@@ -1,0 +1,29 @@
+[Unit]
+# 服务描述，自定义
+Description=Moonick Service
+# 依赖网络，网络启动后再启动该服务
+After=network.target
+
+[Service]
+Environment="MOONICK_ENV=prod"
+# 运行用户（推荐用非root用户，如www，若没有则创建：useradd www；也可直接用root）
+User=root
+# 运行组
+Group=root
+# 项目部署目录（gin-app所在的目录，必须正确！）
+WorkingDirectory=/opt/apps/moonick-backend
+# 可执行文件的绝对路径（必须正确！）
+ExecStart=/opt/apps/moonick-backend/moonick
+# 进程挂掉后的重启策略：总是重启
+Restart=always
+# 重启间隔时间（秒）
+RestartSec=3
+# 标准输出/错误重定向到journald（可通过journalctl查看日志）
+StandardOutput=journal+console
+StandardError=journal+console
+# 启用实时日志
+TTYPath=/dev/pts/0
+
+[Install]
+# 开机自启的目标：多用户模式
+WantedBy=multi-user.target
