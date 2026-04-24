@@ -1,0 +1,5 @@
+sandbox_mode = "workspace-write"
+
+[mcp_servers.antd]
+command = "npx"
+args = ["-y", "ant-design-mcp"]
