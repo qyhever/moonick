@@ -1,0 +1,9 @@
+
+**/.DS_Store
+**/.DS_Store?
+
+**/secrets/**
+**/*.key
+**/*.pem
+**/prod.yml
+**/.env.prod

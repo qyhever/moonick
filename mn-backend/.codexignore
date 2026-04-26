@@ -1,0 +1,47 @@
+# 二进制文件
+moonick
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# 测试二进制文件
+*.test
+
+# 输出覆盖率文件
+*.out
+
+# Go 工作区文件
+go.work
+
+# 临时文件
+tmp/
+.air/
+
+# 编辑器和 IDE
+.vscode/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 日志文件
+*.log
+build-errors.log
+log/*.log
+!log/.gitkeep
+
+# 依赖缓存
+vendor/
+
+# 配置文件（敏感信息）
+internal/config/prod.yml
