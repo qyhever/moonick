@@ -1,4 +1,4 @@
-sandbox_mode = "workspace-write"
+# sandbox_mode = "workspace-write"
 
 [features]
 sandbox = false  # 完全关闭沙箱，codex 和本机权限一致
@@ -6,3 +6,6 @@ sandbox = false  # 完全关闭沙箱，codex 和本机权限一致
 [mcp_servers.antd]
 command = "npx"
 args = ["-y", "ant-design-mcp"]
+
+[mcp_servers.antd.tools.get_component_info]
+approval_mode = "approve"
