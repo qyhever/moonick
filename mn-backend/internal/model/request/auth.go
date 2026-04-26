@@ -1,0 +1,25 @@
+package request
+
+type RegisterRequest struct {
+	Phone    string `json:"phone" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+type LoginRequest struct {
+	Phone    string `json:"phone" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+type AdminLoginRequest struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+type UpdateProfileRequest struct {
+	Nickname string `json:"nickname"`
+}
+
+type UpdateContactRequest struct {
+	DefaultWechat string `json:"defaultWechat"`
+	DefaultPhone  string `json:"defaultPhone"`
+}

@@ -1,0 +1,296 @@
+package router
+
+import (
+	"bytes"
+	"encoding/json"
+	"mime/multipart"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
+	"moonick/internal/config"
+	"moonick/internal/controller"
+	jwtpkg "moonick/internal/pkg/jwt"
+)
+
+func TestSetupRouter_RegistersProtectedDomains(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	r := SetupRouter()
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/me", nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	assertResponseCode(t, rec, controller.CodeNeedLogin)
+
+	adminReq := httptest.NewRequest(http.MethodGet, "/api/admin/v1/auth/me", nil)
+	adminRec := httptest.NewRecorder()
+	r.ServeHTTP(adminRec, adminReq)
+	assertResponseCode(t, adminRec, controller.CodeNeedLogin)
+}
+
+func TestSetupRouter_UserRouteRejectsAdminAccessToken(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	manager := testJWTManager()
+	adminToken, err := manager.GenerateAccessToken("1", "admin")
+	if err != nil {
+		t.Fatalf("generate admin access token: %v", err)
+	}
+
+	r := SetupRouter()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/me", nil)
+	req.Header.Set("Authorization", "Bearer "+adminToken)
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+	assertResponseCode(t, rec, controller.CodePermissionDenied)
+}
+
+func TestSetupRouter_UserRouteRejectsRefreshToken(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	manager := testJWTManager()
+	refreshToken, err := manager.GenerateRefreshToken("1")
+	if err != nil {
+		t.Fatalf("generate user refresh token: %v", err)
+	}
+
+	r := SetupRouter()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/me", nil)
+	req.Header.Set("Authorization", "Bearer "+refreshToken)
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+	assertResponseCode(t, rec, controller.CodeInvalidToken)
+}
+
+func TestSetupRouter_AdminRouteRejectsRefreshToken(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	manager := testJWTManager()
+	refreshToken, err := manager.GenerateRefreshToken("1")
+	if err != nil {
+		t.Fatalf("generate admin refresh token: %v", err)
+	}
+
+	r := SetupRouter()
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/v1/auth/me", nil)
+	req.Header.Set("Authorization", "Bearer "+refreshToken)
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+	assertResponseCode(t, rec, controller.CodeInvalidToken)
+}
+
+func TestSetupRouter_UserProfileUpdateReturnsUserNotExistWhenTokenSubjectMissing(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	manager := testJWTManager()
+	userToken, err := manager.GenerateAccessToken("9999", "user")
+	if err != nil {
+		t.Fatalf("generate user token: %v", err)
+	}
+
+	r := SetupRouter()
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/users/profile", bytes.NewBufferString(`{"nickname":"新昵称"}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+userToken)
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+	assertResponseCode(t, rec, controller.CodeUserNotExist)
+}
+
+func TestSetupRouter_UploadAvatarReturnsUserNotExistWhenTokenSubjectMissing(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	manager := testJWTManager()
+	userToken, err := manager.GenerateAccessToken("9999", "user")
+	if err != nil {
+		t.Fatalf("generate user token: %v", err)
+	}
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("file", "avatar.png")
+	if err != nil {
+		t.Fatalf("create form file: %v", err)
+	}
+	if _, err := part.Write([]byte("avatar")); err != nil {
+		t.Fatalf("write avatar body: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close multipart writer: %v", err)
+	}
+
+	r := SetupRouter()
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/files/avatar", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Authorization", "Bearer "+userToken)
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+	assertResponseCode(t, rec, controller.CodeUserNotExist)
+}
+
+func TestSetupRouter_AdminRouteRejectsUserToken(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	manager := testJWTManager()
+	userToken, err := manager.GenerateAccessToken("user-1", "user")
+	if err != nil {
+		t.Fatalf("generate user token: %v", err)
+	}
+
+	r := SetupRouter()
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/v1/auth/me", nil)
+	req.Header.Set("Authorization", "Bearer "+userToken)
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+	assertResponseCode(t, rec, controller.CodePermissionDenied)
+}
+
+func TestSetupRouter_AdminLoginSucceedsWhenAdminSeedConfigured(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	config.GlobalConfig.Auth.Admin = config.AdminSeedConfig{
+		Username: "root-admin",
+		Password: "secret123",
+		Name:     "Root Admin",
+	}
+
+	r := SetupRouter()
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/v1/auth/login", bytes.NewBufferString(`{"username":"root-admin","password":"secret123"}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected http status %d, got %d, body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+
+	var resp controller.ResponseData
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal response: %v, body=%s", err, rec.Body.String())
+	}
+	if resp.Code != controller.CodeSuccess {
+		t.Fatalf("expected success code, got %d, body=%s", resp.Code, rec.Body.String())
+	}
+}
+
+func TestSetupRouter_AdminLoginFailsSafelyWhenAdminSeedMissing(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	r := SetupRouter()
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/v1/auth/login", bytes.NewBufferString(`{"username":"root-admin","password":"secret123"}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+	assertResponseCode(t, rec, controller.CodeInvalidPassword)
+}
+
+func TestSetupRouter_ReturnsServerErrorWhenJWTConfigInvalid(t *testing.T) {
+	previousConfig := config.GlobalConfig
+	t.Cleanup(func() {
+		config.GlobalConfig = previousConfig
+	})
+
+	config.GlobalConfig = &config.Config{}
+
+	r := SetupRouter()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/me", nil)
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+	assertResponseCode(t, rec, controller.CodeServerBusy)
+}
+
+func TestSetupRouter_RegistersSpecAlignedUserRoutes(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	r := SetupRouter()
+
+	for _, route := range []struct {
+		method string
+		path   string
+	}{
+		{method: http.MethodGet, path: "/api/v1/me/trips"},
+		{method: http.MethodGet, path: "/api/v1/me/favorites"},
+		{method: http.MethodPost, path: "/api/v1/trips/1/favorite"},
+		{method: http.MethodPatch, path: "/api/v1/trips/1/status"},
+	} {
+		req := httptest.NewRequest(route.method, route.path, nil)
+		rec := httptest.NewRecorder()
+		r.ServeHTTP(rec, req)
+		assertResponseCode(t, rec, controller.CodeNeedLogin)
+	}
+}
+
+func TestSetupRouter_RegistersAdminUserTripsRoute(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	r := SetupRouter()
+	req := httptest.NewRequest(http.MethodGet, "/api/admin/v1/users/1/trips", nil)
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+	assertResponseCode(t, rec, controller.CodeNeedLogin)
+}
+
+func useValidJWTConfig(t *testing.T) func() {
+	t.Helper()
+
+	previousConfig := config.GlobalConfig
+	config.GlobalConfig = &config.Config{
+		JWT: config.JWTConfig{
+			Secret:          "test-secret",
+			AccessTokenTTL:  time.Hour,
+			RefreshTokenTTL: 24 * time.Hour,
+		},
+		Auth: config.AuthConfig{},
+	}
+
+	return func() {
+		config.GlobalConfig = previousConfig
+	}
+}
+
+func testJWTManager() *jwtpkg.Manager {
+	return jwtpkg.NewManager(jwtpkg.Config{
+		Secret:          config.GlobalConfig.JWT.Secret,
+		AccessTokenTTL:  config.GlobalConfig.JWT.AccessTokenTTL,
+		RefreshTokenTTL: config.GlobalConfig.JWT.RefreshTokenTTL,
+	})
+}
+
+func assertResponseCode(t *testing.T, rec *httptest.ResponseRecorder, expectedCode controller.MyCode) {
+	t.Helper()
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected http status %d, got %d, body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+
+	var resp controller.ResponseData
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal response: %v, body=%s", err, rec.Body.String())
+	}
+	if resp.Code != expectedCode {
+		t.Fatalf("expected response code %d, got %d, body=%s", expectedCode, resp.Code, rec.Body.String())
+	}
+}
