@@ -59,6 +59,7 @@ func SetupRouter() *gin.Engine {
 	userController := controller.NewUserController(userService, jwtManager)
 	adminAuthController := controller.NewAdminAuthController(authService, jwtManager)
 	fileController := controller.NewFileController(userService, jwtManager)
+	attachController := controller.NewAttachController()
 	tripController := controller.NewTripController(tripService, jwtManager)
 	favoriteController := controller.NewFavoriteController(favoriteService, jwtManager)
 	adminTripController := controller.NewAdminTripController(adminService)
@@ -113,6 +114,13 @@ func SetupRouter() *gin.Engine {
 	fileGroup.Use(middleware.RequireUserAuth(jwtManager))
 	{
 		fileGroup.POST("/avatar", fileController.UploadAvatar)
+	}
+	attach := v1.Group("/attach")
+	{
+		attach.POST("/add", attachController.Add)
+		attach.POST("/upload", attachController.Upload)
+		attach.DELETE("/delete", attachController.Delete)
+		attach.GET("/list", attachController.List)
 	}
 
 	adminProtectedGroup := adminV1.Group("")
