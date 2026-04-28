@@ -70,8 +70,8 @@
 
 ### 文档
 
-- 修改：`mn-backend/README.md`
-- 修改：`README.md`
+- 修改：`mn-backend/AGENTS.md`
+- 修改：`AGENTS.md`
 - 修改：`docs/technical/api-checklist.md`
   责任：补 SQL 导入、MySQL 启动要求和人工联调路径。
 
@@ -583,8 +583,8 @@ git commit -m "feat: 升级后台行程完整编辑页"
 ### 任务 6：补文档并执行全链路验证
 
 **文件：**
-- 修改：`README.md`
-- 修改：`mn-backend/README.md`
+- 修改：`AGENTS.md`
+- 修改：`mn-backend/AGENTS.md`
 - 修改：`docs/technical/api-checklist.md`
 
 - [ ] **步骤 1：补充 SQL 导入与 P1 联调文档**
@@ -627,7 +627,7 @@ mysql -uroot -p moonick < mn-backend/docs/sql/001_init.sql
 - [ ] **步骤 5：Commit**
 
 ```bash
-git add README.md mn-backend/README.md docs/technical/api-checklist.md
+git add AGENTS.md mn-backend/AGENTS.md docs/technical/api-checklist.md
 git commit -m "docs: 补充 MySQL 初始化和 P1 联调说明"
 ```
 

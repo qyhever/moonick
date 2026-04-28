@@ -1,6 +1,17 @@
 # moonick Backend
 
-## 简介
+本文件作为 `mn-backend` 的协作入口。目标是让开发者和代理快速理解服务职责、接口边界、配置项与验证方式。
+
+## 导航
+
+- 当前模块入口：当前文件 `AGENTS.md`
+- 仓库总入口：`../AGENTS.md`
+- 文档索引：`../docs/index.md`
+- 后端技术方案：`../docs/technical/backend.md`
+- 技术总览：`../docs/technical/overview.md`
+- 联调清单：`../docs/technical/api-checklist.md`
+
+## 模块简介
 
 `mn-backend` 是明叶同行的统一后端，负责承载：
 
@@ -12,7 +23,7 @@
 - 后台看板、用户查询、行程查询
 - 行程过期任务骨架
 
-## 路由域
+## 路由边界
 
 用户端接口：
 
@@ -63,9 +74,9 @@ auth:
 - `MOONICK_AUTH_ADMIN_PASSWORD`
 - `MOONICK_AUTH_ADMIN_NAME`
 
-## MySQL 初始化
+## 数据初始化
 
-后端当前使用真实 MySQL 持久化，启动前需要先导入初始化 SQL：
+后端当前使用真实 MySQL 持久化，启动前需要导入初始化 SQL：
 
 ```bash
 cd mn-backend
@@ -76,35 +87,39 @@ mysql -h <host> -P <port> -u <user> -p <database> < docs/sql/001_init.sql
 
 - `docs/sql/001_init.sql`
 
-## 启动
+## 启动方式
 
-编译并启动：
+开发启动：
 
 ```bash
 cd mn-backend
 MOONICK_ENV=dev make dev
 ```
 
-热重载：
+热重载启动：
 
 ```bash
 cd mn-backend
 ./scripts/dev.sh hot
 ```
 
-## 测试
+## 验证命令
 
-在当前环境下，建议显式指定可写的 Go 缓存目录：
+建议显式指定可写的 Go 缓存目录：
 
 ```bash
 cd mn-backend
 GOCACHE=/tmp/moonick-gocache go test ./...
 ```
 
-## 当前实现说明
+## 当前实现边界
 
-当前仓库已接入真实 MySQL 持久化，用户、管理员、行程、收藏等核心数据都通过数据库读写。当前 P1 已对齐的实现边界如下：
+当前仓库已接入真实 MySQL 持久化，用户、管理员、行程、收藏等核心数据都通过数据库读写。当前已对齐的实现边界如下：
 
 - H5 侧行程发布、编辑、状态切换走真实持久化链路
 - Admin 侧行程编辑支持完整字段更新，同时兼容旧的“仅传状态”请求
 - 路由、鉴权边界、业务码协议与分页协议按 v1 契约保持稳定
+
+## 协作建议
+
+修改接口、枚举值或响应结构前，先确认是否会影响 `mn-frontend-h5` 和 `mn-frontend-admin`。涉及联调契约的改动，应同步检查根目录 `AGENTS.md` 与 `docs/technical/*` 文档。

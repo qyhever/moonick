@@ -1,5 +1,17 @@
 # 明叶同行技术方案总览
 
+## 文档导航
+
+- 文档索引：`../index.md`
+- 仓库协作入口：`../../AGENTS.md`
+- 后端协作入口：`../../mn-backend/AGENTS.md`
+- H5 协作入口：`../../mn-frontend-h5/AGENTS.md`
+- Admin 协作入口：`../../mn-frontend-admin/AGENTS.md`
+- H5 技术方案：[h5.md](./h5.md)
+- PC 管理端技术方案：[admin.md](./admin.md)
+- 后端技术方案：[backend.md](./backend.md)
+- 联调清单：[api-checklist.md](./api-checklist.md)
+
 ## 1. 文档定位
 
 本文档用于描述明叶同行 v1 的整体技术方案、系统边界、共享约束和跨端公共设计。

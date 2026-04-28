@@ -103,10 +103,10 @@
 
 本轮新增或更新了以下联调与启动文档：
 
-- `README.md`
-- `mn-backend/README.md`
-- `mn-frontend-h5/README.md`
-- `mn-frontend-admin/README.md`
+- `AGENTS.md`
+- `mn-backend/AGENTS.md`
+- `mn-frontend-h5/AGENTS.md`
+- `mn-frontend-admin/AGENTS.md`
 - `docs/technical/api-checklist.md`
 
 此外，历史过程文档保留：
@@ -208,7 +208,7 @@ npm run build
 如果按模块拆分提交，建议：
 
 ```bash
-git add mn-backend README.md mn-backend/README.md docs/technical/api-checklist.md docs/superpowers
+git add mn-backend AGENTS.md mn-backend/AGENTS.md docs/technical/api-checklist.md docs/superpowers
 git commit -m "feat: 完成明叶同行后端与联调文档"
 
 git add mn-frontend-h5
@@ -221,7 +221,7 @@ git commit -m "feat: 完成管理后台首版骨架和业务页"
 如果一次性提交，建议：
 
 ```bash
-git add README.md mn-backend docs/technical/api-checklist.md docs/superpowers mn-frontend-h5 mn-frontend-admin
+git add AGENTS.md mn-backend docs/technical/api-checklist.md docs/superpowers mn-frontend-h5 mn-frontend-admin
 git commit -m "feat: 完成明叶同行 v1 首版闭环"
 ```
 

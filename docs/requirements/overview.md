@@ -1,5 +1,13 @@
 # 明叶同行 — 需求总览
 
+## 文档导航
+
+- 文档索引：`../index.md`
+- 仓库协作入口：`../../AGENTS.md`
+- 技术总览：`../technical/overview.md`
+- H5 需求：`./h5.md`
+- Admin 需求：`./admin.md`
+
 ---
 
 ## 文档定位

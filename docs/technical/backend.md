@@ -1,5 +1,15 @@
 # 明叶同行后端技术方案
 
+## 文档导航
+
+- 文档索引：`../index.md`
+- 仓库协作入口：`../../AGENTS.md`
+- 后端协作入口：`../../mn-backend/AGENTS.md`
+- 技术总览：[overview.md](./overview.md)
+- H5 技术方案：[h5.md](./h5.md)
+- Admin 技术方案：[admin.md](./admin.md)
+- 联调清单：[api-checklist.md](./api-checklist.md)
+
 ## 1. 文档目标
 
 本文档用于指导 `mn-backend` 的详细设计与开发实现，覆盖：

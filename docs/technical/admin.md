@@ -1,5 +1,15 @@
 # 明叶同行 PC 管理端技术方案
 
+## 文档导航
+
+- 文档索引：`../index.md`
+- 仓库协作入口：`../../AGENTS.md`
+- Admin 协作入口：`../../mn-frontend-admin/AGENTS.md`
+- 技术总览：[overview.md](./overview.md)
+- 后端技术方案：[backend.md](./backend.md)
+- H5 技术方案：[h5.md](./h5.md)
+- 联调清单：[api-checklist.md](./api-checklist.md)
+
 ## 1. 文档目标
 
 本文档用于指导 `mn-frontend-admin` 的页面实现与后端对接，覆盖后台布局、鉴权、页面功能、通用组件抽象和测试方案。

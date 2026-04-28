@@ -850,10 +850,10 @@ git commit -m "feat: 完成后台行程和用户管理页面"
 ## 任务 8：联调、验收与开发文档补全
 
 **文件：**
-- 修改：`README.md`
-- 修改：`mn-backend/README.md`
-- 创建：`mn-frontend-h5/README.md`
-- 创建：`mn-frontend-admin/README.md`
+- 修改：`AGENTS.md`
+- 修改：`mn-backend/AGENTS.md`
+- 创建：`mn-frontend-h5/AGENTS.md`
+- 创建：`mn-frontend-admin/AGENTS.md`
 - 创建：`docs/technical/api-checklist.md`
 
 - [ ] **步骤 1：编写失败的验收检查清单**
@@ -899,7 +899,7 @@ git commit -m "feat: 完成后台行程和用户管理页面"
 - [ ] **步骤 5：Commit**
 
 ```bash
-git add README.md mn-backend/README.md mn-frontend-h5/README.md mn-frontend-admin/README.md docs/technical/api-checklist.md
+git add AGENTS.md mn-backend/AGENTS.md mn-frontend-h5/AGENTS.md mn-frontend-admin/AGENTS.md docs/technical/api-checklist.md
 git commit -m "docs: 补充明叶同行联调和验收说明"
 ```
 

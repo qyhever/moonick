@@ -1,5 +1,17 @@
 # 明叶同行联调与验收检查清单
 
+## 文档导航
+
+- 文档索引：`../index.md`
+- 仓库协作入口：`../../AGENTS.md`
+- 后端协作入口：`../../mn-backend/AGENTS.md`
+- H5 协作入口：`../../mn-frontend-h5/AGENTS.md`
+- Admin 协作入口：`../../mn-frontend-admin/AGENTS.md`
+- 技术总览：[overview.md](./overview.md)
+- 后端技术方案：[backend.md](./backend.md)
+- H5 技术方案：[h5.md](./h5.md)
+- Admin 技术方案：[admin.md](./admin.md)
+
 ## 文档目的
 
 本清单用于记录当前仓库已经落地并可验证的联调路径，不包含尚未实现的需求点。
