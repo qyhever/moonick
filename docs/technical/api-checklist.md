@@ -28,8 +28,14 @@ cd mn-backend
 mysql -h <host> -P <port> -u <user> -p <database> < docs/sql/001_init.sql
 ```
 
+说明：
+
+- `mn-backend/docs/sql/001_init.sql` 当前已去掉 `trips.remark` 的 `TEXT DEFAULT ''` 定义，兼容本地联调使用的 MySQL 版本
+- 如果导入过程曾中途失败，重跑前先清空目标库或删除已创建表，避免留下半套结构
+
 - [ ] 已确认初始化脚本路径：`mn-backend/docs/sql/001_init.sql`
 - [ ] 已检查 `mn-backend/internal/config/dev.yml`
+- [ ] 已按需准备 `mn-backend/internal/config/dev.local.yml` 本地覆盖配置
 - [ ] 已配置 JWT `secret`
 - [ ] 已配置 R2 上传参数
 - [ ] 已配置管理员账号种子：
@@ -56,6 +62,11 @@ npm install
 npm run dev
 ```
 
+说明：
+
+- H5 开发服务默认通过 Vite 代理转发 `/api` 到 `http://127.0.0.1:6303`
+- 当前本地联调入口为 `http://127.0.0.1:5174`
+
 - [ ] 启动 Admin
 
 ```bash
@@ -63,6 +74,11 @@ cd mn-frontend-admin
 npm install
 npm run dev
 ```
+
+说明：
+
+- Admin 开发服务默认通过 Vite 代理转发 `/api` 到 `http://127.0.0.1:6303`
+- 当前本地联调入口为 `http://127.0.0.1:5173`
 
 ---
 
@@ -198,3 +214,21 @@ npm run build
 - H5 `refresh` 接口尚未接入，当前是占位逻辑
 - H5 行程表单当前未包含价格、备注等未落地字段
 - Admin 构建仍存在 chunk size warning，后续可单独做拆包优化
+- H5 详情页不会自动热更新后台改动，当前需要手动刷新后才能看到最新行程内容
+- Admin 行程编辑页的“人数/座位数”控件当前交互偏弱，自动化输入稳定性一般
+- 后端启动日志当前存在明文打印 R2 配置的风险，修复前不要传播包含敏感信息的完整启动日志
+
+## 七、当前已验证基线（2026-04-29）
+
+本轮本地联调已完成以下验证：
+
+- 初始化 SQL 可成功导入
+- 后端可按 `MOONICK_ENV=dev make dev` 正常启动
+- 管理员种子账号 `admin / admin123` 可正常登录 Admin 接口
+- H5 与 Admin 的 Vite 开发代理可正常转发 `/api` 请求到后端
+- H5 与 Admin 的测试、构建命令可执行成功
+- `P1 联调闭环` 已验证通过：
+  - H5 成功发布行程 `#2`
+  - Admin 可编辑 H5 可见字段并保存成功
+  - H5 刷新后可看到后台修改后的终点、时间、人数
+  - Admin 将状态改为 `full` 后，H5 刷新可显示“已满”

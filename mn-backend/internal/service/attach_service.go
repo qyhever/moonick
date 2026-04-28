@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"mime/multipart"
 	"path/filepath"
@@ -28,8 +27,6 @@ func NewAttachService() (*AttachService, error) {
 	}
 
 	r2Config := globalConfig.R2
-	clg, _ := json.MarshalIndent(r2Config, "", "  ")
-	fmt.Printf("r2Config: %v\n", string(clg))
 
 	cfg, err := awsconfig.LoadDefaultConfig(context.TODO(),
 		awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(

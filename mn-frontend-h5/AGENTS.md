@@ -36,6 +36,8 @@ npm install
 npm run dev
 ```
 
+本地开发默认通过 Vite 代理将 `/api` 转发到 `http://127.0.0.1:6303`。
+
 ## 验证命令
 
 ```bash
@@ -73,6 +75,7 @@ npm run test -- publish-form.test.tsx favorite-toggle.test.tsx avatar-upload.tes
 
 - 当前前端没有接入 refresh 接口，`refresh` 仍是显式占位
 - H5 的部分产品文案以后端已支持字段为准，没有扩展到未落地的价格、备注等字段
+- 已验证 H5 发布后，Admin 修改字段与状态，H5 刷新后可同步看到最新内容
 
 ## 协作建议
 

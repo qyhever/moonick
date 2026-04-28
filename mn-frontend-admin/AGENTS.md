@@ -22,7 +22,7 @@
 - 首页运营看板
 - 行程列表
 - 行程详情
-- 行程状态编辑
+- 行程完整字段编辑
 - 用户列表
 - 用户只读详情
 
@@ -33,6 +33,8 @@ cd mn-frontend-admin
 npm install
 npm run dev
 ```
+
+本地开发默认通过 Vite 代理将 `/api` 转发到 `http://127.0.0.1:6303`。
 
 ## 验证命令
 
@@ -57,7 +59,7 @@ npm run test -- trip-edit.test.tsx user-readonly.test.tsx
 - 接口前缀：`/api/admin/v1/...`
 - 管理员登录接口：`POST /api/admin/v1/auth/login`
 - 看板接口：`GET /api/admin/v1/dashboard/summary`
-- 行程编辑当前只支持状态更新
+- 行程编辑接口：`PUT /api/admin/v1/trips/:id`
 
 看板当前展示的真实字段是：
 
@@ -69,9 +71,9 @@ npm run test -- trip-edit.test.tsx user-readonly.test.tsx
 
 ## 当前实现边界
 
-- 行程编辑当前收敛为“状态编辑”，因为后端尚未提供完整的后台全字段编辑接口
 - 用户详情页当前是只读页，不支持封禁、删除、编辑
 - 构建目前会有 Vite 的大包体积 warning，但不影响产物生成
+- 已验证 H5 发布 -> Admin 编辑字段/状态 -> H5 刷新同步的联调闭环
 
 ## 协作建议
 

@@ -87,6 +87,11 @@ mysql -h <host> -P <port> -u <user> -p <database> < docs/sql/001_init.sql
 
 - `docs/sql/001_init.sql`
 
+补充说明：
+
+- 当前脚本已移除 `trips.remark` 的 `TEXT DEFAULT ''` 定义，兼容本地联调使用的 MySQL 版本
+- 如果导入过程曾中途失败，重跑前先清空目标库或删除已创建表，避免留下半套结构
+
 ## 启动方式
 
 开发启动：
@@ -119,6 +124,7 @@ GOCACHE=/tmp/moonick-gocache go test ./...
 - H5 侧行程发布、编辑、状态切换走真实持久化链路
 - Admin 侧行程编辑支持完整字段更新，同时兼容旧的“仅传状态”请求
 - 路由、鉴权边界、业务码协议与分页协议按 v1 契约保持稳定
+- 启动日志当前不应传播包含 R2 敏感配置的完整原文，修复前需谨慎处理日志输出
 
 ## 协作建议
 
