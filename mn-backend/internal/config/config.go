@@ -207,8 +207,22 @@ func GetMySQLDSN() string {
 	if GlobalConfig == nil {
 		return ""
 	}
-	mysql := GlobalConfig.Database.MySQL
-	return fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local&multiStatements=true",
+	return BuildMySQLDSN(GlobalConfig)
+}
+
+// BuildMySQLDSN 从指定配置生成 MySQL 连接字符串
+func BuildMySQLDSN(cfg *Config) string {
+	if cfg == nil {
+		return ""
+	}
+
+	mysql := cfg.Database.MySQL
+	if strings.TrimSpace(mysql.Addr) == "" ||
+		strings.TrimSpace(mysql.User) == "" ||
+		strings.TrimSpace(mysql.DBName) == "" {
+		return ""
+	}
+	return fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		mysql.User, mysql.Password, mysql.Addr, mysql.DBName)
 }
 

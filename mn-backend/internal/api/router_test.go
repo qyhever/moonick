@@ -2,10 +2,12 @@ package router
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -219,6 +221,46 @@ func TestSetupRouter_ReturnsServerErrorWhenJWTConfigInvalid(t *testing.T) {
 	assertResponseCode(t, rec, controller.CodeServerBusy)
 }
 
+func TestInitMySQLDBPanicsWhenDSNConfiguredButOpenFails(t *testing.T) {
+	cfg := &config.Config{
+		Database: config.DatabaseConfig{
+			MySQL: config.MySQLConfig{
+				Addr:   "127.0.0.1:1",
+				User:   "root",
+				DBName: "moonick",
+			},
+		},
+	}
+
+	assertPanicsWith(t, "初始化 MySQL 失败", func() {
+		_ = initMySQLDB(cfg)
+	})
+}
+
+func TestNewAdminRepositoryFromConfigPanicsWhenSeedFails(t *testing.T) {
+	db, err := sql.Open("mysql", "root@tcp(127.0.0.1:3306)/moonick")
+	if err != nil {
+		t.Fatalf("open mysql db handle: %v", err)
+	}
+	if err := db.Close(); err != nil {
+		t.Fatalf("close mysql db handle: %v", err)
+	}
+
+	cfg := &config.Config{
+		Auth: config.AuthConfig{
+			Admin: config.AdminSeedConfig{
+				Username: "root-admin",
+				Password: "secret123",
+				Name:     "Root Admin",
+			},
+		},
+	}
+
+	assertPanicsWith(t, "写入管理员 seed 失败", func() {
+		_ = newAdminRepositoryFromConfig(cfg, db)
+	})
+}
+
 func TestSetupRouter_RegistersSpecAlignedUserRoutes(t *testing.T) {
 	restore := useValidJWTConfig(t)
 	defer restore()
@@ -292,5 +334,33 @@ func assertResponseCode(t *testing.T, rec *httptest.ResponseRecorder, expectedCo
 	}
 	if resp.Code != expectedCode {
 		t.Fatalf("expected response code %d, got %d, body=%s", expectedCode, resp.Code, rec.Body.String())
+	}
+}
+
+func assertPanicsWith(t *testing.T, expected string, fn func()) {
+	t.Helper()
+
+	defer func() {
+		recovered := recover()
+		if recovered == nil {
+			t.Fatalf("expected panic containing %q", expected)
+		}
+
+		if !strings.Contains(toPanicMessage(recovered), expected) {
+			t.Fatalf("expected panic containing %q, got %v", expected, recovered)
+		}
+	}()
+
+	fn()
+}
+
+func toPanicMessage(v any) string {
+	switch value := v.(type) {
+	case error:
+		return value.Error()
+	case string:
+		return value
+	default:
+		return ""
 	}
 }

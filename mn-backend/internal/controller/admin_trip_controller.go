@@ -1,12 +1,14 @@
 package controller
 
 import (
+	"encoding/json"
 	"errors"
 
 	"moonick/internal/model/request"
 	"moonick/internal/service"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
 type AdminTripController struct {
@@ -66,23 +68,53 @@ func (c *AdminTripController) Update(ctx *gin.Context) {
 		return
 	}
 
-	var req request.AdminUpdateTripRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
+	var payload map[string]json.RawMessage
+	if err := ctx.ShouldBindBodyWith(&payload, binding.JSON); err != nil {
 		ResponseFailedWithMsg(ctx, CodeInvalidParam, "请求参数错误: "+err.Error())
 		return
 	}
 
-	resp, err := c.adminService.UpdateTrip(ctx, tripID, req)
-	if err != nil {
-		switch {
-		case errors.Is(err, service.ErrTripNotFound):
-			ResponseFailedWithMsg(ctx, CodeResourceNotExist, err.Error())
-		case errors.Is(err, service.ErrTripStatusInvalid):
-			ResponseFailedWithMsg(ctx, CodeInvalidParam, err.Error())
-		default:
-			ResponseFailedWithMsg(ctx, CodeServerBusy, err.Error())
+	if isLegacyAdminTripStatusPayload(payload) {
+		var req request.AdminUpdateTripRequest
+		if err := ctx.ShouldBindBodyWith(&req, binding.JSON); err != nil {
+			ResponseFailedWithMsg(ctx, CodeInvalidParam, "请求参数错误: "+err.Error())
+			return
 		}
+		resp, err := c.adminService.UpdateTrip(ctx, tripID, req)
+		if err != nil {
+			handleTripMutationError(ctx, err)
+			return
+		}
+		ResponseSuccess(ctx, resp)
+		return
+	}
+
+	var req request.AdminUpdateTripDetailRequest
+	if err := ctx.ShouldBindBodyWith(&req, binding.JSON); err != nil {
+		ResponseFailedWithMsg(ctx, CodeInvalidParam, "请求参数错误: "+err.Error())
+		return
+	}
+
+	resp, err := c.adminService.UpdateTripDetail(ctx, tripID, req)
+	if err != nil {
+		handleTripMutationError(ctx, err)
 		return
 	}
 	ResponseSuccess(ctx, resp)
+}
+
+func isLegacyAdminTripStatusPayload(payload map[string]json.RawMessage) bool {
+	if _, ok := payload["status"]; !ok {
+		return false
+	}
+	for key := range payload {
+		switch key {
+		case "status":
+			continue
+		case "tripType", "fromText", "toText", "departureDate", "departureTime", "seatCount",
+			"priceAmount", "isPriceNegotiable", "contactWechat", "contactPhone", "remark":
+			return false
+		}
+	}
+	return true
 }

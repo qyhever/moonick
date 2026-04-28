@@ -16,21 +16,23 @@ type TripSummary struct {
 }
 
 type TripDetail struct {
-	ID                int64  `json:"id"`
-	UserID            int64  `json:"userId"`
-	TripType          string `json:"tripType"`
-	FromText          string `json:"fromText"`
-	ToText            string `json:"toText"`
-	DepartureDate     string `json:"departureDate"`
-	DepartureTime     string `json:"departureTime"`
-	SeatCount         int    `json:"seatCount"`
-	IsPriceNegotiable bool   `json:"isPriceNegotiable"`
-	ContactWechat     string `json:"contactWechat"`
-	ContactPhone      string `json:"contactPhone"`
-	Status            string `json:"status"`
-	Favorited         bool   `json:"favorited"`
-	CreatedAt         string `json:"createdAt"`
-	UpdatedAt         string `json:"updatedAt"`
+	ID                int64   `json:"id"`
+	UserID            int64   `json:"userId"`
+	TripType          string  `json:"tripType"`
+	FromText          string  `json:"fromText"`
+	ToText            string  `json:"toText"`
+	DepartureDate     string  `json:"departureDate"`
+	DepartureTime     string  `json:"departureTime"`
+	SeatCount         int     `json:"seatCount"`
+	PriceAmount       float64 `json:"priceAmount"`
+	IsPriceNegotiable bool    `json:"isPriceNegotiable"`
+	ContactWechat     string  `json:"contactWechat"`
+	ContactPhone      string  `json:"contactPhone"`
+	Remark            string  `json:"remark"`
+	Status            string  `json:"status"`
+	Favorited         bool    `json:"favorited"`
+	CreatedAt         string  `json:"createdAt"`
+	UpdatedAt         string  `json:"updatedAt"`
 }
 
 type TripListResponse struct {

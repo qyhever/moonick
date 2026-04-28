@@ -17,10 +17,13 @@ type Trip struct {
 	ToText            string
 	DepartureAt       time.Time
 	SeatCount         int
+	PriceAmount       float64
 	IsPriceNegotiable bool
 	ContactWechat     string
 	ContactPhone      string
+	Remark            string
 	Status            string
+	ClosedReason      string
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
 }

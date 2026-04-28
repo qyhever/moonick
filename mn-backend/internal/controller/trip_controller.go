@@ -156,6 +156,7 @@ func handleTripMutationError(ctx *gin.Context, err error) {
 		errors.Is(err, service.ErrTripContactRequired),
 		errors.Is(err, service.ErrTripTypeRequired),
 		errors.Is(err, service.ErrTripSeatCountInvalid),
+		errors.Is(err, service.ErrTripPriceAmountInvalid),
 		errors.Is(err, service.ErrTripStatusInvalid),
 		errors.Is(err, service.ErrTripDepartureDateInvalid),
 		errors.Is(err, service.ErrTripDepartureTimeInvalid):

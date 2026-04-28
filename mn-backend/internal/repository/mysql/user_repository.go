@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"sort"
 	"strings"
@@ -9,6 +10,8 @@ import (
 	"time"
 
 	"moonick/internal/model/entity"
+
+	mysqlDriver "github.com/go-sql-driver/mysql"
 )
 
 var (
@@ -17,13 +20,29 @@ var (
 )
 
 type UserRepository struct {
+	db             *sql.DB
 	mu             sync.RWMutex
 	nextID         int64
 	usersByID      map[int64]entity.User
 	userIDsByPhone map[string]int64
 }
 
-func NewUserRepository() *UserRepository {
+func NewUserRepository(dbs ...*sql.DB) *UserRepository {
+	if len(dbs) > 0 && dbs[0] != nil {
+		return &UserRepository{db: dbs[0]}
+	}
+	if len(dbs) > 0 {
+		return &UserRepository{
+			nextID:         1000,
+			usersByID:      make(map[int64]entity.User),
+			userIDsByPhone: make(map[string]int64),
+		}
+	}
+
+	if db := GetDB(); db != nil {
+		return &UserRepository{db: db}
+	}
+
 	return &UserRepository{
 		nextID:         1000,
 		usersByID:      make(map[int64]entity.User),
@@ -31,7 +50,13 @@ func NewUserRepository() *UserRepository {
 	}
 }
 
-func (r *UserRepository) FindByPhone(_ context.Context, phone string) (*entity.User, error) {
+func (r *UserRepository) FindByPhone(ctx context.Context, phone string) (*entity.User, error) {
+	if r.db != nil {
+		return r.findOne(ctx, `SELECT id, phone, password_hash, nickname, avatar_url, status, default_phone, default_wechat, created_at, updated_at
+FROM users
+WHERE phone = ?`, phone)
+	}
+
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -44,7 +69,13 @@ func (r *UserRepository) FindByPhone(_ context.Context, phone string) (*entity.U
 	return cloneUser(user), nil
 }
 
-func (r *UserRepository) FindByID(_ context.Context, id int64) (*entity.User, error) {
+func (r *UserRepository) FindByID(ctx context.Context, id int64) (*entity.User, error) {
+	if r.db != nil {
+		return r.findOne(ctx, `SELECT id, phone, password_hash, nickname, avatar_url, status, default_phone, default_wechat, created_at, updated_at
+FROM users
+WHERE id = ?`, id)
+	}
+
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -55,7 +86,32 @@ func (r *UserRepository) FindByID(_ context.Context, id int64) (*entity.User, er
 	return cloneUser(user), nil
 }
 
-func (r *UserRepository) Create(_ context.Context, user entity.User) (*entity.User, error) {
+func (r *UserRepository) Create(ctx context.Context, user entity.User) (*entity.User, error) {
+	if r.db != nil {
+		result, err := r.db.ExecContext(ctx, `INSERT INTO users (phone, password_hash, nickname, avatar_url, status, default_phone, default_wechat)
+VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			user.Phone,
+			user.PasswordHash,
+			user.Nickname,
+			user.AvatarURL,
+			user.Status,
+			user.DefaultPhone,
+			user.DefaultWechat,
+		)
+		if isDuplicateKeyError(err) {
+			return nil, ErrUserPhoneAlreadyExists
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		id, err := result.LastInsertId()
+		if err != nil {
+			return nil, err
+		}
+		return r.FindByID(ctx, id)
+	}
+
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -73,7 +129,11 @@ func (r *UserRepository) Create(_ context.Context, user entity.User) (*entity.Us
 	return cloneUser(user), nil
 }
 
-func (r *UserRepository) UpdateProfile(_ context.Context, userID int64, nickname string) error {
+func (r *UserRepository) UpdateProfile(ctx context.Context, userID int64, nickname string) error {
+	if r.db != nil {
+		return r.updateUser(ctx, userID, `UPDATE users SET nickname = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, nickname, userID)
+	}
+
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -88,7 +148,11 @@ func (r *UserRepository) UpdateProfile(_ context.Context, userID int64, nickname
 	return nil
 }
 
-func (r *UserRepository) UpdateContact(_ context.Context, userID int64, defaultWechat, defaultPhone string) error {
+func (r *UserRepository) UpdateContact(ctx context.Context, userID int64, defaultWechat, defaultPhone string) error {
+	if r.db != nil {
+		return r.updateUser(ctx, userID, `UPDATE users SET default_wechat = ?, default_phone = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, defaultWechat, defaultPhone, userID)
+	}
+
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -104,7 +168,11 @@ func (r *UserRepository) UpdateContact(_ context.Context, userID int64, defaultW
 	return nil
 }
 
-func (r *UserRepository) UpdateAvatarURL(_ context.Context, userID int64, avatarURL string) error {
+func (r *UserRepository) UpdateAvatarURL(ctx context.Context, userID int64, avatarURL string) error {
+	if r.db != nil {
+		return r.updateUser(ctx, userID, `UPDATE users SET avatar_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, avatarURL, userID)
+	}
+
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -119,7 +187,11 @@ func (r *UserRepository) UpdateAvatarURL(_ context.Context, userID int64, avatar
 	return nil
 }
 
-func (r *UserRepository) List(_ context.Context, offset, limit int, keyword string) ([]*entity.User, int, error) {
+func (r *UserRepository) List(ctx context.Context, offset, limit int, keyword string) ([]*entity.User, int, error) {
+	if r.db != nil {
+		return r.listFromDB(ctx, offset, limit, keyword)
+	}
+
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -155,11 +227,144 @@ func (r *UserRepository) List(_ context.Context, offset, limit int, keyword stri
 	return result, total, nil
 }
 
-func (r *UserRepository) Count(_ context.Context) (int, error) {
+func (r *UserRepository) Count(ctx context.Context) (int, error) {
+	if r.db != nil {
+		var total int
+		if err := r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM users`).Scan(&total); err != nil {
+			return 0, err
+		}
+		return total, nil
+	}
+
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	return len(r.usersByID), nil
+}
+
+func (r *UserRepository) findOne(ctx context.Context, query string, arg any) (*entity.User, error) {
+	var user entity.User
+	err := r.db.QueryRowContext(ctx, query, arg).Scan(
+		&user.ID,
+		&user.Phone,
+		&user.PasswordHash,
+		&user.Nickname,
+		&user.AvatarURL,
+		&user.Status,
+		&user.DefaultPhone,
+		&user.DefaultWechat,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) listFromDB(ctx context.Context, offset, limit int, keyword string) ([]*entity.User, int, error) {
+	normalizedKeyword := strings.TrimSpace(keyword)
+	countQuery := `SELECT COUNT(*) FROM users`
+	listQuery := `SELECT id, phone, password_hash, nickname, avatar_url, status, default_phone, default_wechat, created_at, updated_at
+FROM users`
+	args := make([]any, 0, 4)
+	countArgs := make([]any, 0, 2)
+	if normalizedKeyword != "" {
+		filter := "%" + normalizedKeyword + "%"
+		whereClause := ` WHERE phone LIKE ? OR nickname LIKE ?`
+		countQuery += whereClause
+		listQuery += whereClause
+		countArgs = append(countArgs, filter, filter)
+		args = append(args, filter, filter)
+	}
+	listQuery += ` ORDER BY id DESC`
+	if limit > 0 {
+		listQuery += ` LIMIT ? OFFSET ?`
+		args = append(args, limit, offset)
+	} else if offset > 0 {
+		// Keep DB semantics aligned with the in-memory path: no limit still honors offset.
+		listQuery += ` LIMIT 18446744073709551615 OFFSET ?`
+		args = append(args, offset)
+	}
+
+	var total int
+	if err := r.db.QueryRowContext(ctx, countQuery, countArgs...).Scan(&total); err != nil {
+		return nil, 0, err
+	}
+
+	rows, err := r.db.QueryContext(ctx, listQuery, args...)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	items := make([]*entity.User, 0)
+	for rows.Next() {
+		var user entity.User
+		if err := rows.Scan(
+			&user.ID,
+			&user.Phone,
+			&user.PasswordHash,
+			&user.Nickname,
+			&user.AvatarURL,
+			&user.Status,
+			&user.DefaultPhone,
+			&user.DefaultWechat,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+		); err != nil {
+			return nil, 0, err
+		}
+		items = append(items, &user)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+	return items, total, nil
+}
+
+func (r *UserRepository) updateUser(ctx context.Context, userID int64, query string, args ...any) error {
+	result, err := r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		exists, err := r.userExistsByID(ctx, userID)
+		if err != nil {
+			return err
+		}
+		if !exists {
+			return ErrUserNotFound
+		}
+	}
+	return nil
+}
+
+func (r *UserRepository) userExistsByID(ctx context.Context, userID int64) (bool, error) {
+	var exists int
+	err := r.db.QueryRowContext(ctx, `SELECT 1 FROM users WHERE id = ?`, userID).Scan(&exists)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func isDuplicateKeyError(err error) bool {
+	if err == nil {
+		return false
+	}
+	var mysqlErr *mysqlDriver.MySQLError
+	return errors.As(err, &mysqlErr) && mysqlErr.Number == 1062
 }
 
 func cloneUser(user entity.User) *entity.User {

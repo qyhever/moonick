@@ -1,6 +1,8 @@
 package router
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"runtime"
@@ -40,8 +42,9 @@ func SetupRouter() *gin.Engine {
 	metaController := controller.NewMetaController()
 	jwtManager := newJWTManager()
 	cfg := config.GetConfig()
-	userRepo := mysql.NewUserRepository()
-	adminRepo := newAdminRepositoryFromConfig(cfg)
+	db := initMySQLDB(cfg)
+	userRepo := mysql.NewUserRepository(db)
+	adminRepo := newAdminRepositoryFromConfig(cfg, db)
 	r2Config := config.R2Config{}
 	if cfg != nil {
 		r2Config = cfg.R2
@@ -160,19 +163,58 @@ func newJWTManager() *jwtpkg.Manager {
 	})
 }
 
-func newAdminRepositoryFromConfig(cfg *config.Config) *mysql.AdminRepository {
+func initMySQLDB(cfg *config.Config) *sql.DB {
 	if cfg == nil {
-		return mysql.NewAdminRepository()
+		return nil
+	}
+
+	dsn := config.BuildMySQLDSN(cfg)
+	if strings.TrimSpace(dsn) == "" {
+		return nil
+	}
+
+	db, err := mysql.OpenDB(dsn)
+	if err != nil {
+		panic(fmt.Errorf("初始化 MySQL 失败: %w", err))
+	}
+
+	mysql.SetDB(db)
+	return db
+}
+
+func newAdminRepositoryFromConfig(cfg *config.Config, db *sql.DB) *mysql.AdminRepository {
+	admin, err := buildAdminSeed(cfg)
+	if err != nil {
+		panic(fmt.Errorf("初始化管理员 seed 失败: %w", err))
+	}
+	repo := mysql.NewAdminRepositoryWithDB(db)
+	if admin == nil {
+		return repo
+	}
+
+	if db != nil {
+		if err := repo.Upsert(context.Background(), *admin); err != nil {
+			panic(fmt.Errorf("写入管理员 seed 失败: %w", err))
+		}
+		return repo
+	}
+
+	return mysql.NewAdminRepository(*admin)
+}
+
+func buildAdminSeed(cfg *config.Config) (*entity.Admin, error) {
+	if cfg == nil {
+		return nil, nil
 	}
 
 	adminCfg := cfg.Auth.Admin
 	if strings.TrimSpace(adminCfg.Username) == "" || strings.TrimSpace(adminCfg.Password) == "" {
-		return mysql.NewAdminRepository()
+		return nil, nil
 	}
 
 	hash, err := password.Hash(adminCfg.Password)
 	if err != nil {
-		return mysql.NewAdminRepository()
+		return nil, err
 	}
 
 	name := adminCfg.Name
@@ -180,11 +222,11 @@ func newAdminRepositoryFromConfig(cfg *config.Config) *mysql.AdminRepository {
 		name = adminCfg.Username
 	}
 
-	return mysql.NewAdminRepository(entity.Admin{
+	return &entity.Admin{
 		ID:           1,
 		Username:     adminCfg.Username,
 		PasswordHash: hash,
 		Name:         name,
 		Status:       "active",
-	})
+	}, nil
 }

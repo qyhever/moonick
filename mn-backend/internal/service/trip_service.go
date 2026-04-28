@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"math"
 	"strings"
 	"time"
 
@@ -25,7 +26,11 @@ var (
 	ErrTripStatusInvalid        = errors.New("行程状态无效")
 	ErrTripDepartureDateInvalid = errors.New("出发日期格式错误")
 	ErrTripDepartureTimeInvalid = errors.New("出发时间格式错误")
+	ErrTripPriceAmountInvalid   = errors.New("价格格式错误")
 )
+
+const maxTripPriceAmount = 99999999.99
+const tripPricePrecisionTolerance = 1e-9
 
 type tripRepository interface {
 	Create(ctx context.Context, trip entity.Trip) (*entity.Trip, error)
@@ -195,38 +200,78 @@ func (s *TripService) UpdateTripStatus(ctx context.Context, userID, tripID int64
 }
 
 func (s *TripService) validateUpsert(req request.UpsertTripRequest, now time.Time) (time.Time, error) {
-	if strings.TrimSpace(req.TripType) == "" {
+	return validateTripFields(
+		req.TripType,
+		req.FromText,
+		req.ToText,
+		req.DepartureDate,
+		req.DepartureTime,
+		req.SeatCount,
+		req.ContactWechat,
+		req.ContactPhone,
+		now,
+	)
+}
+
+func parseDeparture(req request.UpsertTripRequest, location *time.Location) (time.Time, error) {
+	return parseDepartureFields(req.DepartureDate, req.DepartureTime, location)
+}
+
+func validateTripFields(
+	tripType, fromText, toText, departureDate, departureTime string,
+	seatCount int,
+	contactWechat, contactPhone string,
+	now time.Time,
+) (time.Time, error) {
+	if strings.TrimSpace(tripType) == "" {
 		return time.Time{}, ErrTripTypeRequired
 	}
-	if strings.TrimSpace(req.FromText) == strings.TrimSpace(req.ToText) {
+	if strings.TrimSpace(fromText) == "" || strings.TrimSpace(toText) == "" {
 		return time.Time{}, ErrTripInvalidRoute
 	}
-	if req.SeatCount <= 0 {
+	if strings.TrimSpace(fromText) == strings.TrimSpace(toText) {
+		return time.Time{}, ErrTripInvalidRoute
+	}
+	if seatCount <= 0 {
 		return time.Time{}, ErrTripSeatCountInvalid
 	}
-	departureAt, err := parseDeparture(req, now.Location())
+	departureAt, err := parseDepartureFields(departureDate, departureTime, now.Location())
 	if err != nil {
 		return time.Time{}, err
 	}
 	if departureAt.Before(now) {
 		return time.Time{}, ErrTripDepartureInPast
 	}
-	if strings.TrimSpace(req.ContactWechat) == "" && strings.TrimSpace(req.ContactPhone) == "" {
+	if strings.TrimSpace(contactWechat) == "" && strings.TrimSpace(contactPhone) == "" {
 		return time.Time{}, ErrTripContactRequired
 	}
 	return departureAt, nil
 }
 
-func parseDeparture(req request.UpsertTripRequest, location *time.Location) (time.Time, error) {
-	departureDate, err := timeutil.ParseDepartureDate(strings.TrimSpace(req.DepartureDate), location)
+func parseDepartureFields(departureDate, departureTime string, location *time.Location) (time.Time, error) {
+	departureDateValue, err := timeutil.ParseDepartureDate(strings.TrimSpace(departureDate), location)
 	if err != nil {
 		return time.Time{}, ErrTripDepartureDateInvalid
 	}
-	departureAt, err := timeutil.CombineDeparture(departureDate, strings.TrimSpace(req.DepartureTime), location)
+	departureAt, err := timeutil.CombineDeparture(departureDateValue, strings.TrimSpace(departureTime), location)
 	if err != nil {
 		return time.Time{}, ErrTripDepartureTimeInvalid
 	}
 	return departureAt, nil
+}
+
+func validateTripPriceAmount(priceAmount float64) error {
+	if math.IsNaN(priceAmount) || math.IsInf(priceAmount, 0) {
+		return ErrTripPriceAmountInvalid
+	}
+	if priceAmount < 0 || priceAmount > maxTripPriceAmount {
+		return ErrTripPriceAmountInvalid
+	}
+	scaled := priceAmount * 100
+	if math.Abs(math.Round(scaled)-scaled) > tripPricePrecisionTolerance {
+		return ErrTripPriceAmountInvalid
+	}
+	return nil
 }
 
 func normalizeTripRepoError(err error) error {
@@ -289,9 +334,11 @@ func toTripDetail(trip *entity.Trip, favorited bool) *response.TripDetail {
 		DepartureDate:     trip.DepartureAt.Format(time.DateOnly),
 		DepartureTime:     trip.DepartureAt.Format("15:04"),
 		SeatCount:         trip.SeatCount,
+		PriceAmount:       trip.PriceAmount,
 		IsPriceNegotiable: trip.IsPriceNegotiable,
 		ContactWechat:     trip.ContactWechat,
 		ContactPhone:      trip.ContactPhone,
+		Remark:            trip.Remark,
 		Status:            trip.Status,
 		Favorited:         favorited,
 		CreatedAt:         trip.CreatedAt.Format(time.RFC3339),

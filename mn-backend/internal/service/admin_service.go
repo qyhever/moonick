@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"strings"
+	"time"
 
 	"moonick/internal/model/entity"
 	"moonick/internal/model/request"
@@ -31,6 +32,7 @@ type AdminService struct {
 	userRepo     adminUserRepository
 	tripRepo     adminTripRepository
 	favoriteRepo adminFavoriteRepository
+	now          func() time.Time
 }
 
 func NewAdminService(userRepo adminUserRepository, tripRepo adminTripRepository, favoriteRepo adminFavoriteRepository) *AdminService {
@@ -38,6 +40,7 @@ func NewAdminService(userRepo adminUserRepository, tripRepo adminTripRepository,
 		userRepo:     userRepo,
 		tripRepo:     tripRepo,
 		favoriteRepo: favoriteRepo,
+		now:          time.Now,
 	}
 }
 
@@ -130,6 +133,68 @@ func (s *AdminService) UpdateTrip(ctx context.Context, tripID int64, req request
 	}
 
 	trip.Status = status
+	updated, err := s.tripRepo.Update(ctx, *trip)
+	if err != nil {
+		return nil, normalizeTripRepoError(err)
+	}
+	return toTripDetail(updated, false), nil
+}
+
+func (s *AdminService) UpdateTripDetail(ctx context.Context, tripID int64, req request.AdminUpdateTripDetailRequest) (*response.TripDetail, error) {
+	trip, err := s.tripRepo.FindByID(ctx, tripID)
+	if err != nil {
+		return nil, normalizeTripRepoError(err)
+	}
+	if trip == nil {
+		return nil, ErrTripNotFound
+	}
+	if trip.Status == entity.TripStatusExpired {
+		return nil, ErrTripStatusInvalid
+	}
+
+	status := strings.TrimSpace(req.Status)
+	if !isAdminMutableTripStatus(status) {
+		return nil, ErrTripStatusInvalid
+	}
+
+	departureAt, err := validateTripFields(
+		req.TripType,
+		req.FromText,
+		req.ToText,
+		req.DepartureDate,
+		req.DepartureTime,
+		req.SeatCount,
+		req.ContactWechat,
+		req.ContactPhone,
+		s.now(),
+	)
+	if err != nil {
+		return nil, err
+	}
+	if req.PriceAmount != nil {
+		if err := validateTripPriceAmount(*req.PriceAmount); err != nil {
+			return nil, err
+		}
+	}
+
+	trip.TripType = strings.TrimSpace(req.TripType)
+	trip.FromText = strings.TrimSpace(req.FromText)
+	trip.ToText = strings.TrimSpace(req.ToText)
+	trip.DepartureAt = departureAt
+	trip.SeatCount = req.SeatCount
+	trip.ContactWechat = strings.TrimSpace(req.ContactWechat)
+	trip.ContactPhone = strings.TrimSpace(req.ContactPhone)
+	trip.Status = status
+	if req.PriceAmount != nil {
+		trip.PriceAmount = *req.PriceAmount
+	}
+	if req.IsPriceNegotiable != nil {
+		trip.IsPriceNegotiable = *req.IsPriceNegotiable
+	}
+	if req.Remark != nil {
+		trip.Remark = strings.TrimSpace(*req.Remark)
+	}
+
 	updated, err := s.tripRepo.Update(ctx, *trip)
 	if err != nil {
 		return nil, normalizeTripRepoError(err)
