@@ -14,9 +14,9 @@
 - H5 首页、行程详情、发布、编辑、我的发布、我的收藏、个人中心
 - 用户头像上传、昵称更新、默认联系方式更新
 - 后台管理员登录、登录守卫、首页看板
-- 后台行程列表、行程详情、行程状态编辑
+- 后台行程列表、行程详情、行程完整字段编辑
 - 后台用户列表、用户只读详情
-- 后端用户、管理员、行程、收藏、文件上传和过期任务骨架
+- 后端用户、管理员、行程、收藏、文件上传与 MySQL 持久化
 
 当前统一约束：
 
@@ -43,6 +43,17 @@
   - `auth.admin.username`
   - `auth.admin.password`
   - `auth.admin.name`
+
+MySQL 初始化：
+
+```bash
+cd mn-backend
+mysql -h <host> -P <port> -u <user> -p <database> < docs/sql/001_init.sql
+```
+
+初始化 SQL 文件路径：
+
+- `mn-backend/docs/sql/001_init.sql`
 
 启动命令：
 

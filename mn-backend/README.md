@@ -63,6 +63,19 @@ auth:
 - `MOONICK_AUTH_ADMIN_PASSWORD`
 - `MOONICK_AUTH_ADMIN_NAME`
 
+## MySQL 初始化
+
+后端当前使用真实 MySQL 持久化，启动前需要先导入初始化 SQL：
+
+```bash
+cd mn-backend
+mysql -h <host> -P <port> -u <user> -p <database> < docs/sql/001_init.sql
+```
+
+初始化脚本路径：
+
+- `docs/sql/001_init.sql`
+
 ## 启动
 
 编译并启动：
@@ -90,8 +103,8 @@ GOCACHE=/tmp/moonick-gocache go test ./...
 
 ## 当前实现说明
 
-当前仓库中的 repository 仍以轻量内存实现为主，接口边界、错误语义和测试已经按 v1 路由契约对齐。后续如果切到真实 MySQL 持久化，应保持：
+当前仓库已接入真实 MySQL 持久化，用户、管理员、行程、收藏等核心数据都通过数据库读写。当前 P1 已对齐的实现边界如下：
 
-- 业务码协议不变
-- 路由与鉴权边界不变
-- 行程状态与分页协议不变
+- H5 侧行程发布、编辑、状态切换走真实持久化链路
+- Admin 侧行程编辑支持完整字段更新，同时兼容旧的“仅传状态”请求
+- 路由、鉴权边界、业务码协议与分页协议按 v1 契约保持稳定

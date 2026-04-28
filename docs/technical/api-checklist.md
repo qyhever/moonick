@@ -9,6 +9,14 @@
 ## 一、启动前检查
 
 - [ ] 已准备 MySQL，并按后端配置可正常连接
+- [ ] 已导入初始化 SQL：
+
+```bash
+cd mn-backend
+mysql -h <host> -P <port> -u <user> -p <database> < docs/sql/001_init.sql
+```
+
+- [ ] 已确认初始化脚本路径：`mn-backend/docs/sql/001_init.sql`
 - [ ] 已检查 `mn-backend/internal/config/dev.yml`
 - [ ] 已配置 JWT `secret`
 - [ ] 已配置 R2 上传参数
@@ -50,7 +58,7 @@ npm run dev
 
 ### 3.1 后端
 
-- [x] 已执行：
+- [ ] 执行后端测试：
 
 ```bash
 cd mn-backend
@@ -59,7 +67,7 @@ GOCACHE=/tmp/moonick-gocache go test ./...
 
 ### 3.2 H5
 
-- [x] 已执行：
+- [ ] 执行 H5 测试与构建：
 
 ```bash
 cd mn-frontend-h5
@@ -69,7 +77,7 @@ npm run build
 
 ### 3.3 Admin
 
-- [x] 已执行：
+- [ ] 执行 Admin 测试与构建：
 
 ```bash
 cd mn-frontend-admin
@@ -144,10 +152,19 @@ npm run build
 - [ ] 行程详情可查看
 - [ ] 行程编辑页可打开
 - [ ] 点击保存前会出现二次确认
-- [ ] 当前可修改行程状态：
-  - [ ] `active`
-  - [ ] `full`
-  - [ ] `closed`
+- [ ] 可编辑完整字段：
+  - [ ] 行程类型
+  - [ ] 出发地
+  - [ ] 目的地
+  - [ ] 出发日期
+  - [ ] 出发时间
+  - [ ] 座位数
+  - [ ] 价格
+  - [ ] 是否可议价
+  - [ ] 联系微信
+  - [ ] 联系手机号
+  - [ ] 备注
+  - [ ] 行程状态（`active / full / closed`）
 
 ### 5.4 用户管理
 
@@ -155,11 +172,17 @@ npm run build
 - [ ] 用户详情可查看
 - [ ] 用户详情页不出现封禁、删除等越界操作
 
+### 5.5 P1 联调闭环
+
+- [ ] H5 发布一条新行程成功
+- [ ] Admin 打开该行程详情并进入编辑页
+- [ ] Admin 完整修改至少 1 组 H5 可见字段（如出发地、目的地、出发日期、出发时间、座位数、状态）并保存成功
+- [ ] 返回 H5 详情页或我的发布页，可看到对应字段的最新内容
+
 ---
 
 ## 六、当前已知边界
 
 - H5 `refresh` 接口尚未接入，当前是占位逻辑
 - H5 行程表单当前未包含价格、备注等未落地字段
-- Admin 行程编辑当前是状态编辑，不是完整字段编辑
 - Admin 构建仍存在 chunk size warning，后续可单独做拆包优化
