@@ -18,10 +18,27 @@ export type AdminTripSummary = {
 };
 
 export type AdminTripDetail = AdminTripSummary & {
+  priceAmount: number;
+  remark: string;
   contactWechat: string;
   contactPhone: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type AdminTripUpdatePayload = {
+  tripType: string;
+  fromText: string;
+  toText: string;
+  departureDate: string;
+  departureTime: string;
+  seatCount: number;
+  priceAmount: number;
+  isPriceNegotiable: boolean;
+  contactWechat: string;
+  contactPhone: string;
+  remark: string;
+  status: AdminTripStatus;
 };
 
 export type AdminTripListResponse = {
@@ -58,7 +75,7 @@ export async function getAdminTripDetail(id: string | number) {
   return unwrapApiResponse(response.data);
 }
 
-export async function updateAdminTrip(id: string | number, status: Exclude<AdminTripStatus, "expired">) {
-  const response = await api.put<ApiResponse<AdminTripDetail>>(`/api/admin/v1/trips/${id}`, { status });
+export async function updateAdminTrip(id: string | number, payload: AdminTripUpdatePayload) {
+  const response = await api.put<ApiResponse<AdminTripDetail>>(`/api/admin/v1/trips/${id}`, payload);
   return unwrapApiResponse(response.data);
 }
