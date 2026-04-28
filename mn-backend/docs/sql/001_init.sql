@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS trips (
     is_price_negotiable TINYINT(1) NOT NULL DEFAULT 0,
     contact_wechat VARCHAR(128) NOT NULL DEFAULT '',
     contact_phone VARCHAR(32) NOT NULL DEFAULT '',
-    remark TEXT NOT NULL DEFAULT '',
+    remark TEXT NOT NULL,
     status VARCHAR(32) NOT NULL DEFAULT 'active',
     closed_reason VARCHAR(255) NOT NULL DEFAULT '',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

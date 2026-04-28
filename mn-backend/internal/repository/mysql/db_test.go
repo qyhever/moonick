@@ -59,7 +59,7 @@ func TestInitSQLMatchesP1Schema(t *testing.T) {
 		"remark",
 		"closed_reason",
 		"deleted_at",
-		"remark TEXT NOT NULL DEFAULT ''",
+		"remark TEXT NOT NULL",
 	} {
 		if !strings.Contains(sqlText, fragment) {
 			t.Fatalf("expected init sql to contain %q", fragment)
