@@ -276,6 +276,7 @@ internal/
 
 职责：
 
+- 服务启动后立即执行一次过期扫描
 - 定时扫描过期行程
 - 更新状态为 `expired`
 - 记录任务执行日志
@@ -327,9 +328,10 @@ internal/
 
 ### 7.6 行程过期任务
 
-1. 定时扫描 `status in (active, full)` 且 `departure_at < now`
-2. 批量更新为 `expired`
-3. 记录任务处理数量与异常信息
+1. 服务启动后立即执行一次扫描，补齐停机期间遗留的过期数据
+2. 之后按分钟级周期扫描 `status in (active, full)` 且 `departure_at < now`
+3. 批量更新为 `expired`
+4. 记录任务处理数量与异常信息
 
 ---
 
@@ -448,6 +450,7 @@ internal/
 - `status`
 - `costMs`
 - `tripId`
+- `expiredTrips`
 - `error`
 
 ### 10.3 脱敏规则
@@ -493,6 +496,8 @@ internal/
 - 本人可编辑自己的行程
 - 非本人不可编辑
 - 过期任务可将有效行程置为 `expired`
+- 过期任务在服务启动后会立即执行一次
+- 过期任务会在 `context` 结束后停止继续调度
 
 ### 12.3 收藏
 

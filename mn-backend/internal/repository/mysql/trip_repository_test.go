@@ -191,8 +191,12 @@ func TestTripRepository_ExpireTripsBefore(t *testing.T) {
 		t.Fatalf("create preserved trip: %v", err)
 	}
 
-	if err := repo.ExpireTripsBefore(ctx, time.Date(2026, 5, 5, 9, 0, 0, 0, time.Local)); err != nil {
+	expiredCount, err := repo.ExpireTripsBefore(ctx, time.Date(2026, 5, 5, 9, 0, 0, 0, time.Local))
+	if err != nil {
 		t.Fatalf("expire trips: %v", err)
+	}
+	if expiredCount != 1 {
+		t.Fatalf("expected 1 expired trip, got %d", expiredCount)
 	}
 
 	expired, err := repo.FindByID(ctx, expiringTrip.ID)

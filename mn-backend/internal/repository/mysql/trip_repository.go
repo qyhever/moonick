@@ -140,11 +140,11 @@ func (r *TripRepository) List(ctx context.Context, filter entity.TripFilter) ([]
 	return result, total, nil
 }
 
-func (r *TripRepository) ExpireTripsBefore(ctx context.Context, before time.Time) error {
+func (r *TripRepository) ExpireTripsBefore(ctx context.Context, before time.Time) (int64, error) {
 	if r.db != nil {
 		beforeDate := before.Format(time.DateOnly)
 		beforeTime := before.Format("15:04:05")
-		_, err := r.db.ExecContext(
+		result, err := r.db.ExecContext(
 			ctx,
 			`UPDATE trips
 SET status = ?, updated_at = CURRENT_TIMESTAMP
@@ -161,12 +161,22 @@ WHERE deleted_at IS NULL
 			beforeDate,
 			beforeTime,
 		)
-		return err
+		if err != nil {
+			return 0, err
+		}
+
+		affected, err := result.RowsAffected()
+		if err != nil {
+			return 0, err
+		}
+
+		return affected, nil
 	}
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
+	var affected int64
 	for id, trip := range r.tripsByID {
 		if trip.Status != entity.TripStatusActive && trip.Status != entity.TripStatusFull {
 			continue
@@ -175,9 +185,10 @@ WHERE deleted_at IS NULL
 			trip.Status = entity.TripStatusExpired
 			trip.UpdatedAt = time.Now()
 			r.tripsByID[id] = trip
+			affected++
 		}
 	}
-	return nil
+	return affected, nil
 }
 
 func (r *TripRepository) createInDB(ctx context.Context, trip entity.Trip) (*entity.Trip, error) {
