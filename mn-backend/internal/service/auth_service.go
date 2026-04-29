@@ -9,6 +9,7 @@ import (
 	"moonick/internal/model/entity"
 	"moonick/internal/model/request"
 	"moonick/internal/model/response"
+	jwtpkg "moonick/internal/pkg/jwt"
 	"moonick/internal/pkg/password"
 	"moonick/internal/repository/mysql"
 )
@@ -17,6 +18,7 @@ var (
 	ErrPhoneAlreadyRegistered  = errors.New("该手机号已注册，请直接登录")
 	ErrInvalidUserCredentials  = errors.New("手机号或密码错误")
 	ErrInvalidAdminCredentials = errors.New("账号或密码错误")
+	ErrInvalidRefreshToken     = errors.New("refresh token 无效")
 	ErrUserNotFound            = errors.New("用户不存在")
 	ErrAdminNotFound           = errors.New("管理员不存在")
 	ErrStorageNotConfigured    = errors.New("storage not configured")
@@ -28,6 +30,7 @@ var (
 type tokenManager interface {
 	GenerateAccessToken(subject, role string) (string, error)
 	GenerateRefreshToken(subject string) (string, error)
+	Parse(token string) (*jwtpkg.Claims, error)
 }
 
 type authUserRepository interface {
@@ -100,6 +103,35 @@ func (s *AuthService) Login(ctx context.Context, req request.LoginRequest) (*res
 	}
 	if err := password.Compare(user.PasswordHash, req.Password); err != nil {
 		return nil, ErrInvalidUserCredentials
+	}
+
+	return s.buildUserAuthPayload(user)
+}
+
+func (s *AuthService) RefreshUserToken(ctx context.Context, refreshToken string) (*response.AuthPayload, error) {
+	if s.userRepo == nil {
+		return nil, ErrUserNotFound
+	}
+
+	claims, err := s.tokenManger.Parse(strings.TrimSpace(refreshToken))
+	if err != nil {
+		return nil, ErrInvalidRefreshToken
+	}
+	if claims == nil || !strings.EqualFold(claims.TokenType, jwtpkg.TokenTypeRefresh) {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	userID, err := strconv.ParseInt(claims.Subject, 10, 64)
+	if err != nil {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	user, err := s.userRepo.FindByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, ErrUserNotFound
 	}
 
 	return s.buildUserAuthPayload(user)

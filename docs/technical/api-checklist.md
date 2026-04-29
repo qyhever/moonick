@@ -144,6 +144,8 @@ npm run build
 - [ ] 用户可注册
 - [ ] 用户可登录
 - [ ] 未登录访问受保护页面时，登录后能按 `redirect` 回跳
+- [ ] access token 失效后，H5 受保护请求可自动调用 `POST /api/v1/auth/refresh` 并重放原请求
+- [ ] refresh token 失效后，H5 会清理本地登录态并重新要求登录
 
 ### 4.4 H5 行程
 
@@ -221,7 +223,6 @@ npm run build
 
 ## 六、当前已知边界
 
-- H5 `refresh` 接口尚未接入，当前是占位逻辑
 - H5 行程表单当前未包含价格、备注等未落地字段
 - Admin 构建仍存在 chunk size warning，后续可单独做拆包优化
 - H5 详情页不会自动热更新后台改动，当前需要手动刷新后才能看到最新行程内容

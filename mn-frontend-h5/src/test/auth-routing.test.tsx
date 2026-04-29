@@ -44,8 +44,30 @@ beforeEach(() => {
     user: null,
   });
   mockPost.mockReset();
-  mockPost.mockImplementation(async (url: string, payload: { phone: string }) => {
-    if (url !== "/api/v1/auth/login") {
+  mockPost.mockImplementation(async (url: string, payload?: { phone: string }) => {
+    if (url === "/api/v1/auth/refresh") {
+      return {
+        data: {
+          code: 1000,
+          message: "success",
+          data: {
+            accessToken: "refreshed-access-token",
+            refreshToken: "refreshed-refresh-token",
+            user: {
+              id: 1,
+              phone: "13800138000",
+              nickname: "测试用户",
+              avatarUrl: "",
+              status: "active",
+              defaultWechat: "",
+              defaultPhone: "13800138000",
+            },
+          },
+        },
+      };
+    }
+
+    if (url !== "/api/v1/auth/login" || !payload) {
       throw new Error(`Unexpected URL: ${url}`);
     }
 
@@ -103,13 +125,22 @@ it("shows backend business error on login failure instead of crashing on empty d
   expect(mockPost).toHaveBeenCalledTimes(1);
 });
 
-it("keeps refresh as a placeholder and does not request a missing endpoint", async () => {
+it("refreshes token pair through backend refresh endpoint", async () => {
   useAuthStore.setState({
     accessToken: "expired-access-token",
     refreshToken: "refresh-token",
     user: null,
   });
 
-  await expect(useAuthStore.getState().refresh()).rejects.toThrow();
-  expect(mockPost).not.toHaveBeenCalled();
+  await expect(useAuthStore.getState().refresh()).resolves.toBeUndefined();
+  expect(useAuthStore.getState().accessToken).toBe("refreshed-access-token");
+  expect(useAuthStore.getState().refreshToken).toBe("refreshed-refresh-token");
+  expect(mockPost).toHaveBeenCalledWith(
+    "/api/v1/auth/refresh",
+    null,
+    expect.objectContaining({
+      skipAuthRefresh: true,
+      useRefreshToken: true,
+    }),
+  );
 });

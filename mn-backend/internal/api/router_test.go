@@ -71,6 +71,69 @@ func TestSetupRouter_UserRouteRejectsRefreshToken(t *testing.T) {
 	assertResponseCode(t, rec, controller.CodeInvalidToken)
 }
 
+func TestSetupRouter_UserRefreshSucceedsWithRefreshToken(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	r := SetupRouter()
+	registerReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewBufferString(`{"phone":"13800138000","password":"secret123"}`))
+	registerReq.Header.Set("Content-Type", "application/json")
+	registerRec := httptest.NewRecorder()
+	r.ServeHTTP(registerRec, registerReq)
+
+	if registerRec.Code != http.StatusOK {
+		t.Fatalf("expected http status %d, got %d, body=%s", http.StatusOK, registerRec.Code, registerRec.Body.String())
+	}
+
+	var registerResp struct {
+		Code controller.MyCode `json:"code"`
+		Data struct {
+			RefreshToken string `json:"refreshToken"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(registerRec.Body.Bytes(), &registerResp); err != nil {
+		t.Fatalf("unmarshal register response: %v, body=%s", err, registerRec.Body.String())
+	}
+	if registerResp.Code != controller.CodeSuccess {
+		t.Fatalf("expected success code, got %d, body=%s", registerResp.Code, registerRec.Body.String())
+	}
+	if registerResp.Data.RefreshToken == "" {
+		t.Fatalf("expected refresh token in register response, body=%s", registerRec.Body.String())
+	}
+
+	refreshReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", nil)
+	refreshReq.Header.Set("Authorization", "Bearer "+registerResp.Data.RefreshToken)
+	refreshRec := httptest.NewRecorder()
+	r.ServeHTTP(refreshRec, refreshReq)
+
+	if refreshRec.Code != http.StatusOK {
+		t.Fatalf("expected http status %d, got %d, body=%s", http.StatusOK, refreshRec.Code, refreshRec.Body.String())
+	}
+
+	var refreshResp struct {
+		Code controller.MyCode `json:"code"`
+		Data struct {
+			AccessToken  string `json:"accessToken"`
+			RefreshToken string `json:"refreshToken"`
+			User         struct {
+				Phone string `json:"phone"`
+			} `json:"user"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(refreshRec.Body.Bytes(), &refreshResp); err != nil {
+		t.Fatalf("unmarshal refresh response: %v, body=%s", err, refreshRec.Body.String())
+	}
+	if refreshResp.Code != controller.CodeSuccess {
+		t.Fatalf("expected success code, got %d, body=%s", refreshResp.Code, refreshRec.Body.String())
+	}
+	if refreshResp.Data.AccessToken == "" || refreshResp.Data.RefreshToken == "" {
+		t.Fatalf("expected refresh response tokens, body=%s", refreshRec.Body.String())
+	}
+	if refreshResp.Data.User.Phone != "13800138000" {
+		t.Fatalf("expected refreshed user phone, got %#v", refreshResp.Data.User)
+	}
+}
+
 func TestSetupRouter_AdminRouteRejectsRefreshToken(t *testing.T) {
 	restore := useValidJWTConfig(t)
 	defer restore()

@@ -108,6 +108,12 @@ Cloudflare R2        -> 头像等文件资源
 - `iat`
 - `exp`
 
+H5 侧当前约定：
+
+- 登录成功后持久化 `accessToken / refreshToken`
+- 业务接口返回 `1006` 或 `1007` 时，客户端自动调用 `POST /api/v1/auth/refresh`
+- refresh 成功后重放原请求，失败后清理本地登录态并跳转登录
+
 ### 5.3 能力边界
 
 由于采用纯无状态 JWT，v1 明确不支持：

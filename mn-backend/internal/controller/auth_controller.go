@@ -69,6 +69,29 @@ func (c *AuthController) Login(ctx *gin.Context) {
 	ResponseSuccess(ctx, resp)
 }
 
+func (c *AuthController) Refresh(ctx *gin.Context) {
+	token, err := jwtpkg.ExtractBearerToken(ctx.GetHeader("Authorization"))
+	if err != nil {
+		ResponseFailedWithMsg(ctx, CodeNeedLogin, CodeNeedLogin.Msg())
+		return
+	}
+
+	resp, err := c.authService.RefreshUserToken(ctx, token)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrInvalidRefreshToken):
+			ResponseFailedWithMsg(ctx, CodeInvalidToken, CodeInvalidToken.Msg())
+		case errors.Is(err, service.ErrUserNotFound):
+			ResponseFailedWithMsg(ctx, CodeUserNotExist, err.Error())
+		default:
+			ResponseFailedWithMsg(ctx, CodeServerBusy, err.Error())
+		}
+		return
+	}
+
+	ResponseSuccess(ctx, resp)
+}
+
 func (c *AuthController) Me(ctx *gin.Context) {
 	userID, err := currentUserID(ctx, c.jwtManager)
 	if err != nil {

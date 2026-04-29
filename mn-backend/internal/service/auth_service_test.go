@@ -59,6 +59,29 @@ func TestAuthService_RegisterRejectsDuplicatePhone(t *testing.T) {
 	}
 }
 
+func TestAuthService_RefreshUserToken(t *testing.T) {
+	svc := newAuthServiceForTest()
+
+	registerResp, err := svc.Register(context.Background(), request.RegisterRequest{
+		Phone:    "13800138000",
+		Password: "secret123",
+	})
+	if err != nil {
+		t.Fatalf("register returned error: %v", err)
+	}
+
+	refreshResp, err := svc.RefreshUserToken(context.Background(), registerResp.RefreshToken)
+	if err != nil {
+		t.Fatalf("refresh returned error: %v", err)
+	}
+	if refreshResp == nil || refreshResp.AccessToken == "" || refreshResp.RefreshToken == "" {
+		t.Fatalf("expected token pair from refresh, got %#v", refreshResp)
+	}
+	if refreshResp.User == nil || refreshResp.User.Phone != "13800138000" {
+		t.Fatalf("expected refreshed user profile, got %#v", refreshResp)
+	}
+}
+
 func newAuthServiceForTest() *AuthService {
 	jwtManager := jwtpkg.NewManager(jwtpkg.Config{
 		Secret:          "test-secret",

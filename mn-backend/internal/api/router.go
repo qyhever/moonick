@@ -75,6 +75,7 @@ func SetupRouter() *gin.Engine {
 	v1.GET("/meta", metaController.GetMeta)
 	apiV1.POST("/auth/register", authController.Register)
 	apiV1.POST("/auth/login", authController.Login)
+	apiV1.POST("/auth/refresh", authController.Refresh)
 	apiV1.GET("/auth/me", middleware.RequireUserAuth(jwtManager), authController.Me)
 	apiV1.GET("/trips", tripController.List)
 	apiV1.GET("/trips/:id", tripController.Detail)

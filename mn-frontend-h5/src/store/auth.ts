@@ -2,7 +2,6 @@ import { create } from "zustand";
 
 import {
   type ApiResponse,
-  RefreshUnavailableError,
   api,
   attachAuthStore,
   unwrapApiResponse,
@@ -149,7 +148,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw new Error("Missing refresh token");
     }
 
-    throw new RefreshUnavailableError();
+    const res = await api.post<AuthResponse<AuthPayload>>(
+      "/api/v1/auth/refresh",
+      null,
+      {
+        skipAuthRefresh: true,
+        useRefreshToken: true,
+      },
+    );
+    applyAuthPayload(set, unwrapApiResponse(res.data));
   },
   logout: () => {
     clearStoredAuth();

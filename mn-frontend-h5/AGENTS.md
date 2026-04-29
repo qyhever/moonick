@@ -73,7 +73,7 @@ npm run test -- publish-form.test.tsx favorite-toggle.test.tsx avatar-upload.tes
 
 ## 当前实现边界
 
-- 当前前端没有接入 refresh 接口，`refresh` 仍是显式占位
+- H5 已接入 `refresh` 续期流程：受保护请求遇到 `1006 / 1007` 时会自动尝试 refresh，成功后重放原请求，失败则清理本地登录态
 - H5 的部分产品文案以后端已支持字段为准，没有扩展到未落地的价格、备注等字段
 - 已验证 H5 发布后，Admin 修改字段与状态，H5 刷新后可同步看到最新内容
 
