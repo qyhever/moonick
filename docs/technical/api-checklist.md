@@ -128,10 +128,17 @@ npm run build
 
 ### 4.1 后端过期任务
 
-- [ ] 后端启动后，日志中可看到一次行程过期任务执行记录
-- [ ] 准备 1 条 `status=active` 或 `status=full` 且出发时间早于当前时间的行程
-- [ ] 等待 1 分钟内下一次扫描或重启后端
-- [ ] 该行程状态可被更新为 `expired`
+- [x] 后端启动后，日志中可看到一次行程过期任务执行记录
+- [x] 准备 1 条 `status=active` 或 `status=full` 且出发时间早于当前时间的行程
+- [x] 等待 1 分钟内下一次扫描或重启后端
+- [x] 该行程状态可被更新为 `expired`
+
+验收记录（2026-04-29）：
+
+- 本地启动命令：`cd mn-backend && MOONICK_ENV=dev make dev`
+- 启动日志可见行程过期任务执行记录：`trip expire task completed {"expiredTrips": 0}`
+- 按清单准备过期测试数据后，重启后端触发启动即扫描
+- 数据库中目标行程状态已从 `active/full` 更新为 `expired`
 
 ### 4.2 H5 游客路径
 
@@ -144,8 +151,22 @@ npm run build
 - [ ] 用户可注册
 - [ ] 用户可登录
 - [ ] 未登录访问受保护页面时，登录后能按 `redirect` 回跳
-- [ ] access token 失效后，H5 受保护请求可自动调用 `POST /api/v1/auth/refresh` 并重放原请求
-- [ ] refresh token 失效后，H5 会清理本地登录态并重新要求登录
+- [x] access token 失效后，H5 受保护请求可自动调用 `POST /api/v1/auth/refresh` 并重放原请求
+- [x] refresh token 失效后，H5 会清理本地登录态并重新要求登录
+
+验收记录（2026-04-29）：
+
+- 联调入口：`http://localhost:5173/me/profile`
+- 测试账号：`15927700475 / secret123`
+- 成功分支：
+  - 手动篡改 `Local Storage -> mn-h5-auth.accessToken`
+  - 刷新受保护页面后，`Network` 面板可见 `POST /api/v1/auth/refresh`
+  - 页面保持登录态，仍停留在 `/me/profile`
+  - `mn-h5-auth` 中的 `accessToken` 与 `refreshToken` 均被替换为新值
+- 失败分支：
+  - 手动篡改 `Local Storage -> mn-h5-auth.accessToken` 与 `refreshToken`
+  - 刷新受保护页面后，页面跳转到 `/login?redirect=%2Fme%2Fprofile`
+  - `Local Storage` 中的 `mn-h5-auth` 已被清理
 
 ### 4.4 H5 行程
 
@@ -243,3 +264,9 @@ npm run build
   - Admin 可编辑 H5 可见字段并保存成功
   - H5 刷新后可看到后台修改后的终点、时间、人数
   - Admin 将状态改为 `full` 后，H5 刷新可显示“已满”
+- 后端过期任务已验证通过：
+  - 启动日志可见任务执行记录
+  - 过期测试行程可自动转为 `expired`
+- H5 `refresh` 鉴权链路已验证通过：
+  - `accessToken` 失效后可自动调用 `POST /api/v1/auth/refresh` 并重放请求
+  - `refreshToken` 失效后会清理本地登录态并跳回登录页

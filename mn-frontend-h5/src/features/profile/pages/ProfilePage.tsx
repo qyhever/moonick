@@ -9,6 +9,7 @@ import { useAuthStore } from "../../../store/auth";
 
 export default function ProfilePage() {
   const user = useAuthStore((state) => state.user);
+  const userId = user?.id ?? null;
   const setUser = useAuthStore((state) => state.setUser);
   const logout = useAuthStore((state) => state.logout);
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? "");
@@ -22,7 +23,7 @@ export default function ProfilePage() {
   const [savingContact, setSavingContact] = useState(false);
 
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
       return;
     }
 
@@ -58,7 +59,7 @@ export default function ProfilePage() {
     return () => {
       active = false;
     };
-  }, [setUser, user]);
+  }, [setUser, userId]);
 
   async function handleProfileSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
