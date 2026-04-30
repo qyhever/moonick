@@ -86,5 +86,7 @@ it("submits backend-compatible payload", async () => {
     contactPhone: "13800138000",
     contactWechat: "",
   });
-  expect(mockNavigate).toHaveBeenCalledWith("/trips/9");
+  expect(mockNavigate).toHaveBeenCalledWith("/trips/9", {
+    state: { toast: "发布成功" },
+  });
 });

@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { beforeEach, vi } from "vitest";
 
 const { mockGetTripDetail, mockToggleFavorite } = vi.hoisted(() => ({
@@ -15,8 +15,15 @@ vi.mock("../features/trips/api", () => ({
 }));
 
 import TripDetailPage from "../features/trips/pages/TripDetailPage";
+import { useAuthStore } from "../store/auth";
 
 beforeEach(() => {
+  window.localStorage.clear();
+  useAuthStore.setState({
+    accessToken: null,
+    refreshToken: null,
+    user: null,
+  });
   mockGetTripDetail.mockReset();
   mockToggleFavorite.mockReset();
   mockGetTripDetail.mockResolvedValue({
@@ -42,14 +49,29 @@ beforeEach(() => {
   });
 });
 
-it("toggles favorite state without toast", async () => {
-  render(
-    <MemoryRouter initialEntries={["/trips/7"]}>
-      <Routes>
-        <Route path="/trips/:id" element={<TripDetailPage />} />
-      </Routes>
-    </MemoryRouter>,
+it("toggles favorite state and shows success toast", async () => {
+  useAuthStore.setState({
+    accessToken: "access-token",
+    refreshToken: "refresh-token",
+    user: {
+      id: 99,
+      phone: "13800138000",
+      nickname: "测试用户",
+      avatarUrl: "",
+      status: "active",
+      defaultWechat: "",
+      defaultPhone: "13800138000",
+    },
+  });
+
+  const router = createMemoryRouter(
+    [
+      { path: "/trips/:id", element: <TripDetailPage /> },
+    ],
+    { initialEntries: ["/trips/7"] },
   );
+
+  render(<RouterProvider router={router} />);
 
   const button = await screen.findByRole("button", { name: "收藏" });
   await userEvent.click(button);
@@ -57,4 +79,43 @@ it("toggles favorite state without toast", async () => {
   await waitFor(() => {
     expect(button).toHaveAttribute("data-favorited", "true");
   });
+  expect(await screen.findByText("收藏成功")).toBeInTheDocument();
+});
+
+it("redirects guest to login instead of calling favorite api", async () => {
+  const router = createMemoryRouter(
+    [
+      { path: "/trips/:id", element: <TripDetailPage /> },
+      { path: "/login", element: <h1>登录</h1> },
+    ],
+    { initialEntries: ["/trips/7"] },
+  );
+
+  render(<RouterProvider router={router} />);
+
+  const button = await screen.findByRole("button", { name: "收藏" });
+  await userEvent.click(button);
+
+  expect(await screen.findByText("登录")).toBeInTheDocument();
+  expect(router.state.location.pathname).toBe("/login");
+  expect(router.state.location.search).toBe("?redirect=%2Ftrips%2F7");
+  expect(mockToggleFavorite).not.toHaveBeenCalled();
+});
+
+it("shows publish success toast from route state", async () => {
+  const router = createMemoryRouter(
+    [{ path: "/trips/:id", element: <TripDetailPage /> }],
+    {
+      initialEntries: [
+        {
+          pathname: "/trips/7",
+          state: { toast: "发布成功" },
+        },
+      ],
+    },
+  );
+
+  render(<RouterProvider router={router} />);
+
+  expect(await screen.findByText("发布成功")).toBeInTheDocument();
 });

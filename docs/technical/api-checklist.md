@@ -70,7 +70,7 @@ npm run dev
 说明：
 
 - H5 开发服务默认通过 Vite 代理转发 `/api` 到 `http://127.0.0.1:6303`
-- 当前本地联调入口为 `http://127.0.0.1:5174`
+- 当前本地联调入口为 `http://127.0.0.1:5080`
 
 - [ ] 启动 Admin
 
@@ -83,7 +83,7 @@ npm run dev
 说明：
 
 - Admin 开发服务默认通过 Vite 代理转发 `/api` 到 `http://127.0.0.1:6303`
-- 当前本地联调入口为 `http://127.0.0.1:5173`
+- 当前本地联调入口为 `http://127.0.0.1:5090`
 
 ---
 
@@ -156,7 +156,7 @@ npm run build
 
 验收记录（2026-04-29）：
 
-- 联调入口：`http://localhost:5173/me/profile`
+- 联调入口：`http://localhost:5080/me/profile`
 - 测试账号：`15927700475 / secret123`
 - 成功分支：
   - 手动篡改 `Local Storage -> mn-h5-auth.accessToken`

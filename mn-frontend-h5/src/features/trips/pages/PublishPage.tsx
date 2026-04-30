@@ -91,7 +91,9 @@ export default function PublishPage() {
 
     try {
       const created = await createTrip(buildPayload(form));
-      navigate(`/trips/${created.id}`);
+      navigate(`/trips/${created.id}`, {
+        state: { toast: "发布成功" },
+      });
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "发布失败，请稍后再试");
     } finally {
@@ -104,7 +106,7 @@ export default function PublishPage() {
       <section className="hero-card hero-card--compact">
         <p className="eyebrow">发布行程</p>
         <h1 className="hero-card__title">发一条顺路行程，快速被附近同城的人看到</h1>
-        <p className="hero-card__subtitle">白底清爽信息流，首轮只保留最关键字段和校验闭环。</p>
+        <p className="hero-card__subtitle">延续暖色卡片式录入体验，只保留最关键字段和校验闭环。</p>
       </section>
 
       <section className="page-panel">

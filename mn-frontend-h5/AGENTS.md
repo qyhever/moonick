@@ -80,3 +80,5 @@ npm run test -- publish-form.test.tsx favorite-toggle.test.tsx avatar-upload.tes
 ## 协作建议
 
 修改页面表单、筛选项或状态文案前，先核对后端枚举值和字段含义。涉及接口适配时，优先以根目录 `AGENTS.md` 和 `docs/technical/h5.md` 为准。
+
+涉及 H5 UI 变更时，先在仓库根目录 `htmls/*.html` 中做静态稿验证视觉和布局，确认效果后再同步到 `mn-frontend-h5` 的 React 代码与样式。后续默认沿用这个“HTML 先行、H5 同步”的流程。

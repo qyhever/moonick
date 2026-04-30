@@ -893,7 +893,7 @@ git commit -m "feat: 完成后台行程和用户管理页面"
 
 - [ ] **步骤 4：人工回归验证**
 
-运行：`open http://localhost:5173 && open http://localhost:5174`
+运行：`open http://localhost:5080 && open http://localhost:5090`
 预期：H5 与 Admin 均可访问，核心路径按验收清单逐项通过
 
 - [ ] **步骤 5：Commit**

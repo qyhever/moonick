@@ -26,25 +26,36 @@ export default function LoginPage() {
   }
 
   return (
-    <main>
-      <h1>手机号登录</h1>
-      <form onSubmit={handleSubmit}>
-        <label>
-          手机号
-          <input value={phone} onChange={(event) => setPhone(event.target.value)} />
-        </label>
-        <label>
-          密码
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        </label>
-        {error ? <p role="alert">{error}</p> : null}
-        <button type="submit">登录</button>
-      </form>
-      <Link to={`/register?redirect=${encodeURIComponent(redirect)}`}>去注册</Link>
+    <main className="h5-shell h5-shell--auth">
+      <section className="auth-card">
+        <p className="eyebrow">Welcome Back</p>
+        <h1>手机号登录</h1>
+        <p className="auth-card__subtitle">继续使用明叶同行，优先查看附近最新行程、收藏记录和个人发布。</p>
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <label>
+            手机号
+            <input value={phone} onChange={(event) => setPhone(event.target.value)} />
+          </label>
+          <label>
+            密码
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </label>
+          {error ? <p role="alert">{error}</p> : null}
+          <div className="auth-actions">
+            <button className="primary-button" type="submit">
+              登录
+            </button>
+          </div>
+        </form>
+        <p className="auth-footer">
+          还没有账号？
+          <Link to={`/register?redirect=${encodeURIComponent(redirect)}`}> 去注册</Link>
+        </p>
+      </section>
     </main>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
+import Toast from "../../../components/Toast";
 import { getTripDetail, toggleFavorite, updateTripStatus, type TripDetail } from "../api";
 import { useAuthStore } from "../../../store/auth";
 
@@ -34,12 +35,31 @@ function formatDeparture(date: string, time: string) {
 
 export default function TripDetailPage() {
   const { id = "" } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const routeToast = (location.state as { toast?: string } | null)?.toast ?? "";
+  const accessToken = useAuthStore((state) => state.accessToken);
   const currentUser = useAuthStore((state) => state.user);
   const [trip, setTrip] = useState<TripDetail | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState("");
   const isOwner = !!trip && currentUser?.id === trip.userId;
+
+  useEffect(() => {
+    if (!toast) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setToast("");
+    }, 2000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [toast]);
 
   useEffect(() => {
     let active = true;
@@ -71,8 +91,23 @@ export default function TripDetailPage() {
     };
   }, [id]);
 
+  useEffect(() => {
+    if (!routeToast) {
+      return;
+    }
+
+    setToast(routeToast);
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+  }, [location.pathname, location.search, navigate, routeToast]);
+
   async function handleToggleFavorite() {
     if (!trip || trip.status !== "active" || submitting) {
+      return;
+    }
+
+    if (!accessToken) {
+      const redirect = `${location.pathname}${location.search}`;
+      navigate(`/login?redirect=${encodeURIComponent(redirect)}`);
       return;
     }
 
@@ -82,6 +117,7 @@ export default function TripDetailPage() {
     try {
       const result = await toggleFavorite(trip.id);
       setTrip((current) => (current ? { ...current, favorited: result.favorited } : current));
+      setToast("收藏成功");
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "收藏失败，请稍后再试");
     } finally {
@@ -130,6 +166,8 @@ export default function TripDetailPage() {
 
   return (
     <main className="h5-shell">
+      {toast ? <Toast message={toast} /> : null}
+
       <section className="hero-card hero-card--compact">
         <p className="eyebrow">行程详情</p>
         <h1 className="hero-card__title">

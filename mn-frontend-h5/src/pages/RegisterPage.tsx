@@ -33,33 +33,44 @@ export default function RegisterPage() {
   }
 
   return (
-    <main>
-      <h1>注册</h1>
-      <form onSubmit={handleSubmit}>
-        <label>
-          手机号
-          <input value={phone} onChange={(event) => setPhone(event.target.value)} />
-        </label>
-        <label>
-          密码
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-        </label>
-        <label>
-          确认密码
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-          />
-        </label>
-        {error ? <p role="alert">{error}</p> : null}
-        <button type="submit">注册</button>
-      </form>
-      <Link to={`/login?redirect=${encodeURIComponent(redirect)}`}>去登录</Link>
+    <main className="h5-shell h5-shell--auth">
+      <section className="auth-card">
+        <p className="eyebrow">Create Account</p>
+        <h1>注册账号</h1>
+        <p className="auth-card__subtitle">完成基础注册后即可发布顺路信息、收藏行程并维护默认联系方式。</p>
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <label>
+            手机号
+            <input value={phone} onChange={(event) => setPhone(event.target.value)} />
+          </label>
+          <label>
+            密码
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </label>
+          <label>
+            确认密码
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+            />
+          </label>
+          {error ? <p role="alert">{error}</p> : null}
+          <div className="auth-actions">
+            <button className="primary-button" type="submit">
+              注册
+            </button>
+          </div>
+        </form>
+        <p className="auth-footer">
+          已有账号？
+          <Link to={`/login?redirect=${encodeURIComponent(redirect)}`}> 去登录</Link>
+        </p>
+      </section>
     </main>
   );
 }

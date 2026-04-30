@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: devProxy,
+    port: 5090
   },
   test: {
     environment: "jsdom",
