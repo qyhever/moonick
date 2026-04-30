@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>明叶同行 - 风格B：暖阳轻卡</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-warm: #faf7f2;
+  --bg-cream: #f5f0e8;
+  --surface: #ffffff;
+  --accent-orange: #e8683a;
+  --accent-coral: #f2845c;
+  --accent-gold: #c49a3c;
+  --accent-sage: #7a9e8e;
+  --text-dark: #1a1612;
+  --text-body: #4a4038;
+  --text-muted: #9a8e82;
+  --border: rgba(26, 22, 18, 0.08);
+  --radius-xl: 28px;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --shadow-card: 0 2px 24px rgba(26, 22, 18, 0.06);
+  --shadow-elevated: 0 8px 40px rgba(26, 22, 18, 0.1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Plus Jakarta Sans', 'PingFang SC', sans-serif;
+  background: var(--bg-warm);
+  color: var(--text-body);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Warm grain texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+.shell {
+  position: relative;
+  z-index: 1;
+  max-width: 430px;
+  margin: 0 auto;
+  padding: 20px 16px 100px;
+  min-height: 100vh;
+}
+
+/* Navigation */
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 4px;
+  margin-bottom: 16px;
+}
+
+.nav-brand {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.nav-brand span {
+  color: var(--accent-orange);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-bell {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.nav-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
+}
+
+/* Card Base */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: 22px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-card);
+  animation: slideUp 0.5s ease both;
+}
+
+.card:nth-child(2) { animation-delay: 0.06s; }
+.card:nth-child(3) { animation-delay: 0.12s; }
+.card:nth-child(4) { animation-delay: 0.18s; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hero Banner */
+.hero-banner {
+  position: relative;
+  padding: 28px 24px;
+  background: linear-gradient(135deg, #1a1612 0%, #2d2520 100%);
+  color: #fff;
+  overflow: hidden;
+}
+
+.hero-banner::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232, 104, 58, 0.4), transparent 70%);
+}
+
+.hero-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -40px;
+  left: -20px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(122, 158, 142, 0.25), transparent 70%);
+}
+
+.hero-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-coral);
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px;
+  line-height: 1.25;
+  font-weight: 700;
+  position: relative;
+  color: #fff;
+}
+
+.hero-subtitle {
+  margin-top: 12px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.6);
+  position: relative;
+  line-height: 1.6;
+}
+
+/* Section */
+.section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.section-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.section-link {
+  font-size: 13px;
+  color: var(--accent-orange);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* Quick Grid */
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.quick-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 8px;
+  text-decoration: none;
+  color: var(--text-body);
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+}
+
+.quick-item:active {
+  background: var(--bg-cream);
+  transform: scale(0.96);
+}
+
+.quick-item__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.quick-item__icon--1 { background: linear-gradient(135deg, #fde8e0, #fdd5c5); color: var(--accent-orange); }
+.quick-item__icon--2 { background: linear-gradient(135deg, #e0f0e8, #c8e6d6); color: var(--accent-sage); }
+.quick-item__icon--3 { background: linear-gradient(135deg, #f5edd6, #ede2c0); color: var(--accent-gold); }
+.quick-item__icon--4 { background: linear-gradient(135deg, #e8e0f5, #ddd4f0); color: #8b6fc0; }
+
+.quick-item__text {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Trip Card */
+.trip-card {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+}
+
+.trip-card__accent {
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 999px 0 0 999px;
+}
+
+.trip-card__accent--active { background: var(--accent-sage); }
+.trip-card__accent--full { background: var(--text-muted); }
+
+.trip-card__inner {
+  padding: 18px 22px;
+}
+
+.trip-card__topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.trip-card__time {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.pill--active {
+  background: rgba(122, 158, 142, 0.12);
+  color: var(--accent-sage);
+}
+
+
+.pill--full {
+  background: rgba(154, 142, 130, 0.12);
+  color: var(--text-muted);
+}
+
+.trip-card__route {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.trip-card__point { flex: 1; }
+
+.trip-card__label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+
+.trip-card__city {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.trip-card__connector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.trip-card__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-orange);
+}
+
+.trip-card__line {
+  width: 24px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-orange), var(--accent-coral));
+  border-radius: 1px;
+}
+
+.trip-card__tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  background: var(--bg-cream);
+  color: var(--text-body);
+}
+
+/* Form */
+.form-card {
+  padding: 28px 22px;
+}
+
+.form-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 6px;
+}
+
+.form-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.field {
+  margin-bottom: 16px;
+}
+
+.field__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+}
+
+.field__input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-cream);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--text-dark);
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.field__input:focus {
+  border-color: var(--accent-orange);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(232, 104, 58, 0.08);
+}
+
+.field__input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Buttons */
+.btn-solid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(232, 104, 58, 0.25);
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.btn-solid:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(232, 104, 58, 0.2);
+}
+
+.btn-outline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 48px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-body);
+  margin-top: 12px;
+  transition: all 0.2s;
+}
+
+.btn-outline:active {
+  background: var(--bg-cream);
+}
+
+/* Segment */
+.segment-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.segment-btn {
+  height: 44px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-warm);
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.segment-btn.active {
+  background: var(--surface);
+  border-color: var(--accent-orange);
+  color: var(--accent-orange);
+  box-shadow: 0 2px 8px rgba(232, 104, 58, 0.1);
+}
+
+/* Detail */
+.detail-hero {
+  text-align: center;
+  padding: 28px 20px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.detail-hero__route {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.detail-hero__arrow {
+  display: inline-block;
+  margin: 0 10px;
+  color: var(--accent-orange);
+}
+
+.detail-hero__time {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+.detail-chips {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-row:last-of-type {
+  border-bottom: none;
+}
+
+.detail-row dt {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.detail-row dd {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-dark);
+}
+
+.action-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.action-pair .btn-solid,
+.action-pair .btn-outline {
+  margin-top: 0;
+}
+
+/* Profile */
+.profile-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 22px;
+  background: linear-gradient(145deg, #1a1612 0%, #2d2520 55%, #4c3528 100%);
+  color: #fff;
+  box-shadow: var(--shadow-elevated);
+}
+
+.profile-hero::before,
+.profile-hero::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.profile-hero::before {
+  top: -40px;
+  right: -20px;
+  width: 160px;
+  height: 160px;
+  background: radial-gradient(circle, rgba(232, 104, 58, 0.34), transparent 70%);
+}
+
+.profile-hero::after {
+  bottom: -42px;
+  left: -22px;
+  width: 136px;
+  height: 136px;
+  background: radial-gradient(circle, rgba(196, 154, 60, 0.22), transparent 72%);
+}
+
+.profile-hero__top,
+.profile-setting-row,
+.profile-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.profile-avatar {
+  width: 68px;
+  height: 68px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 12px 28px rgba(0,0,0,0.18);
+}
+
+.profile-meta {
+  flex: 1;
+}
+
+.profile-meta__eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-coral);
+  margin-bottom: 10px;
+}
+
+.profile-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.profile-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.profile-phone {
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  margin-top: 6px;
+}
+
+.profile-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #f7d9a7;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.profile-stat {
+  padding: 14px 12px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.profile-stat__num {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.profile-stat__label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.72);
+  margin-top: 4px;
+}
+
+.profile-service-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.profile-service-item {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(250, 247, 242, 0.72);
+  border: 1px solid var(--border);
+}
+
+.profile-service-item__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.profile-service-item__icon--1 { background: linear-gradient(135deg, #fde8e0, #fdd5c5); color: var(--accent-orange); }
+.profile-service-item__icon--2 { background: linear-gradient(135deg, #f5edd6, #ede2c0); color: var(--accent-gold); }
+.profile-service-item__icon--3 { background: linear-gradient(135deg, #e0f0e8, #c8e6d6); color: var(--accent-sage); }
+.profile-service-item__icon--4 { background: linear-gradient(135deg, #f6e8df, #f0d5c7); color: #9a5b40; }
+
+.profile-service-item__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.profile-service-item__desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+.profile-settings {
+  display: grid;
+  gap: 4px;
+}
+
+.profile-setting-row {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+
+.profile-setting-row:last-child {
+  border-bottom: none;
+}
+
+.profile-setting-row__label {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.profile-setting-row__value {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-dark);
+}
+
+.profile-setting-row__action {
+  font-size: 13px;
+  color: var(--accent-orange);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.profile-footer-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Tab Bar */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  padding: 10px 20px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  z-index: 100;
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.tab-item.active { color: var(--accent-orange); }
+
+.tab-item__icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* Page Divider */
+.page-divider {
+  text-align: center;
+  padding: 36px 0 16px;
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Nav -->
+  <nav class="nav-bar">
+    <span class="nav-brand">明叶<span>同行</span></span>
+    <div class="nav-actions">
+      <div class="nav-bell">🔔</div>
+      <div class="nav-avatar"></div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <div class="card hero-banner">
+    <p class="hero-eyebrow">安全 · 便捷 · 同城</p>
+    <h1 class="hero-title">找到同路人<br>一起出发</h1>
+    <p class="hero-subtitle">同城拼车平台，快速发布和浏览行程信息</p>
+  </div>
+
+  <!-- Quick Grid -->
+  <div class="card">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">快捷服务</h2>
+      </div>
+    </div>
+    <div class="quick-grid">
+      <a class="quick-item" href="#">
+        <span class="quick-item__icon quick-item__icon--1">✦</span>
+        <span class="quick-item__text">发布</span>
+      </a>
+      <a class="quick-item" href="#">
+        <span class="quick-item__icon quick-item__icon--2">◈</span>
+        <span class="quick-item__text">我的行程</span>
+      </a>
+      <a class="quick-item" href="#">
+        <span class="quick-item__icon quick-item__icon--3">♡</span>
+        <span class="quick-item__text">收藏</span>
+      </a>
+      <a class="quick-item" href="#">
+        <span class="quick-item__icon quick-item__icon--4">◎</span>
+        <span class="quick-item__text">个人</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Trip List -->
+  <div style="margin-bottom: 14px;">
+    <div class="section-header" style="padding: 0 4px;">
+      <div>
+        <h2 class="section-title">附近行程</h2>
+        <p class="section-subtitle">最新发布的顺路信息</p>
+      </div>
+      <a class="section-link" href="#">更多 →</a>
+    </div>
+  </div>
+
+  <!-- Trip Cards -->
+  <div class="card trip-card">
+    <div class="trip-card__accent trip-card__accent--active"></div>
+    <div class="trip-card__inner">
+      <div class="trip-card__topline">
+        <span class="pill pill--active">可约</span>
+        <span class="trip-card__time">4月30日 14:30</span>
+      </div>
+      <div class="trip-card__route">
+        <div class="trip-card__point">
+          <p class="trip-card__label">出发</p>
+          <p class="trip-card__city">上海虹桥</p>
+        </div>
+        <div class="trip-card__connector">
+          <span class="trip-card__dot"></span>
+          <span class="trip-card__line"></span>
+          <span class="trip-card__dot"></span>
+        </div>
+        <div class="trip-card__point" style="text-align: right;">
+          <p class="trip-card__label">到达</p>
+          <p class="trip-card__city">杭州东站</p>
+        </div>
+      </div>
+      <div class="trip-card__tags">
+        <span class="tag">车找人</span>
+        <span class="tag">3 人</span>
+        <span class="tag">费用面议</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card trip-card">
+    <div class="trip-card__accent trip-card__accent--full"></div>
+    <div class="trip-card__inner">
+      <div class="trip-card__topline">
+        <span class="pill pill--full">已满</span>
+        <span class="trip-card__time">5月1日 08:00</span>
+      </div>
+      <div class="trip-card__route">
+        <div class="trip-card__point">
+          <p class="trip-card__label">出发</p>
+          <p class="trip-card__city">南京南站</p>
+        </div>
+        <div class="trip-card__connector">
+          <span class="trip-card__dot"></span>
+          <span class="trip-card__line"></span>
+          <span class="trip-card__dot"></span>
+        </div>
+        <div class="trip-card__point" style="text-align: right;">
+          <p class="trip-card__label">到达</p>
+          <p class="trip-card__city">合肥南站</p>
+        </div>
+      </div>
+      <div class="trip-card__tags">
+        <span class="tag">人找车</span>
+        <span class="tag">2 人</span>
+        <span class="tag">费用面议</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Page -->
+  <p class="page-divider">登录页面</p>
+
+  <div class="card form-card">
+    <h2 class="form-title">欢迎回来</h2>
+    <p class="form-subtitle">输入您的手机号和密码继续</p>
+    <div class="field">
+      <label class="field__label">手机号</label>
+      <input class="field__input" type="tel" placeholder="请输入手机号">
+    </div>
+    <div class="field">
+      <label class="field__label">密码</label>
+      <input class="field__input" type="password" placeholder="请输入密码">
+    </div>
+    <button class="btn-solid">登录</button>
+    <button class="btn-outline">还没有账户？立即注册</button>
+  </div>
+
+  <!-- Publish Page -->
+  <p class="page-divider">发布行程</p>
+
+  <div class="card form-card">
+    <h2 class="form-title">发布行程</h2>
+    <p class="form-subtitle">让附近的同路人看到你</p>
+
+    <div class="field">
+      <label class="field__label">行程类型</label>
+      <div class="segment-row">
+        <button class="segment-btn active">车找人</button>
+        <button class="segment-btn">人找车</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field__label">起点</label>
+      <input class="field__input" placeholder="如：上海虹桥站">
+    </div>
+    <div class="field">
+      <label class="field__label">终点</label>
+      <input class="field__input" placeholder="如：杭州东站">
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div class="field">
+        <label class="field__label">日期</label>
+        <input class="field__input" placeholder="2026-05-01">
+      </div>
+      <div class="field">
+        <label class="field__label">时间</label>
+        <input class="field__input" placeholder="14:30">
+      </div>
+    </div>
+    <div class="field">
+      <label class="field__label">联系电话</label>
+      <input class="field__input" placeholder="至少填写一种联系方式">
+    </div>
+    <button class="btn-solid">发布行程</button>
+  </div>
+
+  <!-- Detail Page -->
+  <p class="page-divider">行程详情</p>
+
+  <div class="card">
+    <div class="detail-hero">
+      <p class="detail-hero__route">
+        上海虹桥
+        <span class="detail-hero__arrow">→</span>
+        杭州东站
+      </p>
+      <p class="detail-hero__time">4月30日 周三 14:30 出发</p>
+      <div class="detail-chips">
+        <span class="pill pill--active">可约</span>
+        <span class="tag">车找人</span>
+        <span class="tag">3 人</span>
+      </div>
+    </div>
+    <dl>
+      <div class="detail-row">
+        <dt>费用</dt>
+        <dd>面议</dd>
+      </div>
+      <div class="detail-row">
+        <dt>手机号</dt>
+        <dd>138****6789</dd>
+      </div>
+      <div class="detail-row">
+        <dt>微信号</dt>
+        <dd>travel_2026</dd>
+      </div>
+    </dl>
+    <div class="action-pair">
+      <button class="btn-outline">收藏</button>
+      <button class="btn-solid">联系 TA</button>
+    </div>
+  </div>
+
+  <!-- Profile Page -->
+  <p class="page-divider">个人中心</p>
+
+  <div class="card profile-hero">
+    <div class="profile-hero__top">
+      <div class="profile-avatar">Y</div>
+      <div class="profile-meta">
+        <p class="profile-meta__eyebrow">我的账户</p>
+        <div class="profile-title-row">
+          <h2 class="profile-name">旅途用户</h2>
+          <span class="profile-status">已实名</span>
+        </div>
+        <p class="profile-phone">138****6789</p>
+      </div>
+    </div>
+    <div class="profile-stats">
+      <div class="profile-stat">
+        <p class="profile-stat__num">12</p>
+        <p class="profile-stat__label">我的发布</p>
+      </div>
+      <div class="profile-stat">
+        <p class="profile-stat__num">5</p>
+        <p class="profile-stat__label">我的收藏</p>
+      </div>
+      <div class="profile-stat">
+        <p class="profile-stat__num">98</p>
+        <p class="profile-stat__label">信用评分</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">常用服务</h2>
+        <p class="section-subtitle">高频入口集中收纳，首屏更干净</p>
+      </div>
+    </div>
+    <div class="profile-service-grid">
+      <div class="profile-service-item">
+        <div class="profile-service-item__icon profile-service-item__icon--1">证</div>
+        <p class="profile-service-item__title">证件信息</p>
+        <p class="profile-service-item__desc">实名认证资料</p>
+      </div>
+      <div class="profile-service-item">
+        <div class="profile-service-item__icon profile-service-item__icon--2">¥</div>
+        <p class="profile-service-item__title">钱包余额</p>
+        <p class="profile-service-item__desc">收支与明细</p>
+      </div>
+      <div class="profile-service-item">
+        <div class="profile-service-item__icon profile-service-item__icon--3">人</div>
+        <p class="profile-service-item__title">常用乘客</p>
+        <p class="profile-service-item__desc">出行档案管理</p>
+      </div>
+      <div class="profile-service-item">
+        <div class="profile-service-item__icon profile-service-item__icon--4">?</div>
+        <p class="profile-service-item__title">客服帮助</p>
+        <p class="profile-service-item__desc">平台与出行支持</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">账户与安全</h2>
+        <p class="section-subtitle">账户设置已拆为独立页面，这里只保留进入入口</p>
+      </div>
+    </div>
+    <div class="profile-settings">
+      <div class="profile-setting-row">
+        <div>
+          <p class="profile-setting-row__label">账户设置</p>
+          <p class="profile-setting-row__value">管理昵称、手机号、登录安全与退出登录</p>
+        </div>
+        <span class="profile-setting-row__action">去查看</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Settings Page -->
+  <p class="page-divider">账户设置</p>
+
+  <div class="card profile-hero">
+    <div class="profile-hero__top">
+      <div class="profile-avatar">设</div>
+      <div class="profile-meta">
+        <p class="profile-meta__eyebrow">资料与安全</p>
+        <div class="profile-title-row">
+          <h2 class="profile-name">账户设置</h2>
+          <span class="profile-status">独立页面</span>
+        </div>
+        <p class="profile-phone">集中处理个人资料、联系方式与登录安全</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">基本资料</h2>
+        <p class="section-subtitle">优先展示用户最常修改的信息</p>
+      </div>
+    </div>
+    <div class="profile-settings">
+      <div class="profile-setting-row">
+        <div>
+          <p class="profile-setting-row__label">昵称</p>
+          <p class="profile-setting-row__value">旅途用户</p>
+        </div>
+        <span class="profile-setting-row__action">修改</span>
+      </div>
+      <div class="profile-setting-row">
+        <div>
+          <p class="profile-setting-row__label">默认手机号</p>
+          <p class="profile-setting-row__value">13812346789</p>
+        </div>
+        <span class="profile-setting-row__action">去管理</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">安全管理</h2>
+        <p class="section-subtitle">为后续密码、设备与风控能力预留结构</p>
+      </div>
+    </div>
+    <div class="profile-settings">
+      <div class="profile-setting-row">
+        <div>
+          <p class="profile-setting-row__label">账号安全</p>
+          <p class="profile-setting-row__value">登录状态正常，支持后续接入密码与设备管理</p>
+        </div>
+        <span class="profile-setting-row__action">去管理</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-footer-actions">
+    <button class="btn-solid">保存修改</button>
+    <button class="btn-outline">退出登录</button>
+  </div>
+
+  <!-- Tab Bar -->
+  <nav class="tab-bar">
+    <a class="tab-item active" href="#">
+      <span class="tab-item__icon">⌂</span>
+      <span>首页</span>
+    </a>
+    <a class="tab-item" href="#">
+      <span class="tab-item__icon">✦</span>
+      <span>发布</span>
+    </a>
+    <a class="tab-item" href="#">
+      <span class="tab-item__icon">♡</span>
+      <span>收藏</span>
+    </a>
+    <a class="tab-item" href="#">
+      <span class="tab-item__icon">◎</span>
+      <span>我的</span>
+    </a>
+  </nav>
+
+</div>
+</body>
+</html>

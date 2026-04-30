@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { Navigate, type RouteObject, createBrowserRouter, useLocation } from "react-router-dom";
 
+import AppLayout from "../components/MobileTabBar";
+import AccountSettingsPage from "../features/profile/pages/AccountSettingsPage";
 import ProfilePage from "../features/profile/pages/ProfilePage";
 import EditTripPage from "../features/trips/pages/EditTripPage";
 import MyFavoritesPage from "../features/trips/pages/MyFavoritesPage";
@@ -25,49 +27,62 @@ function RequireAuth({ children }: { children: ReactNode }) {
 }
 
 export const routes: RouteObject[] = [
-  { path: "/", element: <HomePage /> },
-  { path: "/login", element: <LoginPage /> },
-  { path: "/register", element: <RegisterPage /> },
-  { path: "/trips/:id", element: <TripDetailPage /> },
   {
-    path: "/publish",
-    element: (
-      <RequireAuth>
-        <PublishPage />
-      </RequireAuth>
-    ),
-  },
-  {
-    path: "/trips/:id/edit",
-    element: (
-      <RequireAuth>
-        <EditTripPage />
-      </RequireAuth>
-    ),
-  },
-  {
-    path: "/me/trips",
-    element: (
-      <RequireAuth>
-        <MyTripsPage />
-      </RequireAuth>
-    ),
-  },
-  {
-    path: "/me/favorites",
-    element: (
-      <RequireAuth>
-        <MyFavoritesPage />
-      </RequireAuth>
-    ),
-  },
-  {
-    path: "/me/profile",
-    element: (
-      <RequireAuth>
-        <ProfilePage />
-      </RequireAuth>
-    ),
+    element: <AppLayout />,
+    children: [
+      { path: "/", element: <HomePage /> },
+      { path: "/login", element: <LoginPage /> },
+      { path: "/register", element: <RegisterPage /> },
+      { path: "/trips/:id", element: <TripDetailPage /> },
+      {
+        path: "/publish",
+        element: (
+          <RequireAuth>
+            <PublishPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: "/trips/:id/edit",
+        element: (
+          <RequireAuth>
+            <EditTripPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: "/me/trips",
+        element: (
+          <RequireAuth>
+            <MyTripsPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: "/me/favorites",
+        element: (
+          <RequireAuth>
+            <MyFavoritesPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: "/me/profile",
+        element: (
+          <RequireAuth>
+            <ProfilePage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: "/me/settings",
+        element: (
+          <RequireAuth>
+            <AccountSettingsPage />
+          </RequireAuth>
+        ),
+      },
+    ],
   },
 ];
 
