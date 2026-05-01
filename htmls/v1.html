@@ -244,6 +244,188 @@ body::before {
   font-weight: 600;
 }
 
+/* Home Filter */
+.filter-card {
+  padding: 20px;
+}
+
+.filter-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.filter-card__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.filter-card__hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.filter-chip-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.filter-primary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.filter-primary-row .filter-chip-row {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.filter-chip {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(26, 22, 18, 0.1);
+  background: rgba(245, 240, 232, 0.7);
+  color: var(--text-body);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.filter-chip.active {
+  border-color: rgba(232, 104, 58, 0.2);
+  background: rgba(232, 104, 58, 0.12);
+  color: var(--accent-orange);
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: var(--bg-cream);
+  color: var(--text-dark);
+  font-size: 14px;
+  outline: none;
+}
+
+.filter-input::placeholder {
+  color: var(--text-muted);
+}
+
+.filter-icon-trigger {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(232, 104, 58, 0.18);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255, 247, 241, 0.96), rgba(241, 246, 242, 0.92));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-orange);
+  font-size: 18px;
+  box-shadow: 0 10px 18px rgba(26, 22, 18, 0.06);
+}
+
+.drawer-preview {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+
+.drawer-preview::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(26, 22, 18, 0.08), rgba(26, 22, 18, 0));
+  pointer-events: none;
+}
+
+.drawer-preview__sheet {
+  position: relative;
+  margin-top: 16px;
+  padding: 18px 20px 20px;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 -10px 40px rgba(26, 22, 18, 0.08);
+}
+
+.drawer-preview__handle {
+  width: 52px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(26, 22, 18, 0.12);
+  margin: 0 auto 16px;
+}
+
+.drawer-preview__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.drawer-preview__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.drawer-preview__text-btn {
+  border: none;
+  background: transparent;
+  color: var(--accent-orange);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.drawer-group {
+  margin-bottom: 16px;
+}
+
+.drawer-group:last-child {
+  margin-bottom: 0;
+}
+
+.drawer-group__label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.drawer-actions {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.btn-ghost {
+  height: 48px;
+  border: 1px solid rgba(26, 22, 18, 0.08);
+  border-radius: 14px;
+  background: var(--bg-warm);
+  color: var(--text-body);
+  font-size: 14px;
+  font-weight: 600;
+}
+
 /* Quick Grid */
 .quick-grid {
   display: grid;
@@ -828,6 +1010,7 @@ body::before {
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--border);
   display: flex;
+  align-items: center;
   justify-content: space-around;
   z-index: 100;
 }
@@ -921,14 +1104,75 @@ body::before {
     </div>
   </div>
 
+  <!-- Home Filter -->
+  <div class="card filter-card">
+    <div class="filter-card__top">
+      <div>
+        <p class="filter-card__title">先筛一下，再看行程</p>
+        <p class="filter-card__hint">主区只留高频类型切换，详细条件放进抽屉</p>
+      </div>
+    </div>
+
+    <div class="filter-primary-row">
+      <div class="filter-chip-row">
+        <button class="filter-chip active">车找人</button>
+        <button class="filter-chip">人找车</button>
+      </div>
+      <button class="filter-icon-trigger" aria-label="打开筛选抽屉">▦</button>
+    </div>
+  </div>
+
   <!-- Trip List -->
   <div style="margin-bottom: 14px;">
     <div class="section-header" style="padding: 0 4px;">
       <div>
-        <h2 class="section-title">附近行程</h2>
-        <p class="section-subtitle">最新发布的顺路信息</p>
+        <h2 class="section-title">行程列表</h2>
+        <p class="section-subtitle">按起终点快速筛选你要的顺路信息</p>
       </div>
-      <a class="section-link" href="#">更多 →</a>
+      <a class="section-link" href="#">12 条结果</a>
+    </div>
+  </div>
+
+  <!-- Filter Drawer Preview -->
+  <div class="card drawer-preview">
+    <div class="drawer-preview__sheet">
+      <div class="drawer-preview__handle"></div>
+      <div class="drawer-preview__top">
+        <div>
+          <p class="drawer-preview__title">筛选抽屉</p>
+          <p class="section-subtitle">起终点与其它条件统一放在这里确认</p>
+        </div>
+        <button class="drawer-preview__text-btn">关闭</button>
+      </div>
+
+      <div class="drawer-group">
+        <div class="filter-grid">
+          <input class="filter-input" value="上海虹桥" aria-label="起点">
+          <input class="filter-input" value="杭州东站" aria-label="终点">
+        </div>
+      </div>
+
+      <div class="drawer-group">
+        <p class="drawer-group__label">时间</p>
+        <div class="filter-chip-row" style="margin-bottom: 0;">
+          <button class="filter-chip active">全部</button>
+          <button class="filter-chip">今天</button>
+          <button class="filter-chip">明天</button>
+        </div>
+      </div>
+
+      <div class="drawer-group">
+        <p class="drawer-group__label">更多条件</p>
+        <div class="filter-chip-row" style="margin-bottom: 0;">
+          <button class="filter-chip">仅看可约</button>
+          <button class="filter-chip active">可议价</button>
+        </div>
+      </div>
+
+      <div class="drawer-actions">
+        <button class="btn-ghost">重置</button>
+        <button class="btn-solid" style="margin-top: 0;">确定</button>
+      </div>
     </div>
   </div>
 
@@ -989,6 +1233,36 @@ body::before {
         <span class="tag">人找车</span>
         <span class="tag">2 人</span>
         <span class="tag">费用面议</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card trip-card">
+    <div class="trip-card__accent trip-card__accent--active"></div>
+    <div class="trip-card__inner">
+      <div class="trip-card__topline">
+        <span class="pill pill--active">可约</span>
+        <span class="trip-card__time">5月1日 19:20</span>
+      </div>
+      <div class="trip-card__route">
+        <div class="trip-card__point">
+          <p class="trip-card__label">出发</p>
+          <p class="trip-card__city">苏州园区</p>
+        </div>
+        <div class="trip-card__connector">
+          <span class="trip-card__dot"></span>
+          <span class="trip-card__line"></span>
+          <span class="trip-card__dot"></span>
+        </div>
+        <div class="trip-card__point" style="text-align: right;">
+          <p class="trip-card__label">到达</p>
+          <p class="trip-card__city">上海浦东</p>
+        </div>
+      </div>
+      <div class="trip-card__tags">
+        <span class="tag">车找人</span>
+        <span class="tag">1 座</span>
+        <span class="tag">¥45/人</span>
       </div>
     </div>
   </div>

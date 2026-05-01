@@ -50,6 +50,9 @@ export type TripQuery = {
   tripType?: string;
   status?: string;
   keyword?: string;
+  fromText?: string;
+  toText?: string;
+  datePreset?: "today" | "tomorrow";
 };
 
 type FavoriteToggleResponse = {
@@ -61,8 +64,10 @@ type AvatarUploadResponse = {
   avatarUrl?: string;
 };
 
-export async function getTrips() {
-  const response = await api.get<ApiResponse<TripListResponse>>("/api/v1/trips");
+export async function getTrips(query?: TripQuery) {
+  const response = await api.get<ApiResponse<TripListResponse>>("/api/v1/trips", {
+    params: query,
+  });
   return unwrapApiResponse(response.data);
 }
 

@@ -91,12 +91,6 @@ export default function ProfilePage() {
       </section>
 
       <section className="page-panel profile-services-panel">
-        <div className="section-header">
-          <div>
-            <h2 className="section-title">常用服务</h2>
-            <p className="section-subtitle">高频入口集中收纳，首屏更干净</p>
-          </div>
-        </div>
         <div className="profile-service-grid">
           <button className="profile-service-item" type="button">
             <span className="profile-service-item__icon profile-service-item__icon--document">证</span>
@@ -125,7 +119,6 @@ export default function ProfilePage() {
         <div className="section-header">
           <div>
             <h2 className="section-title">账户与安全</h2>
-            <p className="section-subtitle">账户设置已拆为独立页面，这里只保留进入入口</p>
           </div>
         </div>
         <Link className="profile-setting-entry" to="/me/settings">
