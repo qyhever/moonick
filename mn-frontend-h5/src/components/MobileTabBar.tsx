@@ -12,6 +12,7 @@ type TabItem = {
 
 type RouteFrame = {
   title: string;
+  showTopBar: boolean;
   showTabBar: boolean;
   backFallback: string;
 };
@@ -20,6 +21,7 @@ function getRouteFrame(pathname: string): RouteFrame {
   if (pathname === "/") {
     return {
       title: "",
+      showTopBar: false,
       showTabBar: true,
       backFallback: "/",
     };
@@ -28,6 +30,7 @@ function getRouteFrame(pathname: string): RouteFrame {
   if (pathname === "/me/profile") {
     return {
       title: "",
+      showTopBar: false,
       showTabBar: true,
       backFallback: "/",
     };
@@ -36,6 +39,7 @@ function getRouteFrame(pathname: string): RouteFrame {
   if (pathname === "/publish") {
     return {
       title: "发布行程",
+      showTopBar: true,
       showTabBar: false,
       backFallback: "/",
     };
@@ -44,6 +48,7 @@ function getRouteFrame(pathname: string): RouteFrame {
   if (pathname === "/login") {
     return {
       title: "登录",
+      showTopBar: false,
       showTabBar: false,
       backFallback: "/",
     };
@@ -52,6 +57,7 @@ function getRouteFrame(pathname: string): RouteFrame {
   if (pathname === "/register") {
     return {
       title: "注册",
+      showTopBar: false,
       showTabBar: false,
       backFallback: "/login",
     };
@@ -60,6 +66,7 @@ function getRouteFrame(pathname: string): RouteFrame {
   if (pathname === "/me/trips") {
     return {
       title: "我的发布",
+      showTopBar: true,
       showTabBar: false,
       backFallback: "/me/profile",
     };
@@ -68,6 +75,7 @@ function getRouteFrame(pathname: string): RouteFrame {
   if (pathname === "/me/favorites") {
     return {
       title: "我的收藏",
+      showTopBar: true,
       showTabBar: false,
       backFallback: "/me/profile",
     };
@@ -76,6 +84,7 @@ function getRouteFrame(pathname: string): RouteFrame {
   if (pathname === "/me/settings") {
     return {
       title: "账户设置",
+      showTopBar: true,
       showTabBar: false,
       backFallback: "/me/profile",
     };
@@ -84,6 +93,7 @@ function getRouteFrame(pathname: string): RouteFrame {
   if (pathname.endsWith("/edit")) {
     return {
       title: "编辑行程",
+      showTopBar: true,
       showTabBar: false,
       backFallback: "/me/trips",
     };
@@ -92,6 +102,7 @@ function getRouteFrame(pathname: string): RouteFrame {
   if (pathname.startsWith("/trips/")) {
     return {
       title: "行程详情",
+      showTopBar: true,
       showTabBar: false,
       backFallback: "/",
     };
@@ -99,6 +110,7 @@ function getRouteFrame(pathname: string): RouteFrame {
 
   return {
     title: "返回",
+    showTopBar: true,
     showTabBar: false,
     backFallback: "/",
   };
@@ -107,7 +119,7 @@ function getRouteFrame(pathname: string): RouteFrame {
 export default function AppLayout() {
   const location = useLocation();
   const frame = getRouteFrame(location.pathname);
-  const shouldShowTopBar = !frame.showTabBar;
+  const shouldShowTopBar = frame.showTopBar;
 
   return (
     <>

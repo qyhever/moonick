@@ -71,7 +71,14 @@ it("toggles favorite state and shows success toast", async () => {
     { initialEntries: ["/trips/7"] },
   );
 
-  render(<RouterProvider router={router} />);
+  render(
+    <RouterProvider
+      router={router}
+      future={{
+        v7_startTransition: true,
+      }}
+    />
+  );
 
   const button = await screen.findByRole("button", { name: "收藏" });
   await userEvent.click(button);
@@ -91,7 +98,14 @@ it("redirects guest to login instead of calling favorite api", async () => {
     { initialEntries: ["/trips/7"] },
   );
 
-  render(<RouterProvider router={router} />);
+  render(
+    <RouterProvider
+      router={router}
+      future={{
+        v7_startTransition: true,
+      }}
+    />
+  );
 
   const button = await screen.findByRole("button", { name: "收藏" });
   await userEvent.click(button);
@@ -115,7 +129,14 @@ it("shows publish success toast from route state", async () => {
     },
   );
 
-  render(<RouterProvider router={router} />);
+  render(
+    <RouterProvider
+      router={router}
+      future={{
+        v7_startTransition: true,
+      }}
+    />
+  );
 
   expect(await screen.findByText("发布成功")).toBeInTheDocument();
 });

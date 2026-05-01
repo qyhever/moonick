@@ -26,13 +26,37 @@ function RequireAuth({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+function RequireGuest({ children }: { children: ReactNode }) {
+  const accessToken = useAuthStore((state) => state.accessToken);
+
+  if (accessToken) {
+    return <Navigate replace to="/" />;
+  }
+
+  return <>{children}</>;
+}
+
 export const routes: RouteObject[] = [
   {
     element: <AppLayout />,
     children: [
       { path: "/", element: <HomePage /> },
-      { path: "/login", element: <LoginPage /> },
-      { path: "/register", element: <RegisterPage /> },
+      {
+        path: "/login",
+        element: (
+          <RequireGuest>
+            <LoginPage />
+          </RequireGuest>
+        ),
+      },
+      {
+        path: "/register",
+        element: (
+          <RequireGuest>
+            <RegisterPage />
+          </RequireGuest>
+        ),
+      },
       { path: "/trips/:id", element: <TripDetailPage /> },
       {
         path: "/publish",

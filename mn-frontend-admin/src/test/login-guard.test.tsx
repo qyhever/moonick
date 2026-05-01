@@ -10,7 +10,14 @@ function renderWithRouter(initialEntry: string) {
     initialEntries: [initialEntry],
   });
 
-  return render(<RouterProvider router={router} />);
+  return render(
+    <RouterProvider
+      router={router}
+      future={{
+        v7_startTransition: true,
+      }}
+    />
+  );
 }
 
 beforeEach(() => {

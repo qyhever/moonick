@@ -33,7 +33,17 @@ function renderWithRouter(initialEntry: string) {
     initialEntries: [initialEntry],
   });
 
-  return render(<RouterProvider router={router} />);
+  return {
+    router,
+    ...render(
+      <RouterProvider
+        router={router}
+        future={{
+          v7_startTransition: true,
+        }}
+      />
+    ),
+  };
 }
 
 beforeEach(() => {
@@ -102,7 +112,62 @@ it("redirects guest to login and jumps back after login", async () => {
   await userEvent.type(screen.getByLabelText("密码"), "secret123");
   await userEvent.click(screen.getByRole("button", { name: "登录" }));
 
-  expect(await screen.findByText("发布行程")).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "发一条顺路行程，快速被附近同城的人看到" })).toBeInTheDocument();
+});
+
+it("does not show route topbar on login or register pages", async () => {
+  const { unmount } = renderWithRouter("/login");
+
+  expect(screen.queryByRole("button", { name: "返回上一页" })).not.toBeInTheDocument();
+
+  unmount();
+  renderWithRouter("/register");
+
+  expect(screen.queryByRole("button", { name: "返回上一页" })).not.toBeInTheDocument();
+});
+
+it("redirects logged-in user away from login page to home", async () => {
+  useAuthStore.setState({
+    accessToken: "access-token",
+    refreshToken: "refresh-token",
+    user: {
+      id: 1,
+      phone: "13800138000",
+      nickname: "测试用户",
+      avatarUrl: "",
+      status: "active",
+      defaultWechat: "",
+      defaultPhone: "13800138000",
+    },
+  });
+
+  const { router } = renderWithRouter("/login");
+
+  await vi.waitFor(() => {
+    expect(router.state.location.pathname).toBe("/");
+  });
+});
+
+it("redirects logged-in user away from register page to home", async () => {
+  useAuthStore.setState({
+    accessToken: "access-token",
+    refreshToken: "refresh-token",
+    user: {
+      id: 1,
+      phone: "13800138000",
+      nickname: "测试用户",
+      avatarUrl: "",
+      status: "active",
+      defaultWechat: "",
+      defaultPhone: "13800138000",
+    },
+  });
+
+  const { router } = renderWithRouter("/register");
+
+  await vi.waitFor(() => {
+    expect(router.state.location.pathname).toBe("/");
+  });
 });
 
 it("shows backend business error on login failure instead of crashing on empty data", async () => {
