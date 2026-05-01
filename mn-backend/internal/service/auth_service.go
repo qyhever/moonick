@@ -137,6 +137,35 @@ func (s *AuthService) RefreshUserToken(ctx context.Context, refreshToken string)
 	return s.buildUserAuthPayload(user)
 }
 
+func (s *AuthService) RefreshAdminToken(ctx context.Context, refreshToken string) (*response.AuthPayload, error) {
+	if s.adminRepo == nil {
+		return nil, ErrAdminNotFound
+	}
+
+	claims, err := s.tokenManger.Parse(strings.TrimSpace(refreshToken))
+	if err != nil {
+		return nil, ErrInvalidRefreshToken
+	}
+	if claims == nil || !strings.EqualFold(claims.TokenType, jwtpkg.TokenTypeRefresh) {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	adminID, err := strconv.ParseInt(claims.Subject, 10, 64)
+	if err != nil {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	admin, err := s.adminRepo.FindByID(ctx, adminID)
+	if err != nil {
+		return nil, err
+	}
+	if admin == nil {
+		return nil, ErrAdminNotFound
+	}
+
+	return s.buildAdminAuthPayload(admin)
+}
+
 func (s *AuthService) AdminLogin(ctx context.Context, req request.AdminLoginRequest) (*response.AuthPayload, error) {
 	if s.adminRepo == nil {
 		return nil, ErrAdminNotFound

@@ -43,6 +43,29 @@ func (c *AdminAuthController) Login(ctx *gin.Context) {
 	ResponseSuccess(ctx, resp)
 }
 
+func (c *AdminAuthController) Refresh(ctx *gin.Context) {
+	token, err := jwtpkg.ExtractBearerToken(ctx.GetHeader("Authorization"))
+	if err != nil {
+		ResponseFailedWithMsg(ctx, CodeNeedLogin, CodeNeedLogin.Msg())
+		return
+	}
+
+	resp, err := c.authService.RefreshAdminToken(ctx, token)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrInvalidRefreshToken):
+			ResponseFailedWithMsg(ctx, CodeInvalidToken, CodeInvalidToken.Msg())
+		case errors.Is(err, service.ErrAdminNotFound):
+			ResponseFailedWithMsg(ctx, CodeUserNotExist, err.Error())
+		default:
+			ResponseFailedWithMsg(ctx, CodeServerBusy, err.Error())
+		}
+		return
+	}
+
+	ResponseSuccess(ctx, resp)
+}
+
 func (c *AdminAuthController) Me(ctx *gin.Context) {
 	adminID, err := currentAdminID(ctx, c.jwtManager)
 	if err != nil {

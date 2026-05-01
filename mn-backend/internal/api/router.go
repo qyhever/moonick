@@ -80,6 +80,7 @@ func SetupRouter() *gin.Engine {
 	apiV1.GET("/trips", tripController.List)
 	apiV1.GET("/trips/:id", tripController.Detail)
 	adminV1.POST("/auth/login", adminAuthController.Login)
+	adminV1.POST("/auth/refresh", adminAuthController.Refresh)
 	adminV1.GET("/auth/me", middleware.RequireAdminAuth(jwtManager), adminAuthController.Me)
 
 	userGroup := apiV1.Group("/users")

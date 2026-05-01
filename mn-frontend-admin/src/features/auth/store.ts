@@ -1,6 +1,11 @@
 import { create } from "zustand";
 
-import { api, type ApiResponse, unwrapApiResponse } from "../../lib/http";
+import {
+  api,
+  attachAuthStore,
+  type ApiResponse,
+  unwrapApiResponse,
+} from "../../lib/http";
 
 export type AdminProfile = {
   id: number;
@@ -20,6 +25,7 @@ type AuthState = {
   refreshToken: string | null;
   admin: AdminProfile | null;
   login: (payload: { username: string; password: string }) => Promise<void>;
+  refresh: () => Promise<void>;
   logout: () => void;
 };
 
@@ -80,20 +86,43 @@ function clearStoredAuth() {
   window.localStorage.removeItem(AUTH_STORAGE_KEY);
 }
 
+function applyAuthPayload(
+  set: (partial: Partial<AuthState>) => void,
+  payload: AuthPayload,
+) {
+  const nextState = {
+    accessToken: payload.accessToken,
+    refreshToken: payload.refreshToken,
+    admin: payload.admin ?? null,
+  };
+
+  persistAuth(nextState);
+  set(nextState);
+}
+
 const initialState = readStoredAuth();
 
-export const useAdminAuthStore = create<AuthState>((set) => ({
+export const useAdminAuthStore = create<AuthState>((set, get) => ({
   ...initialState,
   login: async (payload) => {
     const response = await api.post<ApiResponse<AuthPayload>>("/api/admin/v1/auth/login", payload);
-    const data = unwrapApiResponse(response.data);
-    const nextState = {
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
-      admin: data.admin ?? null,
-    };
-    persistAuth(nextState);
-    set(nextState);
+    applyAuthPayload(set, unwrapApiResponse(response.data));
+  },
+  refresh: async () => {
+    const refreshToken = get().refreshToken;
+    if (!refreshToken) {
+      throw new Error("Missing refresh token");
+    }
+
+    const response = await api.post<ApiResponse<AuthPayload>>(
+      "/api/admin/v1/auth/refresh",
+      null,
+      {
+        skipAuthRefresh: true,
+        useRefreshToken: true,
+      },
+    );
+    applyAuthPayload(set, unwrapApiResponse(response.data));
   },
   logout: () => {
     clearStoredAuth();
@@ -104,3 +133,5 @@ export const useAdminAuthStore = create<AuthState>((set) => ({
     });
   },
 }));
+
+attachAuthStore(useAdminAuthStore);

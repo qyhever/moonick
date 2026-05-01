@@ -153,6 +153,75 @@ func TestSetupRouter_AdminRouteRejectsRefreshToken(t *testing.T) {
 	assertResponseCode(t, rec, controller.CodeInvalidToken)
 }
 
+func TestSetupRouter_AdminRefreshSucceedsWithRefreshToken(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	config.GlobalConfig.Auth.Admin = config.AdminSeedConfig{
+		Username: "root-admin",
+		Password: "secret123",
+		Name:     "Root Admin",
+	}
+
+	r := SetupRouter()
+	loginReq := httptest.NewRequest(http.MethodPost, "/api/admin/v1/auth/login", bytes.NewBufferString(`{"username":"root-admin","password":"secret123"}`))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginRec := httptest.NewRecorder()
+	r.ServeHTTP(loginRec, loginReq)
+
+	if loginRec.Code != http.StatusOK {
+		t.Fatalf("expected http status %d, got %d, body=%s", http.StatusOK, loginRec.Code, loginRec.Body.String())
+	}
+
+	var loginResp struct {
+		Code controller.MyCode `json:"code"`
+		Data struct {
+			RefreshToken string `json:"refreshToken"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(loginRec.Body.Bytes(), &loginResp); err != nil {
+		t.Fatalf("unmarshal admin login response: %v, body=%s", err, loginRec.Body.String())
+	}
+	if loginResp.Code != controller.CodeSuccess {
+		t.Fatalf("expected success code, got %d, body=%s", loginResp.Code, loginRec.Body.String())
+	}
+	if loginResp.Data.RefreshToken == "" {
+		t.Fatalf("expected refresh token in admin login response, body=%s", loginRec.Body.String())
+	}
+
+	refreshReq := httptest.NewRequest(http.MethodPost, "/api/admin/v1/auth/refresh", nil)
+	refreshReq.Header.Set("Authorization", "Bearer "+loginResp.Data.RefreshToken)
+	refreshRec := httptest.NewRecorder()
+	r.ServeHTTP(refreshRec, refreshReq)
+
+	if refreshRec.Code != http.StatusOK {
+		t.Fatalf("expected http status %d, got %d, body=%s", http.StatusOK, refreshRec.Code, refreshRec.Body.String())
+	}
+
+	var refreshResp struct {
+		Code controller.MyCode `json:"code"`
+		Data struct {
+			AccessToken  string `json:"accessToken"`
+			RefreshToken string `json:"refreshToken"`
+			Admin        struct {
+				Username string `json:"username"`
+			} `json:"admin"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(refreshRec.Body.Bytes(), &refreshResp); err != nil {
+		t.Fatalf("unmarshal admin refresh response: %v, body=%s", err, refreshRec.Body.String())
+	}
+	if refreshResp.Code != controller.CodeSuccess {
+		t.Fatalf("expected success code, got %d, body=%s", refreshResp.Code, refreshRec.Body.String())
+	}
+	if refreshResp.Data.AccessToken == "" || refreshResp.Data.RefreshToken == "" {
+		t.Fatalf("expected refresh response tokens, body=%s", refreshRec.Body.String())
+	}
+	if refreshResp.Data.Admin.Username != "root-admin" {
+		t.Fatalf("expected refreshed admin username, got %#v", refreshResp.Data.Admin)
+	}
+}
+
 func TestSetupRouter_UserProfileUpdateReturnsUserNotExistWhenTokenSubjectMissing(t *testing.T) {
 	restore := useValidJWTConfig(t)
 	defer restore()
