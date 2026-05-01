@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-
 import TripCard from "../components/TripCard";
 import { getMyFavorites, type TripSummary } from "../api";
 
@@ -47,9 +45,6 @@ export default function MyFavoritesPage() {
             <p className="eyebrow">我的收藏</p>
             <h1>收藏的顺路行程</h1>
           </div>
-          <Link className="secondary-link" to="/">
-            回首页
-          </Link>
         </div>
 
         {loading ? <p className="subtle-text">正在加载...</p> : null}

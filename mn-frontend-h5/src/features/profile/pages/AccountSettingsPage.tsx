@@ -1,7 +1,5 @@
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-
 import { getCurrentUserProfile, updateUserContact, updateUserProfile } from "../api";
 import AvatarUploader from "../components/AvatarUploader";
 import { getInitial, maskPhone } from "../utils";
@@ -116,9 +114,6 @@ export default function AccountSettingsPage() {
             <p className="eyebrow">账户设置</p>
             <h1>资料与安全管理</h1>
           </div>
-          <Link className="secondary-link" to="/me/profile">
-            返回我的
-          </Link>
         </div>
 
         <div className="profile-avatar-editor">

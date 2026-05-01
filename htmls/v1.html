@@ -101,6 +101,45 @@ body::before {
   background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
 }
 
+.page-topbar {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  min-height: 52px;
+  margin-bottom: 16px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 10px 28px rgba(26, 22, 18, 0.08);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.page-topbar__back,
+.page-topbar__spacer {
+  width: 44px;
+  height: 40px;
+}
+
+.page-topbar__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(245, 240, 232, 0.92);
+  color: var(--text-dark);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.page-topbar__title {
+  text-align: center;
+  color: var(--text-dark);
+  font-size: 15px;
+  font-weight: 700;
+}
+
 /* Card Base */
 .card {
   background: var(--surface);
@@ -812,6 +851,18 @@ body::before {
   line-height: 1;
 }
 
+.tab-item:nth-child(2) .tab-item__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #fde8e0, #fdd5c5);
+  color: var(--accent-orange);
+  box-shadow: 0 8px 18px rgba(232, 104, 58, 0.16);
+}
+
 /* Page Divider */
 .page-divider {
   text-align: center;
@@ -1119,6 +1170,12 @@ body::before {
   <!-- Account Settings Page -->
   <p class="page-divider">账户设置</p>
 
+  <div class="page-topbar">
+    <div class="page-topbar__back">‹</div>
+    <div class="page-topbar__title">账户设置</div>
+    <div class="page-topbar__spacer"></div>
+  </div>
+
   <div class="card profile-hero">
     <div class="profile-hero__top">
       <div class="profile-avatar">设</div>
@@ -1180,26 +1237,6 @@ body::before {
     <button class="btn-solid">保存修改</button>
     <button class="btn-outline">退出登录</button>
   </div>
-
-  <!-- Tab Bar -->
-  <nav class="tab-bar">
-    <a class="tab-item active" href="#">
-      <span class="tab-item__icon">⌂</span>
-      <span>首页</span>
-    </a>
-    <a class="tab-item" href="#">
-      <span class="tab-item__icon">✦</span>
-      <span>发布</span>
-    </a>
-    <a class="tab-item" href="#">
-      <span class="tab-item__icon">♡</span>
-      <span>收藏</span>
-    </a>
-    <a class="tab-item" href="#">
-      <span class="tab-item__icon">◎</span>
-      <span>我的</span>
-    </a>
-  </nav>
 
 </div>
 </body>

@@ -79,6 +79,11 @@ textarea {
   z-index: 1;
 }
 
+.app-route--with-topbar .h5-shell {
+  padding-top: 8px;
+  padding-bottom: 32px;
+}
+
 .toast-banner {
   position: sticky;
   top: 16px;
@@ -851,6 +856,10 @@ textarea {
   box-shadow: 0 4px 16px rgba(232, 104, 58, 0.24);
 }
 
+.primary-button--block {
+  width: 100%;
+}
+
 .primary-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -1036,6 +1045,60 @@ textarea {
   font-weight: 700;
 }
 
+.page-topbar-shell {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  margin: 0 auto;
+  max-width: 430px;
+  padding: 12px 16px 0;
+}
+
+.page-topbar {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  min-height: 52px;
+  padding: 6px;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 10px 28px rgba(26, 22, 18, 0.08);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.page-topbar__back,
+.page-topbar__spacer {
+  width: 44px;
+  height: 40px;
+}
+
+.page-topbar__back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(245, 240, 232, 0.92);
+  color: var(--text-dark);
+  cursor: pointer;
+}
+
+.page-topbar__back:active {
+  transform: scale(0.97);
+}
+
+.page-topbar__title {
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-dark);
+  font-size: 15px;
+  font-weight: 700;
+}
+
 .tab-bar {
   position: fixed;
   left: 50%;
@@ -1078,6 +1141,15 @@ textarea {
   align-items: center;
   justify-content: center;
   line-height: 1;
+}
+
+.tab-item:nth-child(2) .tab-item__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fde8e0, #fdd5c5);
+  color: var(--accent-orange);
+  box-shadow: 0 8px 18px rgba(232, 104, 58, 0.16);
 }
 
 .sr-only {

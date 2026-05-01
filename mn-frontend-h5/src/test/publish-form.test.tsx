@@ -90,3 +90,23 @@ it("submits backend-compatible payload", async () => {
     state: { toast: "发布成功" },
   });
 });
+
+it("does not show back-home action on publish page", () => {
+  render(
+    <MemoryRouter>
+      <PublishPage />
+    </MemoryRouter>,
+  );
+
+  expect(screen.queryByRole("link", { name: "返回首页" })).not.toBeInTheDocument();
+});
+
+it("renders publish action as a full-width primary button", () => {
+  render(
+    <MemoryRouter>
+      <PublishPage />
+    </MemoryRouter>,
+  );
+
+  expect(screen.getByRole("button", { name: "发布" })).toHaveClass("primary-button--block");
+});

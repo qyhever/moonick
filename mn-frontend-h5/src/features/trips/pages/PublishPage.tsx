@@ -1,6 +1,6 @@
 import type { ChangeEvent, FormEvent } from "react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { createTrip, type TripFormPayload, type TripType } from "../api";
 
@@ -204,13 +204,10 @@ export default function PublishPage() {
 
           {error ? <p role="alert">{error}</p> : null}
 
-          <div className="action-row">
-            <button className="primary-button" disabled={submitting} type="submit">
+          <div className="action-row action-row--single">
+            <button className="primary-button primary-button--block" disabled={submitting} type="submit">
               发布
             </button>
-            <Link className="secondary-link" to="/">
-              返回首页
-            </Link>
           </div>
         </form>
       </section>
