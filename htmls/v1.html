@@ -84,13 +84,17 @@ body::before {
 .nav-bell {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  min-width: 36px;
+  padding: 0 10px;
+  border-radius: 999px;
   background: var(--surface);
   border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-orange);
   box-shadow: var(--shadow-card);
 }
 
@@ -99,6 +103,13 @@ body::before {
   height: 36px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral));
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: var(--shadow-card);
 }
 
 .page-topbar {
@@ -257,18 +268,6 @@ body::before {
   margin-bottom: 16px;
 }
 
-.filter-card__title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-dark);
-}
-
-.filter-card__hint {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
-
 .filter-chip-row {
   display: flex;
   gap: 8px;
@@ -424,50 +423,6 @@ body::before {
   color: var(--text-body);
   font-size: 14px;
   font-weight: 600;
-}
-
-/* Quick Grid */
-.quick-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-}
-
-.quick-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 16px 8px;
-  text-decoration: none;
-  color: var(--text-body);
-  border-radius: var(--radius-md);
-  transition: all 0.2s;
-}
-
-.quick-item:active {
-  background: var(--bg-cream);
-  transform: scale(0.96);
-}
-
-.quick-item__icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-}
-
-.quick-item__icon--1 { background: linear-gradient(135deg, #fde8e0, #fdd5c5); color: var(--accent-orange); }
-.quick-item__icon--2 { background: linear-gradient(135deg, #e0f0e8, #c8e6d6); color: var(--accent-sage); }
-.quick-item__icon--3 { background: linear-gradient(135deg, #f5edd6, #ede2c0); color: var(--accent-gold); }
-.quick-item__icon--4 { background: linear-gradient(135deg, #e8e0f5, #ddd4f0); color: #8b6fc0; }
-
-.quick-item__text {
-  font-size: 12px;
-  font-weight: 500;
 }
 
 /* Trip Card */
@@ -1065,52 +1020,25 @@ body::before {
   <nav class="nav-bar">
     <span class="nav-brand">明叶<span>同行</span></span>
     <div class="nav-actions">
-      <div class="nav-bell">🔔</div>
-      <div class="nav-avatar"></div>
+      <div class="nav-bell">新</div>
+      <div class="nav-avatar">登录</div>
     </div>
   </nav>
 
   <!-- Hero -->
   <div class="card hero-banner">
-    <p class="hero-eyebrow">安全 · 便捷 · 同城</p>
-    <h1 class="hero-title">找到同路人<br>一起出发</h1>
-    <p class="hero-subtitle">同城拼车平台，快速发布和浏览行程信息</p>
-  </div>
-
-  <!-- Quick Grid -->
-  <div class="card">
-    <div class="section-header">
-      <div>
-        <h2 class="section-title">快捷服务</h2>
-      </div>
-    </div>
-    <div class="quick-grid">
-      <a class="quick-item" href="#">
-        <span class="quick-item__icon quick-item__icon--1">✦</span>
-        <span class="quick-item__text">发布</span>
-      </a>
-      <a class="quick-item" href="#">
-        <span class="quick-item__icon quick-item__icon--2">◈</span>
-        <span class="quick-item__text">我的行程</span>
-      </a>
-      <a class="quick-item" href="#">
-        <span class="quick-item__icon quick-item__icon--3">♡</span>
-        <span class="quick-item__text">收藏</span>
-      </a>
-      <a class="quick-item" href="#">
-        <span class="quick-item__icon quick-item__icon--4">◎</span>
-        <span class="quick-item__text">个人</span>
-      </a>
-    </div>
+    <p class="hero-eyebrow">Warm Ride Board</p>
+    <h1 class="hero-title">顺路信息更清楚一点，<br>联系和成交就会更快一点。</h1>
+    <p class="hero-subtitle">专为有拼车、搭车、返乡、跨城出行需求的车主和乘客打造。</p>
   </div>
 
   <!-- Home Filter -->
   <div class="card filter-card">
     <div class="filter-card__top">
       <div>
-        <p class="filter-card__title">先筛一下，再看行程</p>
-        <p class="filter-card__hint">主区只留高频类型切换，详细条件放进抽屉</p>
+        <p class="hero-eyebrow" style="margin-bottom: 6px;">Trip Board</p>
       </div>
+      <a class="section-link" href="#">12 条结果</a>
     </div>
 
     <div class="filter-primary-row">
@@ -1129,7 +1057,6 @@ body::before {
         <h2 class="section-title">行程列表</h2>
         <p class="section-subtitle">按起终点快速筛选你要的顺路信息</p>
       </div>
-      <a class="section-link" href="#">12 条结果</a>
     </div>
   </div>
 
