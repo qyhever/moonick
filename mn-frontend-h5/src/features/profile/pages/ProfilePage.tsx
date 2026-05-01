@@ -68,7 +68,6 @@ export default function ProfilePage() {
             <p className="eyebrow">我的账户</p>
             <div className="profile-identity-card__title-row">
               <h1 className="hero-card__title">{displayName}</h1>
-              <span className="profile-status-pill">已实名</span>
             </div>
             <p className="hero-card__subtitle">{displayPhone}</p>
           </div>
@@ -83,35 +82,6 @@ export default function ProfilePage() {
             <span className="profile-stat-card__value">{favoriteCount > 99 ? "99+" : favoriteCount}</span>
             <span className="profile-stat-card__label">我的收藏</span>
           </Link>
-          <div className="profile-stat-card">
-            <span className="profile-stat-card__value">98</span>
-            <span className="profile-stat-card__label">信用评分</span>
-          </div>
-        </div>
-      </section>
-
-      <section className="page-panel profile-services-panel">
-        <div className="profile-service-grid">
-          <button className="profile-service-item" type="button">
-            <span className="profile-service-item__icon profile-service-item__icon--document">证</span>
-            <strong>证件信息</strong>
-            <span>实名认证资料</span>
-          </button>
-          <button className="profile-service-item" type="button">
-            <span className="profile-service-item__icon profile-service-item__icon--wallet">¥</span>
-            <strong>钱包余额</strong>
-            <span>收支与明细</span>
-          </button>
-          <button className="profile-service-item" type="button">
-            <span className="profile-service-item__icon profile-service-item__icon--passenger">人</span>
-            <strong>常用乘客</strong>
-            <span>出行档案管理</span>
-          </button>
-          <button className="profile-service-item" type="button">
-            <span className="profile-service-item__icon profile-service-item__icon--help">?</span>
-            <strong>客服帮助</strong>
-            <span>平台与出行支持</span>
-          </button>
         </div>
       </section>
 

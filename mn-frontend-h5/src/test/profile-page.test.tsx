@@ -128,9 +128,14 @@ it("renders the profile overview with a dedicated account settings entry", async
     </MemoryRouter>,
   );
 
-  expect(await screen.findByText("常用服务")).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: /账户设置/i })).toBeInTheDocument();
-  expect(screen.getByText("信用评分")).toBeInTheDocument();
+  expect(await screen.findByRole("link", { name: /账户设置/i })).toBeInTheDocument();
+  expect(screen.queryByText("已实名")).not.toBeInTheDocument();
+  expect(screen.queryByText("信用评分")).not.toBeInTheDocument();
+  expect(screen.queryByText("证件信息")).not.toBeInTheDocument();
+  expect(screen.queryByText("钱包余额")).not.toBeInTheDocument();
+  expect(screen.queryByText("常用服务")).not.toBeInTheDocument();
+  expect(screen.queryByText("常用乘客")).not.toBeInTheDocument();
+  expect(screen.queryByText("客服帮助")).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "保存修改" })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "退出登录" })).not.toBeInTheDocument();
   expect(screen.queryByText("账号安全")).not.toBeInTheDocument();
