@@ -21,6 +21,7 @@ export type TripSummary = {
 export type TripDetail = TripSummary & {
   contactPhone: string;
   contactWechat: string;
+  remark: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -35,6 +36,7 @@ export type TripFormPayload = {
   isPriceNegotiable: boolean;
   contactPhone: string;
   contactWechat: string;
+  remark: string;
 };
 
 export type TripListResponse = {

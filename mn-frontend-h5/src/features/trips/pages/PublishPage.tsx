@@ -14,6 +14,7 @@ type TripFormState = {
   isPriceNegotiable: boolean;
   contactPhone: string;
   contactWechat: string;
+  remark: string;
 };
 
 const initialForm: TripFormState = {
@@ -26,6 +27,7 @@ const initialForm: TripFormState = {
   isPriceNegotiable: true,
   contactPhone: "",
   contactWechat: "",
+  remark: "",
 };
 
 function buildPayload(form: TripFormState): TripFormPayload {
@@ -39,6 +41,7 @@ function buildPayload(form: TripFormState): TripFormPayload {
     isPriceNegotiable: form.isPriceNegotiable,
     contactPhone: form.contactPhone.trim(),
     contactWechat: form.contactWechat.trim(),
+    remark: form.remark.trim(),
   };
 }
 
@@ -199,6 +202,16 @@ export default function PublishPage() {
               value={form.contactWechat}
               onChange={updateField}
               placeholder="可选"
+            />
+          </label>
+
+          <label className="field-block">
+            <span>备注</span>
+            <textarea
+              name="remark"
+              value={form.remark}
+              onChange={updateField}
+              placeholder="可填写出发时间弹性、上下车说明、行李要求等"
             />
           </label>
 

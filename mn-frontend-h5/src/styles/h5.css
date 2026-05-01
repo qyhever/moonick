@@ -894,7 +894,9 @@ textarea {
 }
 
 .field-block textarea {
+  min-height: 112px;
   resize: vertical;
+  line-height: 1.6;
 }
 
 .primary-button,

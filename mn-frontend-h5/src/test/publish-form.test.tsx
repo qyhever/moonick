@@ -73,6 +73,7 @@ it("submits backend-compatible payload", async () => {
   await user.clear(screen.getByLabelText("人数"));
   await user.type(screen.getByLabelText("人数"), "2");
   await user.type(screen.getByLabelText("手机号"), "13800138000");
+  await user.type(screen.getByLabelText("备注"), " 可带20寸行李箱 ");
   await user.click(screen.getByRole("button", { name: "发布" }));
 
   expect(mockCreateTrip).toHaveBeenCalledWith({
@@ -85,6 +86,7 @@ it("submits backend-compatible payload", async () => {
     isPriceNegotiable: true,
     contactPhone: "13800138000",
     contactWechat: "",
+    remark: "可带20寸行李箱",
   });
   expect(mockNavigate).toHaveBeenCalledWith("/trips/9", {
     state: { toast: "发布成功" },

@@ -593,6 +593,12 @@ body::before {
   color: var(--text-muted);
 }
 
+textarea.field__input {
+  min-height: 112px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
 /* Buttons */
 .btn-solid {
   display: flex;
@@ -1204,6 +1210,10 @@ body::before {
     <div class="field">
       <label class="field__label">联系电话</label>
       <input class="field__input" placeholder="至少填写一种联系方式">
+    </div>
+    <div class="field">
+      <label class="field__label">备注</label>
+      <textarea class="field__input" placeholder="可填写出发时间弹性、上下车说明、行李要求等"></textarea>
     </div>
     <button class="btn-solid">发布行程</button>
   </div>

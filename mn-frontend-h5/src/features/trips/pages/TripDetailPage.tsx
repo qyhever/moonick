@@ -199,6 +199,13 @@ export default function TripDetailPage() {
           </dl>
         </div>
 
+        {trip.remark ? (
+          <div className="detail-section">
+            <h2>备注</h2>
+            <p>{trip.remark}</p>
+          </div>
+        ) : null}
+
         {error ? <p role="alert">{error}</p> : null}
 
         <div className="action-row">
