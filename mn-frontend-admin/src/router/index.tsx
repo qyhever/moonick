@@ -48,7 +48,14 @@ export const routes: RouteObject[] = [
 const appRouter = createBrowserRouter(routes);
 
 export function AppRouter() {
-  return <RouterProvider router={appRouter} />;
+  return (
+    <RouterProvider
+      router={appRouter}
+      future={{
+        v7_startTransition: true,
+      }}
+    />
+  )
 }
 
 export default appRouter;
