@@ -593,6 +593,35 @@ body::before {
   color: var(--text-muted);
 }
 
+.field--code .field__control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 112px;
+  gap: 10px;
+}
+
+.field--code .field__input {
+  margin: 0;
+}
+
+.field__send-btn {
+  height: 100%;
+  min-height: 50px;
+  border: 1.5px solid rgba(232, 104, 58, 0.18);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(255, 247, 241, 0.96), rgba(241, 246, 242, 0.92));
+  color: var(--accent-orange);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 10px 22px rgba(26, 22, 18, 0.06);
+}
+
+.field__send-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 4px 12px rgba(26, 22, 18, 0.08);
+}
+
 textarea.field__input {
   min-height: 112px;
   resize: vertical;
@@ -1173,6 +1202,34 @@ textarea.field__input {
     </div>
     <button class="btn-solid">登录</button>
     <button class="btn-outline">还没有账号？去注册</button>
+  </div>
+
+  <p class="page-divider">注册页面</p>
+
+  <div class="card form-card">
+    <h2 class="form-title">邮箱注册</h2>
+    <p class="form-subtitle">创建你的明叶同行账号，优先查看附近最新行程、收藏记录和个人发布。</p>
+    <div class="field">
+      <label class="field__label">邮箱</label>
+      <input class="field__input" type="email" placeholder="请输入邮箱地址">
+    </div>
+    <div class="field">
+      <label class="field__label">密码</label>
+      <input class="field__input" type="password" placeholder="请输入密码">
+    </div>
+    <div class="field">
+      <label class="field__label">确认密码</label>
+      <input class="field__input" type="password" placeholder="请再次输入密码">
+    </div>
+    <div class="field field--code">
+      <label class="field__label">验证码</label>
+      <div class="field__control">
+        <input class="field__input" type="text" inputmode="numeric" placeholder="请输入验证码">
+        <button class="field__send-btn" type="button">发送验证码</button>
+      </div>
+    </div>
+    <button class="btn-solid">注册</button>
+    <button class="btn-outline">已有账号？去登录</button>
   </div>
 
   <!-- Publish Page -->

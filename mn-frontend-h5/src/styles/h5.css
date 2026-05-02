@@ -1128,6 +1128,39 @@ textarea {
   color: var(--text-dark);
 }
 
+.auth-code {
+  display: grid;
+  gap: 8px;
+}
+
+.auth-code__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.auth-code__control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 112px;
+  gap: 10px;
+}
+
+.auth-code__send {
+  min-height: 50px;
+  border: 1.5px solid rgba(232, 104, 58, 0.18);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(255, 247, 241, 0.96), rgba(241, 246, 242, 0.92));
+  color: var(--accent-orange);
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 10px 22px rgba(26, 22, 18, 0.06);
+}
+
+.auth-code__send:active {
+  transform: scale(0.98);
+  box-shadow: 0 4px 12px rgba(26, 22, 18, 0.08);
+}
+
 .auth-actions {
   display: grid;
   gap: 12px;

@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import { beforeEach, vi } from "vitest";
@@ -73,6 +73,18 @@ beforeEach(() => {
               defaultWechat: "",
               defaultPhone: "13800138000",
             },
+          },
+        },
+      };
+    }
+
+    if (url === "/api/v1/auth/register/code" && payload) {
+      return {
+        data: {
+          code: 1000,
+          message: "success",
+          data: {
+            code: "123456",
           },
         },
       };
@@ -203,6 +215,45 @@ it("blocks login submit when email format is invalid", async () => {
 
   expect(await screen.findByRole("alert")).toHaveTextContent("请输入有效的邮箱地址");
   expect(mockPost).not.toHaveBeenCalled();
+});
+
+it("does not render verification code field on login page but keeps it on register page", async () => {
+  const { unmount } = renderWithRouter("/login");
+
+  expect(screen.queryByLabelText("验证码")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "发送验证码" })).not.toBeInTheDocument();
+
+  unmount();
+  renderWithRouter("/register");
+
+  expect(screen.getByLabelText("验证码")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "发送验证码" })).toHaveClass("auth-code__send");
+});
+
+it("sends register verification code and restores countdown after remount", async () => {
+  const { unmount } = renderWithRouter("/register");
+
+  fireEvent.change(screen.getByLabelText("邮箱"), {
+    target: { value: "user@example.com" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "发送验证码" }));
+
+  expect(mockPost).toHaveBeenCalledWith("/api/v1/auth/register/code", {
+    email: "user@example.com",
+  });
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: "60s后重试" })).toBeDisabled();
+  });
+
+  unmount();
+  renderWithRouter("/register");
+  expect(screen.getByRole("button", { name: "60s后重试" })).toBeDisabled();
+
+  window.localStorage.setItem("mn-h5-register-code-expires-at", String(Date.now() - 1000));
+  unmount();
+  renderWithRouter("/register");
+
+  expect(screen.getByRole("button", { name: "发送验证码" })).toBeEnabled();
 });
 
 it("blocks register submit when email format is invalid", async () => {
