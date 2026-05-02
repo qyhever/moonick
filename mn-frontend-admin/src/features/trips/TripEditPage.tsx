@@ -9,6 +9,7 @@ import {
   type AdminTripDetail,
   type AdminTripUpdatePayload,
 } from "./api";
+import { getTripStatusText } from "../displayText";
 
 const tripTypeOptions = [
   { label: "车找人", value: "driver_post" },
@@ -86,7 +87,7 @@ export default function TripEditPage() {
       <Card title={`编辑行程 #${trip.id}`}>
         <Descriptions bordered column={2} style={{ marginBottom: 16 }}>
           <Descriptions.Item label="路线">{trip.fromText} → {trip.toText}</Descriptions.Item>
-          <Descriptions.Item label="当前状态">{trip.status}</Descriptions.Item>
+          <Descriptions.Item label="当前状态">{getTripStatusText(trip.status)}</Descriptions.Item>
           <Descriptions.Item label="出发时间">{trip.departureDate} {trip.departureTime}</Descriptions.Item>
           <Descriptions.Item label="联系方式">{trip.contactPhone || trip.contactWechat || "未填写"}</Descriptions.Item>
         </Descriptions>

@@ -42,6 +42,8 @@ it("does not render destructive actions on user detail page", async () => {
   );
 
   expect(await screen.findByText("基本资料")).toBeInTheDocument();
+  expect(screen.getByText("正常")).toBeInTheDocument();
+  expect(screen.queryByText("active")).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "封禁" })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "删除" })).not.toBeInTheDocument();
 });

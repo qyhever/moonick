@@ -70,6 +70,10 @@ it("loads trip detail into the full edit form", async () => {
   renderTripEditPage();
 
   expect(await screen.findByLabelText("出发地")).toHaveValue("上海");
+  expect(screen.getByText("车找人")).toBeInTheDocument();
+  expect(screen.getAllByText("可约").length).toBeGreaterThan(0);
+  expect(screen.queryByText("driver_post")).not.toBeInTheDocument();
+  expect(screen.queryByText("active")).not.toBeInTheDocument();
   expect(screen.getByLabelText("目的地")).toHaveValue("杭州");
   expect(screen.getByLabelText("出发日期")).toHaveValue("2026-04-30");
   expect(screen.getByLabelText("出发时间")).toHaveValue("09:00");
@@ -158,6 +162,10 @@ it("formats createdAt and updatedAt in trip detail page", async () => {
 
   renderTripDetailPage();
 
+  expect(await screen.findByText("车找人")).toBeInTheDocument();
+  expect(screen.getByText("可约")).toBeInTheDocument();
+  expect(screen.queryByText("driver_post")).not.toBeInTheDocument();
+  expect(screen.queryByText("active")).not.toBeInTheDocument();
   expect(await screen.findByText("2026-05-02 09:45:03")).toBeInTheDocument();
   expect(screen.getByText("2026-05-02 10:15:30")).toBeInTheDocument();
   expect(screen.queryByText("2026-05-02T09:45:03+08:00")).not.toBeInTheDocument();

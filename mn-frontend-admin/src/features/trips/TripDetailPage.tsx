@@ -3,6 +3,7 @@ import { Card, Descriptions, Space, Tag } from "antd";
 import { Link, useParams } from "react-router-dom";
 
 import { getAdminTripDetail, type AdminTripDetail } from "./api";
+import { getTripStatusText, getTripTypeText } from "../displayText";
 
 function formatPrice(trip: AdminTripDetail) {
   if (trip.isPriceNegotiable && trip.priceAmount > 0) {
@@ -56,9 +57,9 @@ export default function TripDetailPage() {
         title={`行程详情 #${trip.id}`}
       >
         <Descriptions bordered column={2}>
-          <Descriptions.Item label="类型">{trip.tripType}</Descriptions.Item>
+          <Descriptions.Item label="类型">{getTripTypeText(trip.tripType)}</Descriptions.Item>
           <Descriptions.Item label="状态">
-            <Tag>{trip.status}</Tag>
+            <Tag>{getTripStatusText(trip.status)}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label="起点">{trip.fromText}</Descriptions.Item>
           <Descriptions.Item label="终点">{trip.toText}</Descriptions.Item>

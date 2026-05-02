@@ -39,6 +39,8 @@ it("requests paginated users and reloads when page changes", async () => {
   );
 
   await screen.findByText("测试用户");
+  expect(screen.getByText("正常")).toBeInTheDocument();
+  expect(screen.queryByText("active")).not.toBeInTheDocument();
 
   expect(mockGetAdminUsers).toHaveBeenCalledWith({
     keyword: "",

@@ -5,12 +5,17 @@ import type { ColumnsType } from "antd/es/table";
 import type { TablePaginationConfig } from "antd/es/table";
 
 import { getAdminUsers, type AdminUserSummary } from "./api";
+import { getUserStatusText } from "../displayText";
 
 const columns: ColumnsType<AdminUserSummary> = [
   { title: "ID", dataIndex: "id", width: 90 },
   { title: "昵称", dataIndex: "nickname" },
   { title: "手机号", dataIndex: "phone" },
-  { title: "状态", dataIndex: "status" },
+  {
+    title: "状态",
+    dataIndex: "status",
+    render: (value: string) => getUserStatusText(value),
+  },
   {
     title: "操作",
     render: (_, record) => <Link to={`/users/${record.id}`}>详情</Link>,
