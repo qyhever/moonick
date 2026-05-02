@@ -9,6 +9,7 @@ import {
 
 export type AuthUser = {
   id: number;
+  email: string;
   phone: string;
   nickname: string;
   avatarUrl: string;
@@ -30,7 +31,7 @@ type AuthResponse<T> = {
 };
 
 type Credentials = {
-  phone: string;
+  email: string;
   password: string;
 };
 
@@ -137,7 +138,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   register: async (payload) => {
     const res = await api.post<AuthResponse<AuthPayload>>("/api/v1/auth/register", {
-      phone: payload.phone,
+      email: payload.email,
       password: payload.password,
     });
     applyAuthPayload(set, unwrapApiResponse(res.data));

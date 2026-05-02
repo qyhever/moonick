@@ -54,7 +54,7 @@ beforeEach(() => {
     user: null,
   });
   mockPost.mockReset();
-  mockPost.mockImplementation(async (url: string, payload?: { phone: string }) => {
+  mockPost.mockImplementation(async (url: string, payload?: { email: string }) => {
     if (url === "/api/v1/auth/refresh") {
       return {
         data: {
@@ -65,6 +65,7 @@ beforeEach(() => {
             refreshToken: "refreshed-refresh-token",
             user: {
               id: 1,
+              email: "user@example.com",
               phone: "13800138000",
               nickname: "测试用户",
               avatarUrl: "",
@@ -86,19 +87,20 @@ beforeEach(() => {
         code: 1000,
         message: "success",
         data: {
-          accessToken: "access-token",
-          refreshToken: "refresh-token",
-          user: {
-            id: 1,
-            phone: payload.phone,
-            nickname: "测试用户",
-            avatarUrl: "",
-            status: "active",
-            defaultWechat: "",
-            defaultPhone: payload.phone,
+            accessToken: "access-token",
+            refreshToken: "refresh-token",
+            user: {
+              id: 1,
+              email: payload.email,
+              phone: "",
+              nickname: "测试用户",
+              avatarUrl: "",
+              status: "active",
+              defaultWechat: "",
+              defaultPhone: "",
+            },
           },
         },
-      },
     };
   });
 });
@@ -108,7 +110,7 @@ it("redirects guest to login and jumps back after login", async () => {
 
   expect(await screen.findByText("登录")).toBeInTheDocument();
 
-  await userEvent.type(screen.getByLabelText("手机号"), "13800138000");
+  await userEvent.type(screen.getByLabelText("邮箱"), "user@example.com");
   await userEvent.type(screen.getByLabelText("密码"), "secret123");
   await userEvent.click(screen.getByRole("button", { name: "登录" }));
 
@@ -132,6 +134,7 @@ it("redirects logged-in user away from login page to home", async () => {
     refreshToken: "refresh-token",
     user: {
       id: 1,
+      email: "user@example.com",
       phone: "13800138000",
       nickname: "测试用户",
       avatarUrl: "",
@@ -154,6 +157,7 @@ it("redirects logged-in user away from register page to home", async () => {
     refreshToken: "refresh-token",
     user: {
       id: 1,
+      email: "user@example.com",
       phone: "13800138000",
       nickname: "测试用户",
       avatarUrl: "",
@@ -181,13 +185,63 @@ it("shows backend business error on login failure instead of crashing on empty d
 
   renderWithRouter("/publish");
 
-  await userEvent.type(screen.getByLabelText("手机号"), "13800138000");
+  await userEvent.type(screen.getByLabelText("邮箱"), "user@example.com");
   await userEvent.type(screen.getByLabelText("密码"), "wrong-password");
   await userEvent.click(screen.getByRole("button", { name: "登录" }));
 
   expect(await screen.findByRole("alert")).toHaveTextContent("用户名或密码错误");
   expect(screen.queryByText("发布行程")).not.toBeInTheDocument();
   expect(mockPost).toHaveBeenCalledTimes(1);
+});
+
+it("blocks login submit when email format is invalid", async () => {
+  renderWithRouter("/login");
+
+  await userEvent.type(screen.getByLabelText("邮箱"), "invalid-email");
+  await userEvent.type(screen.getByLabelText("密码"), "secret123");
+  await userEvent.click(screen.getByRole("button", { name: "登录" }));
+
+  expect(await screen.findByRole("alert")).toHaveTextContent("请输入有效的邮箱地址");
+  expect(mockPost).not.toHaveBeenCalled();
+});
+
+it("blocks register submit when email format is invalid", async () => {
+  mockPost.mockImplementation(async (url: string) => {
+    if (url === "/api/v1/auth/refresh") {
+      return {
+        data: {
+          code: 1000,
+          message: "success",
+          data: {
+            accessToken: "refreshed-access-token",
+            refreshToken: "refreshed-refresh-token",
+            user: {
+              id: 1,
+              email: "user@example.com",
+              phone: "13800138000",
+              nickname: "测试用户",
+              avatarUrl: "",
+              status: "active",
+              defaultWechat: "",
+              defaultPhone: "13800138000",
+            },
+          },
+        },
+      };
+    }
+
+    throw new Error(`Unexpected URL: ${url}`);
+  });
+
+  renderWithRouter("/register");
+
+  await userEvent.type(screen.getByLabelText("邮箱"), "invalid-email");
+  await userEvent.type(screen.getByLabelText("密码"), "secret123");
+  await userEvent.type(screen.getByLabelText("确认密码"), "secret123");
+  await userEvent.click(screen.getByRole("button", { name: "注册" }));
+
+  expect(await screen.findByRole("alert")).toHaveTextContent("请输入有效的邮箱地址");
+  expect(mockPost).not.toHaveBeenCalled();
 });
 
 it("refreshes token pair through backend refresh endpoint", async () => {

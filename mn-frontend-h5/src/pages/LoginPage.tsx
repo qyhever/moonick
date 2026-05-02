@@ -2,23 +2,30 @@ import type { FormEvent } from "react";
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
+import { isValidEmail } from "../lib/validation";
 import { useAuthStore } from "../store/auth";
 
 export default function LoginPage() {
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const redirect = searchParams.get("redirect") || "/";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!isValidEmail(email)) {
+      setError("请输入有效的邮箱地址");
+      return;
+    }
+
     setError("");
 
     try {
-      await login({ phone, password });
+      await login({ email, password });
       navigate(redirect, { replace: true });
     } catch (error) {
       setError(error instanceof Error ? error.message : "登录失败，请稍后重试");
@@ -29,12 +36,12 @@ export default function LoginPage() {
     <main className="h5-shell h5-shell--auth">
       <section className="auth-card">
         <p className="eyebrow">Welcome Back</p>
-        <h1>手机号登录</h1>
+        <h1>邮箱登录</h1>
         <p className="auth-card__subtitle">继续使用明叶同行，优先查看附近最新行程、收藏记录和个人发布。</p>
-        <form className="auth-form" onSubmit={handleSubmit}>
+        <form className="auth-form" noValidate onSubmit={handleSubmit}>
           <label>
-            手机号
-            <input value={phone} onChange={(event) => setPhone(event.target.value)} />
+            邮箱
+            <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
           </label>
           <label>
             密码

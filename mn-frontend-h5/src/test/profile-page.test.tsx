@@ -45,6 +45,7 @@ beforeEach(() => {
     refreshToken: "refresh-token",
     user: {
       id: 1,
+      email: "user@example.com",
       phone: "13800138000",
       nickname: "初始用户",
       avatarUrl: "",
@@ -64,6 +65,7 @@ beforeEach(() => {
 it("loads profile data once after login hydration", async () => {
   mockGetCurrentUserProfile.mockImplementation(async () => ({
     id: 1,
+    email: "user@example.com",
     phone: "13800138000",
     nickname: "测试用户",
     avatarUrl: "",
@@ -102,6 +104,7 @@ it("loads profile data once after login hydration", async () => {
 it("renders the profile overview with a dedicated account settings entry", async () => {
   mockGetCurrentUserProfile.mockImplementation(async () => ({
     id: 1,
+    email: "user@example.com",
     phone: "13800138000",
     nickname: "测试用户",
     avatarUrl: "",
@@ -144,6 +147,7 @@ it("renders the profile overview with a dedicated account settings entry", async
 it("renders the dedicated account settings page and keeps edit actions working", async () => {
   mockGetCurrentUserProfile.mockResolvedValue({
     id: 1,
+    email: "user@example.com",
     phone: "13800138000",
     nickname: "测试用户",
     avatarUrl: "",

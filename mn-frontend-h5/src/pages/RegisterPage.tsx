@@ -2,13 +2,14 @@ import type { FormEvent } from "react";
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
+import { isValidEmail } from "../lib/validation";
 import { useAuthStore } from "../store/auth";
 
 export default function RegisterPage() {
   const register = useAuthStore((state) => state.register);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -16,6 +17,11 @@ export default function RegisterPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!isValidEmail(email)) {
+      setError("请输入有效的邮箱地址");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("两次输入的密码不一致");
@@ -25,7 +31,7 @@ export default function RegisterPage() {
     setError("");
 
     try {
-      await register({ phone, password, confirmPassword });
+      await register({ email, password, confirmPassword });
       navigate(redirect, { replace: true });
     } catch (error) {
       setError(error instanceof Error ? error.message : "注册失败，请稍后重试");
@@ -38,10 +44,10 @@ export default function RegisterPage() {
         <p className="eyebrow">Create Account</p>
         <h1>注册账号</h1>
         <p className="auth-card__subtitle">完成基础注册后即可发布顺路信息、收藏行程并维护默认联系方式。</p>
-        <form className="auth-form" onSubmit={handleSubmit}>
+        <form className="auth-form" noValidate onSubmit={handleSubmit}>
           <label>
-            手机号
-            <input value={phone} onChange={(event) => setPhone(event.target.value)} />
+            邮箱
+            <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
           </label>
           <label>
             密码

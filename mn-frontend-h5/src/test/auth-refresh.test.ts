@@ -94,6 +94,7 @@ it("refreshes login state once and retries the original request", async () => {
           refreshToken: "refreshed-refresh-token",
           user: {
             id: 1,
+            email: "user@example.com",
             phone: "13800138000",
             nickname: "测试用户",
             avatarUrl: "",

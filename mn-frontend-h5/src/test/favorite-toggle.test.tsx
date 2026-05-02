@@ -55,6 +55,7 @@ it("toggles favorite state and shows success toast", async () => {
     refreshToken: "refresh-token",
     user: {
       id: 99,
+      email: "user@example.com",
       phone: "13800138000",
       nickname: "测试用户",
       avatarUrl: "",

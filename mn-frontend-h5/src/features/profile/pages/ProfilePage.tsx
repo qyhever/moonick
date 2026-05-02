@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 import { getCurrentUserProfile } from "../api";
 import { getMyFavorites, getMyTrips } from "../../trips/api";
-import { getInitial, maskPhone } from "../utils";
+import { getInitial, maskEmail } from "../utils";
 import { useAuthStore } from "../../../store/auth";
 
 export default function ProfilePage() {
@@ -52,7 +52,7 @@ export default function ProfilePage() {
   }, [setUser, userId]);
 
   const displayName = user?.nickname || "旅途用户";
-  const displayPhone = maskPhone(user?.phone || user?.defaultPhone || "");
+  const displayAccount = maskEmail(user?.email || "");
 
   return (
     <main className="h5-shell h5-shell--profile">
@@ -69,7 +69,7 @@ export default function ProfilePage() {
             <div className="profile-identity-card__title-row">
               <h1 className="hero-card__title">{displayName}</h1>
             </div>
-            <p className="hero-card__subtitle">{displayPhone}</p>
+            <p className="hero-card__subtitle">{displayAccount}</p>
           </div>
         </div>
 
@@ -94,7 +94,7 @@ export default function ProfilePage() {
         <Link className="profile-setting-entry" to="/me/settings">
           <div>
             <p className="profile-setting-item__label">账户设置</p>
-            <p className="profile-setting-item__value">管理昵称、手机号、登录安全与退出登录</p>
+            <p className="profile-setting-item__value">管理昵称、绑定手机号、登录安全与退出登录</p>
           </div>
           <span className="profile-setting-entry__action">去查看</span>
         </Link>

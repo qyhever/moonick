@@ -2,7 +2,7 @@ import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { getCurrentUserProfile, updateUserContact, updateUserProfile } from "../api";
 import AvatarUploader from "../components/AvatarUploader";
-import { getInitial, maskPhone } from "../utils";
+import { getInitial, maskEmail } from "../utils";
 import { useAuthStore } from "../../../store/auth";
 
 export default function AccountSettingsPage() {
@@ -52,7 +52,7 @@ export default function AccountSettingsPage() {
   }, [setUser, userId]);
 
   const displayName = nickname || user?.nickname || "旅途用户";
-  const displayPhone = maskPhone(user?.phone || defaultPhone || "");
+  const displayEmail = maskEmail(user?.email || "");
   const hasNicknameChange = nickname !== (user?.nickname ?? "");
   const hasContactChange =
     defaultPhone !== (user?.defaultPhone ?? "") || defaultWechat !== (user?.defaultWechat ?? "");
@@ -103,7 +103,7 @@ export default function AccountSettingsPage() {
               <h1 className="hero-card__title">账户设置</h1>
               <span className="profile-status-pill">独立页面</span>
             </div>
-            <p className="hero-card__subtitle">{displayName} · {displayPhone}</p>
+            <p className="hero-card__subtitle">{displayName} · {displayEmail}</p>
           </div>
         </div>
       </section>
@@ -158,6 +158,13 @@ export default function AccountSettingsPage() {
                   <input onChange={(event) => setNickname(event.target.value)} value={nickname} />
                 </label>
               ) : null}
+
+              <div className="profile-setting-item">
+                <div>
+                  <p className="profile-setting-item__label">登录邮箱</p>
+                  <p className="profile-setting-item__value">{user?.email || "未设置邮箱"}</p>
+                </div>
+              </div>
 
               <div className="profile-setting-item">
                 <div>
