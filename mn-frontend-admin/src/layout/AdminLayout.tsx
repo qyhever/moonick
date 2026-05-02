@@ -6,6 +6,8 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAdminAuthStore } from "../features/auth/store";
 
 const { Header, Content, Sider } = Layout;
+const siderWidth = 232;
+const headerHeight = 64;
 
 const menuItems: MenuProps["items"] = [
   {
@@ -32,8 +34,19 @@ export default function AdminLayout() {
   const logout = useAdminAuthStore((state) => state.logout);
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Sider theme="light" width={232}>
+    <Layout style={{ minHeight: "100vh", overflow: "hidden" }}>
+      <Sider
+        theme="light"
+        width={siderWidth}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          bottom: 0,
+          height: "100vh",
+          overflow: "auto",
+        }}
+      >
         <div style={{ padding: "24px 20px 12px" }}>
           <Typography.Text strong style={{ color: "#155eef" }}>
             明叶同行 Admin
@@ -48,7 +61,7 @@ export default function AdminLayout() {
         />
       </Sider>
 
-      <Layout>
+      <Layout style={{ marginLeft: siderWidth, minHeight: "100vh" }}>
         <Header
           style={{
             background: "#fff",
@@ -56,6 +69,12 @@ export default function AdminLayout() {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            position: "fixed",
+            top: 0,
+            left: siderWidth,
+            right: 0,
+            height: headerHeight,
+            zIndex: 10,
           }}
         >
           <Typography.Title level={4} style={{ margin: 0 }}>
@@ -75,7 +94,16 @@ export default function AdminLayout() {
             </Button>
           </Space>
         </Header>
-        <Content style={{ padding: 24, background: "#f5f7fb" }}>
+        <Content
+          data-testid="admin-layout-content"
+          style={{
+            padding: 24,
+            background: "#f5f7fb",
+            marginTop: headerHeight,
+            height: `calc(100vh - ${headerHeight}px)`,
+            overflowY: "auto",
+          }}
+        >
           <Outlet />
         </Content>
       </Layout>
