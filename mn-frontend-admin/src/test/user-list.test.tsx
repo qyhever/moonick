@@ -25,6 +25,7 @@ it("requests paginated users and reloads when page changes", async () => {
         phone: "13800138000",
         nickname: "测试用户",
         status: "active",
+        createdAt: "2026-05-02T09:45:03+08:00",
       },
     ],
     total: 21,
@@ -39,6 +40,7 @@ it("requests paginated users and reloads when page changes", async () => {
   );
 
   await screen.findByText("测试用户");
+  expect(screen.getByText("2026-05-02 09:45:03")).toBeInTheDocument();
   expect(screen.getByText("正常")).toBeInTheDocument();
   expect(screen.queryByText("active")).not.toBeInTheDocument();
 
@@ -55,6 +57,7 @@ it("requests paginated users and reloads when page changes", async () => {
         phone: "13900139000",
         nickname: "第二页用户",
         status: "active",
+        createdAt: "2026-05-03T08:30:00+08:00",
       },
     ],
     total: 21,

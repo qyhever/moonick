@@ -55,10 +55,11 @@ type AdminDashboardSummary struct {
 }
 
 type AdminUserSummary struct {
-	ID       int64  `json:"id"`
-	Phone    string `json:"phone"`
-	Nickname string `json:"nickname"`
-	Status   string `json:"status"`
+	ID        int64  `json:"id"`
+	Phone     string `json:"phone"`
+	Nickname  string `json:"nickname"`
+	Status    string `json:"status"`
+	CreatedAt string `json:"createdAt"`
 }
 
 type AdminUserDetail struct {
@@ -71,6 +72,7 @@ type AdminUserDetail struct {
 	DefaultPhone       string `json:"defaultPhone"`
 	PublishedTripCount int    `json:"publishedTripCount"`
 	FavoriteCount      int    `json:"favoriteCount"`
+	CreatedAt          string `json:"createdAt"`
 }
 
 type AdminUserListResponse struct {

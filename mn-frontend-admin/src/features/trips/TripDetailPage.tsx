@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 
 import { getAdminTripDetail, type AdminTripDetail } from "./api";
 import { getTripStatusText, getTripTypeText } from "../displayText";
+import { formatDateTime } from "../../lib/dateTime";
 
 function formatPrice(trip: AdminTripDetail) {
   if (trip.isPriceNegotiable && trip.priceAmount > 0) {
@@ -15,15 +16,6 @@ function formatPrice(trip: AdminTripDetail) {
   }
 
   return `${trip.priceAmount} 元`;
-}
-
-function formatDateTime(value: string) {
-  const matched = value.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2})/);
-  if (matched) {
-    return `${matched[1]} ${matched[2]}`;
-  }
-
-  return value;
 }
 
 export default function TripDetailPage() {

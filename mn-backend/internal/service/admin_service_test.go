@@ -204,6 +204,38 @@ func TestAdminService_GetUserDetailCountsAllPublishedTrips(t *testing.T) {
 	if detail.PublishedTripCount != 3 {
 		t.Fatalf("expected publishedTripCount=3, got %#v", detail)
 	}
+	if detail.CreatedAt != user.CreatedAt.Format(time.RFC3339) {
+		t.Fatalf("expected createdAt=%q, got %#v", user.CreatedAt.Format(time.RFC3339), detail)
+	}
+}
+
+func TestAdminService_ListUsersIncludesCreatedAt(t *testing.T) {
+	ctx := context.Background()
+	userRepo := mysql.NewUserRepository()
+	tripRepo := mysql.NewTripRepository()
+	favoriteRepo := mysql.NewFavoriteRepository()
+
+	user, err := userRepo.Create(ctx, entity.User{
+		Phone:        "13800138005",
+		PasswordHash: "hash-list",
+		Nickname:     "列表用户",
+		Status:       "active",
+	})
+	if err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+
+	svc := NewAdminService(userRepo, tripRepo, favoriteRepo)
+	resp, err := svc.ListUsers(ctx, request.ListUserRequest{PageNum: 1, PageSize: 10})
+	if err != nil {
+		t.Fatalf("ListUsers returned error: %v", err)
+	}
+	if len(resp.Items) != 1 {
+		t.Fatalf("expected 1 item, got %#v", resp)
+	}
+	if resp.Items[0].CreatedAt != user.CreatedAt.Format(time.RFC3339) {
+		t.Fatalf("expected createdAt=%q, got %#v", user.CreatedAt.Format(time.RFC3339), resp.Items[0])
+	}
 }
 
 func TestAdminService_UpdateTripDetail(t *testing.T) {

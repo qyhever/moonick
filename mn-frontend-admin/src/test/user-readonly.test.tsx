@@ -21,6 +21,7 @@ it("does not render destructive actions on user detail page", async () => {
     nickname: "测试用户",
     avatarUrl: "",
     status: "active",
+    createdAt: "2026-05-02T09:45:03+08:00",
     defaultWechat: "mingye-user",
     defaultPhone: "13800138000",
     publishedTripCount: 4,
@@ -43,6 +44,7 @@ it("does not render destructive actions on user detail page", async () => {
 
   expect(await screen.findByText("基本资料")).toBeInTheDocument();
   expect(screen.getByText("正常")).toBeInTheDocument();
+  expect(screen.getByText("2026-05-02 09:45:03")).toBeInTheDocument();
   expect(screen.queryByText("active")).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "封禁" })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "删除" })).not.toBeInTheDocument();

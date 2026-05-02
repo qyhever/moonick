@@ -6,6 +6,7 @@ import type { ColumnsType } from "antd/es/table";
 import { getAdminUserDetail, getAdminUserTrips, type AdminUserDetail } from "./api";
 import type { AdminTripSummary } from "../trips/api";
 import { getTripStatusText, getUserStatusText } from "../displayText";
+import { formatDateTime } from "../../lib/dateTime";
 
 const columns: ColumnsType<AdminTripSummary> = [
   { title: "ID", dataIndex: "id", width: 90 },
@@ -63,6 +64,7 @@ export default function UserDetailPage() {
           <Descriptions.Item label="昵称">{user.nickname}</Descriptions.Item>
           <Descriptions.Item label="手机号">{user.phone}</Descriptions.Item>
           <Descriptions.Item label="状态">{getUserStatusText(user.status)}</Descriptions.Item>
+          <Descriptions.Item label="注册时间">{formatDateTime(user.createdAt)}</Descriptions.Item>
           <Descriptions.Item label="默认微信">{user.defaultWechat || "未填写"}</Descriptions.Item>
           <Descriptions.Item label="默认手机号">{user.defaultPhone || "未填写"}</Descriptions.Item>
         </Descriptions>

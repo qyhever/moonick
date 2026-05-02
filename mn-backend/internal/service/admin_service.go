@@ -212,10 +212,11 @@ func (s *AdminService) ListUsers(ctx context.Context, req request.ListUserReques
 	items := make([]*response.AdminUserSummary, 0, len(users))
 	for _, user := range users {
 		items = append(items, &response.AdminUserSummary{
-			ID:       user.ID,
-			Phone:    user.Phone,
-			Nickname: user.Nickname,
-			Status:   user.Status,
+			ID:        user.ID,
+			Phone:     user.Phone,
+			Nickname:  user.Nickname,
+			Status:    user.Status,
+			CreatedAt: user.CreatedAt.Format(time.RFC3339),
 		})
 	}
 
@@ -258,6 +259,7 @@ func (s *AdminService) GetUserDetail(ctx context.Context, userID int64) (*respon
 		DefaultPhone:       user.DefaultPhone,
 		PublishedTripCount: publishedTripCount,
 		FavoriteCount:      favoriteCount,
+		CreatedAt:          user.CreatedAt.Format(time.RFC3339),
 	}, nil
 }
 

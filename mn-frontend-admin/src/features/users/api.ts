@@ -6,6 +6,7 @@ export type AdminUserSummary = {
   phone: string;
   nickname: string;
   status: string;
+  createdAt: string;
 };
 
 export type AdminUserListResponse = {
@@ -21,6 +22,7 @@ export type AdminUserDetail = {
   nickname: string;
   avatarUrl: string;
   status: string;
+  createdAt: string;
   defaultWechat: string;
   defaultPhone: string;
   publishedTripCount: number;

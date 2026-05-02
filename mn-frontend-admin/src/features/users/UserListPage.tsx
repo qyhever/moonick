@@ -6,11 +6,17 @@ import type { TablePaginationConfig } from "antd/es/table";
 
 import { getAdminUsers, type AdminUserSummary } from "./api";
 import { getUserStatusText } from "../displayText";
+import { formatDateTime } from "../../lib/dateTime";
 
 const columns: ColumnsType<AdminUserSummary> = [
   { title: "ID", dataIndex: "id", width: 90 },
   { title: "昵称", dataIndex: "nickname" },
   { title: "手机号", dataIndex: "phone" },
+  {
+    title: "注册时间",
+    dataIndex: "createdAt",
+    render: (value: string) => formatDateTime(value),
+  },
   {
     title: "状态",
     dataIndex: "status",
