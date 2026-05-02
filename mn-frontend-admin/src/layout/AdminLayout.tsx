@@ -1,5 +1,6 @@
 import { DashboardOutlined, TeamOutlined, CarOutlined, LogoutOutlined } from "@ant-design/icons";
-import { Button, Layout, Menu, Space, Typography } from "antd";
+import { useRef } from "react";
+import { Button, FloatButton, Layout, Menu, Modal, Space, Typography } from "antd";
 import type { MenuProps } from "antd";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
@@ -30,11 +31,26 @@ const menuItems: MenuProps["items"] = [
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const [modal, contextHolder] = Modal.useModal();
   const admin = useAdminAuthStore((state) => state.admin);
   const logout = useAdminAuthStore((state) => state.logout);
 
+  const handleLogoutConfirm = () => {
+    modal.confirm({
+      title: "确认退出登录吗？",
+      okText: "确认退出",
+      cancelText: "取消",
+      onOk: () => {
+        logout();
+        navigate("/login", { replace: true });
+      },
+    });
+  };
+
   return (
     <Layout style={{ minHeight: "100vh", overflow: "hidden" }}>
+      {contextHolder}
       <Sider
         theme="light"
         width={siderWidth}
@@ -82,20 +98,14 @@ export default function AdminLayout() {
           </Typography.Title>
           <Space>
             <Typography.Text>{admin?.name || admin?.username || "管理员"}</Typography.Text>
-            <Button
-              icon={<LogoutOutlined />}
-              onClick={() => {
-                logout();
-                navigate("/login", { replace: true });
-              }}
-              type="text"
-            >
+            <Button icon={<LogoutOutlined />} onClick={handleLogoutConfirm} type="text">
               退出
             </Button>
           </Space>
         </Header>
         <Content
           data-testid="admin-layout-content"
+          ref={contentRef}
           style={{
             padding: 24,
             background: "#f5f7fb",
@@ -105,6 +115,7 @@ export default function AdminLayout() {
           }}
         >
           <Outlet />
+          <FloatButton.BackTop target={() => contentRef.current ?? window} />
         </Content>
       </Layout>
     </Layout>
