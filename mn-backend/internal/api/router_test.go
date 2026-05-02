@@ -134,6 +134,38 @@ func TestSetupRouter_UserRefreshSucceedsWithRefreshToken(t *testing.T) {
 	}
 }
 
+func TestSetupRouter_RegisterCodeReturnsSixDigitCode(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	r := SetupRouter()
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register/code", bytes.NewBufferString(`{"email":"user@example.com"}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected http status %d, got %d, body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+
+	var resp struct {
+		Code controller.MyCode `json:"code"`
+		Data struct {
+			Code string `json:"code"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal register code response: %v, body=%s", err, rec.Body.String())
+	}
+	if resp.Code != controller.CodeSuccess {
+		t.Fatalf("expected success code, got %d, body=%s", resp.Code, rec.Body.String())
+	}
+	if len(resp.Data.Code) != 6 {
+		t.Fatalf("expected 6 digit register code, got %#v", resp.Data)
+	}
+}
+
 func TestSetupRouter_AdminRouteRejectsRefreshToken(t *testing.T) {
 	restore := useValidJWTConfig(t)
 	defer restore()

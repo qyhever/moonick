@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
+	"math/big"
 	"strconv"
 	"strings"
 
@@ -87,6 +89,22 @@ func (s *AuthService) Register(ctx context.Context, req request.RegisterRequest)
 	}
 
 	return s.buildUserAuthPayload(user)
+}
+
+func (s *AuthService) SendRegisterCode(ctx context.Context, req request.SendRegisterCodeRequest) (*response.RegisterCodePayload, error) {
+	email := strings.TrimSpace(req.Email)
+	if email == "" {
+		return nil, ErrInvalidUserCredentials
+	}
+
+	code, err := generateVerificationCode(6)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.RegisterCodePayload{
+		Code: code,
+	}, nil
 }
 
 func (s *AuthService) Login(ctx context.Context, req request.LoginRequest) (*response.AuthPayload, error) {
@@ -270,6 +288,23 @@ func toUserProfile(user *entity.User) *response.UserProfile {
 		DefaultWechat: user.DefaultWechat,
 		DefaultPhone:  user.DefaultPhone,
 	}
+}
+
+func generateVerificationCode(length int) (string, error) {
+	if length <= 0 {
+		return "", errors.New("invalid verification code length")
+	}
+
+	digits := make([]byte, length)
+	for i := range digits {
+		n, err := rand.Int(rand.Reader, big.NewInt(10))
+		if err != nil {
+			return "", err
+		}
+		digits[i] = byte('0' + n.Int64())
+	}
+
+	return string(digits), nil
 }
 
 func emailSuffix(email string) string {

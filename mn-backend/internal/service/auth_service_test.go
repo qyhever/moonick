@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"regexp"
 	"testing"
 	"time"
 
@@ -81,6 +82,23 @@ func TestAuthService_RefreshUserToken(t *testing.T) {
 	}
 	if refreshResp.User == nil || refreshResp.User.Email != "user@example.com" {
 		t.Fatalf("expected refreshed user profile, got %#v", refreshResp)
+	}
+}
+
+func TestAuthService_SendRegisterCode(t *testing.T) {
+	svc := newAuthServiceForTest()
+
+	resp, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+		Email: "user@example.com",
+	})
+	if err != nil {
+		t.Fatalf("send register code returned error: %v", err)
+	}
+	if resp == nil {
+		t.Fatal("expected register code payload")
+	}
+	if matched := regexp.MustCompile(`^\d{6}$`).MatchString(resp.Code); !matched {
+		t.Fatalf("expected 6 digit code, got %#v", resp)
 	}
 }
 

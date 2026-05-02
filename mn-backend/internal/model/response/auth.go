@@ -29,3 +29,7 @@ type AuthPayload struct {
 	User         *UserProfile  `json:"user,omitempty"`
 	Admin        *AdminProfile `json:"admin,omitempty"`
 }
+
+type RegisterCodePayload struct {
+	Code string `json:"code"`
+}

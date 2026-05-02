@@ -48,6 +48,27 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	ResponseSuccess(ctx, resp)
 }
 
+func (c *AuthController) SendRegisterCode(ctx *gin.Context) {
+	var req request.SendRegisterCodeRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ResponseFailedWithMsg(ctx, CodeInvalidParam, "请求参数错误: "+err.Error())
+		return
+	}
+
+	resp, err := c.authService.SendRegisterCode(ctx, req)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrInvalidUserCredentials):
+			ResponseFailedWithMsg(ctx, CodeInvalidParam, "请输入有效的邮箱地址")
+		default:
+			ResponseFailedWithMsg(ctx, CodeServerBusy, err.Error())
+		}
+		return
+	}
+
+	ResponseSuccess(ctx, resp)
+}
+
 func (c *AuthController) Login(ctx *gin.Context) {
 	var req request.LoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
