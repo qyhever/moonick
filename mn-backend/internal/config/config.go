@@ -20,6 +20,7 @@ type Config struct {
 	JWT      JWTConfig      `mapstructure:"jwt"`
 	Auth     AuthConfig     `mapstructure:"auth"`
 	R2       R2Config       `mapstructure:"r2"`
+	Postal   PostalConfig   `mapstructure:"postal"`
 }
 
 // ServerConfig 服务器配置
@@ -79,6 +80,15 @@ type R2Config struct {
 	AccountID       string `mapstructure:"account_id"`
 	AccessKeyID     string `mapstructure:"access_key_id"`
 	AccessKeySecret string `mapstructure:"access_key_secret"`
+}
+
+// Postal配置
+type PostalConfig struct {
+	SmtpServer string `mapstructure:"smtp_server"`
+	SmtpPort   string `mapstructure:"smtp_port"`
+	FromEmail  string `mapstructure:"from_email"`
+	FromPass   string `mapstructure:"from_pass"`
+	FromName   string `mapstructure:"from_name"`
 }
 
 // GlobalConfig 全局配置实例
