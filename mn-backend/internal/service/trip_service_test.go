@@ -53,6 +53,68 @@ func TestTripService_CreateTripDefaultsToActiveStatus(t *testing.T) {
 	}
 }
 
+func TestTripService_CreateTripPersistsTrimmedRemark(t *testing.T) {
+	svc := newTripServiceForTest()
+
+	trip, err := svc.CreateTrip(context.Background(), 1001, request.UpsertTripRequest{
+		TripType:          "driver_post",
+		FromText:          "上海",
+		ToText:            "杭州",
+		DepartureDate:     "2026-04-26",
+		DepartureTime:     "10:00",
+		SeatCount:         3,
+		IsPriceNegotiable: true,
+		ContactPhone:      "13800138000",
+		Remark:            "  需要提前联系  ",
+	})
+	if err != nil {
+		t.Fatalf("CreateTrip returned error: %v", err)
+	}
+	if trip.Remark != "需要提前联系" {
+		t.Fatalf("expected trimmed remark, got %#v", trip.Remark)
+	}
+}
+
+func TestTripService_UpdateTripPersistsTrimmedRemark(t *testing.T) {
+	svc, repo := newTripServiceWithRepoForTest()
+	ctx := context.Background()
+
+	created, err := repo.Create(ctx, entity.Trip{
+		ID:                6001,
+		UserID:            1001,
+		TripType:          "driver_post",
+		FromText:          "上海",
+		ToText:            "杭州",
+		DepartureAt:       time.Date(2026, 4, 26, 10, 0, 0, 0, time.Local),
+		SeatCount:         3,
+		IsPriceNegotiable: true,
+		ContactPhone:      "13800138000",
+		Remark:            "旧备注",
+		Status:            entity.TripStatusActive,
+	})
+	if err != nil {
+		t.Fatalf("seed trip: %v", err)
+	}
+
+	updated, err := svc.UpdateTrip(ctx, 1001, created.ID, request.UpsertTripRequest{
+		TripType:          "driver_post",
+		FromText:          "上海",
+		ToText:            "苏州",
+		DepartureDate:     "2026-04-27",
+		DepartureTime:     "11:00",
+		SeatCount:         2,
+		IsPriceNegotiable: false,
+		ContactWechat:     "wx-1001",
+		Remark:            "  改后的备注 ",
+	})
+	if err != nil {
+		t.Fatalf("UpdateTrip returned error: %v", err)
+	}
+	if updated.Remark != "改后的备注" {
+		t.Fatalf("expected trimmed remark, got %#v", updated.Remark)
+	}
+}
+
 func TestTripService_ListTripsUsesPageNumAndDefaultPageSize(t *testing.T) {
 	svc, repo := newTripServiceWithRepoForTest()
 	ctx := context.Background()

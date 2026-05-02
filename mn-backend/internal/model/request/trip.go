@@ -10,6 +10,7 @@ type UpsertTripRequest struct {
 	IsPriceNegotiable bool   `json:"isPriceNegotiable"`
 	ContactWechat     string `json:"contactWechat"`
 	ContactPhone      string `json:"contactPhone"`
+	Remark            string `json:"remark"`
 }
 
 type ListTripRequest struct {

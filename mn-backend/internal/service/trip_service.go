@@ -68,6 +68,7 @@ func (s *TripService) CreateTrip(ctx context.Context, userID int64, req request.
 		IsPriceNegotiable: req.IsPriceNegotiable,
 		ContactWechat:     strings.TrimSpace(req.ContactWechat),
 		ContactPhone:      strings.TrimSpace(req.ContactPhone),
+		Remark:            strings.TrimSpace(req.Remark),
 		Status:            entity.TripStatusActive,
 	})
 	if err != nil {
@@ -102,6 +103,7 @@ func (s *TripService) UpdateTrip(ctx context.Context, userID, tripID int64, req 
 	current.IsPriceNegotiable = req.IsPriceNegotiable
 	current.ContactWechat = strings.TrimSpace(req.ContactWechat)
 	current.ContactPhone = strings.TrimSpace(req.ContactPhone)
+	current.Remark = strings.TrimSpace(req.Remark)
 
 	updated, err := s.tripRepo.Update(ctx, *current)
 	if err != nil {
