@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, Input, Space, Table } from "antd";
 import { Link } from "react-router-dom";
 import type { ColumnsType } from "antd/es/table";
+import type { TablePaginationConfig } from "antd/es/table";
 
 import { getAdminUsers, type AdminUserSummary } from "./api";
 
@@ -20,20 +21,40 @@ export default function UserListPage() {
   const [keyword, setKeyword] = useState("");
   const [data, setData] = useState<AdminUserSummary[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
 
-  async function loadUsers(nextKeyword = "") {
+  async function loadUsers(nextPageNum = 1, nextPageSize = pagination.pageSize, nextKeyword = keyword) {
     setLoading(true);
     try {
-      const response = await getAdminUsers({ keyword: nextKeyword });
+      const response = await getAdminUsers({
+        keyword: nextKeyword,
+        pageNum: nextPageNum,
+        pageSize: nextPageSize,
+      });
       setData(response.items);
+      setPagination({
+        current: response.pageNum,
+        pageSize: response.pageSize,
+        total: response.total,
+      });
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    void loadUsers();
+    void loadUsers(1, pagination.pageSize, "");
   }, []);
+
+  function handleTableChange(nextPagination: TablePaginationConfig) {
+    const nextPageNum = nextPagination.current ?? 1;
+    const nextPageSize = nextPagination.pageSize ?? pagination.pageSize;
+    void loadUsers(nextPageNum, nextPageSize, keyword);
+  }
 
   return (
     <Card title="用户管理">
@@ -43,14 +64,26 @@ export default function UserListPage() {
           enterButton="搜索"
           onSearch={(value) => {
             setKeyword(value);
-            void loadUsers(value);
+            void loadUsers(1, pagination.pageSize, value);
           }}
           placeholder="按昵称或手机号搜索"
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
         />
       </Space>
-      <Table columns={columns} dataSource={data} loading={loading} pagination={false} rowKey="id" />
+      <Table
+        columns={columns}
+        dataSource={data}
+        loading={loading}
+        onChange={handleTableChange}
+        pagination={{
+          current: pagination.current,
+          pageSize: pagination.pageSize,
+          total: pagination.total,
+          showSizeChanger: true,
+        }}
+        rowKey="id"
+      />
     </Card>
   );
 }
