@@ -10,7 +10,7 @@ const REGISTER_CODE_EXPIRES_AT_STORAGE_KEY = "mn-h5-register-code-expires-at";
 const REGISTER_CODE_COUNTDOWN_SECONDS = 60;
 
 type RegisterCodeResponse = {
-  code: string;
+  sent: boolean;
 };
 
 function readStoredCountdownDeadline() {
@@ -113,10 +113,16 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!verificationCode.trim()) {
+      setError("请输入验证码");
+      return;
+    }
+
     setError("");
 
     try {
-      await register({ email, password, confirmPassword });
+      await register({ email, password, confirmPassword, code: verificationCode.trim() });
+      persistCountdownDeadline(null);
       navigate(redirect, { replace: true });
     } catch (error) {
       setError(error instanceof Error ? error.message : "注册失败，请稍后重试");
@@ -136,7 +142,10 @@ export default function RegisterPage() {
       const response = await api.post<ApiResponse<RegisterCodeResponse>>("/api/v1/auth/register/code", {
         email,
       });
-      unwrapApiResponse(response.data);
+      const payload = unwrapApiResponse(response.data);
+      if (!payload.sent) {
+        throw new Error("验证码发送失败，请稍后重试");
+      }
       const expiresAt = Date.now() + REGISTER_CODE_COUNTDOWN_SECONDS * 1000;
       persistCountdownDeadline(expiresAt);
       setCountdownExpiresAt(expiresAt);

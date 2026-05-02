@@ -126,7 +126,23 @@ internal/
 | `created_at` | datetime | 创建时间 |
 | `updated_at` | datetime | 更新时间 |
 
-### 4.3 行程表 `trips`
+### 4.3 注册验证码表 `register_codes`
+
+| 字段 | 类型建议 | 说明 |
+|------|----------|------|
+| `email` | varchar(128) PK | 注册邮箱，同一时间只保留一条有效记录 |
+| `code` | varchar(6) | 6 位数字验证码 |
+| `expires_at` | datetime | 过期时间，固定为发送后 5 分钟 |
+| `used_at` | datetime null | 使用时间，未使用时为空 |
+| `created_at` | datetime | 创建时间 |
+| `updated_at` | datetime | 更新时间 |
+
+索引建议：
+
+- 主键：`email`
+- 索引：`idx_register_codes_expires_at(expires_at)`
+
+### 4.4 行程表 `trips`
 
 | 字段 | 类型建议 | 说明 |
 |------|----------|------|
@@ -157,7 +173,7 @@ internal/
 - `idx_trips_type_departure(trip_type, departure_at)`
 - `idx_trips_created(created_at desc)`
 
-### 4.4 收藏表 `trip_favorites`
+### 4.5 收藏表 `trip_favorites`
 
 | 字段 | 类型建议 | 说明 |
 |------|----------|------|
@@ -171,7 +187,7 @@ internal/
 - 唯一索引：`uk_trip_favorites_user_trip(user_id, trip_id)`
 - 索引：`idx_trip_favorites_user_created(user_id, created_at desc)`
 
-### 4.5 文件资源表 `file_assets`
+### 4.6 文件资源表 `file_assets`
 
 | 字段 | 类型建议 | 说明 |
 |------|----------|------|
@@ -289,11 +305,22 @@ internal/
 ### 7.1 用户注册
 
 1. 校验邮箱格式
-2. 校验邮箱唯一
-3. 密码加密存储
-4. 创建用户
-5. 签发 `accessToken + refreshToken`
-6. 返回用户信息与 token
+2. 校验邮箱验证码是否存在、匹配、未过期且未使用
+3. 校验邮箱唯一
+4. 验证码核销为已使用
+5. 密码加密存储
+6. 创建用户
+7. 签发 `accessToken + refreshToken`
+8. 返回用户信息与 token
+
+### 7.2 发送注册验证码
+
+1. 校验邮箱格式
+2. 校验邮箱未注册
+3. 生成 6 位随机数字验证码
+4. 以 `email` 为唯一键覆盖旧验证码
+5. 写入 `expires_at = now + 5 分钟`
+6. 调用邮件服务发送 HTML 模板
 
 ### 7.2 用户登录
 
@@ -359,6 +386,7 @@ internal/
 
 | 接口 | 说明 |
 |------|------|
+| `POST /api/v1/auth/register/code` | 发送注册验证码 |
 | `POST /api/v1/auth/register` | 注册 |
 | `POST /api/v1/auth/login` | 登录 |
 | `POST /api/v1/auth/refresh` | 刷新 access token |

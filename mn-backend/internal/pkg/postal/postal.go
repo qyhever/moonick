@@ -9,12 +9,29 @@ import (
 	"strings"
 )
 
+var sendMailImpl = sendMailSMTP
+
 // SendMail 发送邮件
 // to: 收件人邮箱
 // subject: 邮件标题
 // body: 邮件内容(支持HTML格式)
 func SendMail(to, subject, body string) error {
+	return sendMailImpl(to, subject, body)
+}
+
+func SetSendMailImplForTest(fn func(to, subject, body string) error) func() {
+	previous := sendMailImpl
+	sendMailImpl = fn
+	return func() {
+		sendMailImpl = previous
+	}
+}
+
+func sendMailSMTP(to, subject, body string) error {
 	cfg := config.GetConfig()
+	if cfg == nil {
+		return fmt.Errorf("postal config is nil")
+	}
 	fromName := cfg.Postal.FromName
 	fromEmail := cfg.Postal.FromEmail
 	smtpServer := cfg.Postal.SmtpServer

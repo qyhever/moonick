@@ -45,13 +45,14 @@ func SetupRouter() *gin.Engine {
 	db := initMySQLDB(cfg)
 	userRepo := mysql.NewUserRepository(db)
 	adminRepo := newAdminRepositoryFromConfig(cfg, db)
+	registerCodeRepo := mysql.NewRegisterCodeRepository(db)
 	r2Config := config.R2Config{}
 	if cfg != nil {
 		r2Config = cfg.R2
 	}
 	r2Storage := storage.NewR2(r2Config)
 	fileService := service.NewFileService(r2Storage)
-	authService := service.NewAuthService(userRepo, adminRepo, jwtManager)
+	authService := service.NewAuthService(userRepo, adminRepo, registerCodeRepo, jwtManager, service.NewPostalMailSender())
 	userService := service.NewUserService(userRepo, fileService)
 	tripRepo := mysql.NewTripRepository()
 	favoriteRepo := mysql.NewFavoriteRepository()

@@ -54,7 +54,7 @@ beforeEach(() => {
     user: null,
   });
   mockPost.mockReset();
-  mockPost.mockImplementation(async (url: string, payload?: { email: string }) => {
+  mockPost.mockImplementation(async (url: string, payload?: { email: string; password?: string; code?: string }) => {
     if (url === "/api/v1/auth/refresh") {
       return {
         data: {
@@ -84,7 +84,30 @@ beforeEach(() => {
           code: 1000,
           message: "success",
           data: {
-            code: "123456",
+            sent: true,
+          },
+        },
+      };
+    }
+
+    if (url === "/api/v1/auth/register" && payload) {
+      return {
+        data: {
+          code: 1000,
+          message: "success",
+          data: {
+            accessToken: "access-token",
+            refreshToken: "refresh-token",
+            user: {
+              id: 1,
+              email: payload.email,
+              phone: "",
+              nickname: "测试用户",
+              avatarUrl: "",
+              status: "active",
+              defaultWechat: "",
+              defaultPhone: "",
+            },
           },
         },
       };
@@ -293,6 +316,28 @@ it("blocks register submit when email format is invalid", async () => {
 
   expect(await screen.findByRole("alert")).toHaveTextContent("请输入有效的邮箱地址");
   expect(mockPost).not.toHaveBeenCalled();
+});
+
+it("submits register code with email and password to backend", async () => {
+  const { router } = renderWithRouter("/register?redirect=%2Fpublish");
+
+  await userEvent.type(screen.getByLabelText("邮箱"), "user@example.com");
+  await userEvent.type(screen.getByLabelText("密码"), "secret123");
+  await userEvent.type(screen.getByLabelText("确认密码"), "secret123");
+  await userEvent.type(screen.getByLabelText("验证码"), "795232");
+  await userEvent.click(screen.getByRole("button", { name: "注册" }));
+
+  await waitFor(() => {
+    expect(mockPost).toHaveBeenCalledWith("/api/v1/auth/register", {
+      email: "user@example.com",
+      password: "secret123",
+      code: "795232",
+    });
+  });
+
+  await waitFor(() => {
+    expect(router.state.location.pathname).toBe("/publish");
+  });
 });
 
 it("refreshes token pair through backend refresh endpoint", async () => {

@@ -37,6 +37,10 @@ func (c *AuthController) Register(ctx *gin.Context) {
 		switch {
 		case errors.Is(err, service.ErrEmailAlreadyRegistered):
 			ResponseFailedWithMsg(ctx, CodeUserExist, err.Error())
+		case errors.Is(err, service.ErrInvalidRegisterCode):
+			ResponseFailedWithMsg(ctx, CodeInvalidParam, err.Error())
+		case errors.Is(err, service.ErrInvalidEmail):
+			ResponseFailedWithMsg(ctx, CodeInvalidParam, err.Error())
 		case errors.Is(err, service.ErrInvalidUserCredentials):
 			ResponseFailedWithMsg(ctx, CodeInvalidParam, err.Error())
 		default:
@@ -58,8 +62,10 @@ func (c *AuthController) SendRegisterCode(ctx *gin.Context) {
 	resp, err := c.authService.SendRegisterCode(ctx, req)
 	if err != nil {
 		switch {
-		case errors.Is(err, service.ErrInvalidUserCredentials):
-			ResponseFailedWithMsg(ctx, CodeInvalidParam, "请输入有效的邮箱地址")
+		case errors.Is(err, service.ErrEmailAlreadyRegistered):
+			ResponseFailedWithMsg(ctx, CodeUserExist, err.Error())
+		case errors.Is(err, service.ErrInvalidEmail):
+			ResponseFailedWithMsg(ctx, CodeInvalidParam, err.Error())
 		default:
 			ResponseFailedWithMsg(ctx, CodeServerBusy, err.Error())
 		}

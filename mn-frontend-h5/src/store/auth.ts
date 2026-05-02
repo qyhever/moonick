@@ -37,6 +37,7 @@ type Credentials = {
 
 type RegisterPayload = Credentials & {
   confirmPassword: string;
+  code: string;
 };
 
 type AuthState = {
@@ -140,6 +141,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const res = await api.post<AuthResponse<AuthPayload>>("/api/v1/auth/register", {
       email: payload.email,
       password: payload.password,
+      code: payload.code,
     });
     applyAuthPayload(set, unwrapApiResponse(res.data));
   },

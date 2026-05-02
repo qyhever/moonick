@@ -31,5 +31,5 @@ type AuthPayload struct {
 }
 
 type RegisterCodePayload struct {
-	Code string `json:"code"`
+	Sent bool `json:"sent"`
 }

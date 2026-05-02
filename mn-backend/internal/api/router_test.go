@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"moonick/internal/config"
 	"moonick/internal/controller"
 	jwtpkg "moonick/internal/pkg/jwt"
+	"moonick/internal/pkg/postal"
 )
 
 func TestSetupRouter_RegistersProtectedDomains(t *testing.T) {
@@ -74,9 +76,11 @@ func TestSetupRouter_UserRouteRejectsRefreshToken(t *testing.T) {
 func TestSetupRouter_UserRefreshSucceedsWithRefreshToken(t *testing.T) {
 	restore := useValidJWTConfig(t)
 	defer restore()
+	mailbox := useFakeMailSender(t)
 
 	r := SetupRouter()
-	registerReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewBufferString(`{"email":"user@example.com","password":"secret123"}`))
+	code := sendRegisterCodeAndExtract(t, r, mailbox, "user@example.com")
+	registerReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewBufferString(`{"email":"user@example.com","password":"secret123","code":"`+code+`"}`))
 	registerReq.Header.Set("Content-Type", "application/json")
 	registerRec := httptest.NewRecorder()
 	r.ServeHTTP(registerRec, registerReq)
@@ -134,9 +138,10 @@ func TestSetupRouter_UserRefreshSucceedsWithRefreshToken(t *testing.T) {
 	}
 }
 
-func TestSetupRouter_RegisterCodeReturnsSixDigitCode(t *testing.T) {
+func TestSetupRouter_RegisterCodeSendsMailWithoutReturningCode(t *testing.T) {
 	restore := useValidJWTConfig(t)
 	defer restore()
+	mailbox := useFakeMailSender(t)
 
 	r := SetupRouter()
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register/code", bytes.NewBufferString(`{"email":"user@example.com"}`))
@@ -152,7 +157,7 @@ func TestSetupRouter_RegisterCodeReturnsSixDigitCode(t *testing.T) {
 	var resp struct {
 		Code controller.MyCode `json:"code"`
 		Data struct {
-			Code string `json:"code"`
+			Sent bool `json:"sent"`
 		} `json:"data"`
 	}
 	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
@@ -161,8 +166,14 @@ func TestSetupRouter_RegisterCodeReturnsSixDigitCode(t *testing.T) {
 	if resp.Code != controller.CodeSuccess {
 		t.Fatalf("expected success code, got %d, body=%s", resp.Code, rec.Body.String())
 	}
-	if len(resp.Data.Code) != 6 {
-		t.Fatalf("expected 6 digit register code, got %#v", resp.Data)
+	if !resp.Data.Sent {
+		t.Fatalf("expected sent=true, got %#v", resp.Data)
+	}
+	if len(mailbox.messages) != 1 {
+		t.Fatalf("expected one email message, got %d", len(mailbox.messages))
+	}
+	if extractCodeFromBody(mailbox.messages[0].body) == "" {
+		t.Fatalf("expected email body to contain 6 digit code, body=%s", mailbox.messages[0].body)
 	}
 }
 
@@ -483,6 +494,57 @@ func testJWTManager() *jwtpkg.Manager {
 		AccessTokenTTL:  config.GlobalConfig.JWT.AccessTokenTTL,
 		RefreshTokenTTL: config.GlobalConfig.JWT.RefreshTokenTTL,
 	})
+}
+
+type fakeMailbox struct {
+	messages []fakeMailMessage
+}
+
+type fakeMailMessage struct {
+	to      string
+	subject string
+	body    string
+}
+
+func useFakeMailSender(t *testing.T) *fakeMailbox {
+	t.Helper()
+
+	mailbox := &fakeMailbox{}
+	restore := postal.SetSendMailImplForTest(func(to, subject, body string) error {
+		mailbox.messages = append(mailbox.messages, fakeMailMessage{
+			to:      to,
+			subject: subject,
+			body:    body,
+		})
+		return nil
+	})
+	t.Cleanup(restore)
+	return mailbox
+}
+
+func sendRegisterCodeAndExtract(t *testing.T, r http.Handler, mailbox *fakeMailbox, email string) string {
+	t.Helper()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register/code", bytes.NewBufferString(`{"email":"`+email+`"}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	assertResponseCode(t, rec, controller.CodeSuccess)
+
+	if len(mailbox.messages) == 0 {
+		t.Fatal("expected register code email to be sent")
+	}
+
+	code := extractCodeFromBody(mailbox.messages[len(mailbox.messages)-1].body)
+	if code == "" {
+		t.Fatalf("expected email body to contain 6 digit code, body=%s", mailbox.messages[len(mailbox.messages)-1].body)
+	}
+	return code
+}
+
+func extractCodeFromBody(body string) string {
+	matched := regexp.MustCompile(`\b\d{6}\b`).FindString(body)
+	return matched
 }
 
 func assertResponseCode(t *testing.T, rec *httptest.ResponseRecorder, expectedCode controller.MyCode) {

@@ -5,20 +5,25 @@ import (
 	"crypto/rand"
 	"errors"
 	"math/big"
+	"net/mail"
 	"strconv"
 	"strings"
+	"time"
 
 	"moonick/internal/model/entity"
 	"moonick/internal/model/request"
 	"moonick/internal/model/response"
 	jwtpkg "moonick/internal/pkg/jwt"
 	"moonick/internal/pkg/password"
+	"moonick/internal/pkg/postal"
 	"moonick/internal/repository/mysql"
 )
 
 var (
 	ErrEmailAlreadyRegistered  = errors.New("该邮箱已注册，请直接登录")
 	ErrInvalidUserCredentials  = errors.New("邮箱或密码错误")
+	ErrInvalidEmail            = errors.New("请输入有效的邮箱地址")
+	ErrInvalidRegisterCode     = errors.New("验证码错误或已失效")
 	ErrInvalidAdminCredentials = errors.New("账号或密码错误")
 	ErrInvalidRefreshToken     = errors.New("refresh token 无效")
 	ErrUserNotFound            = errors.New("用户不存在")
@@ -46,17 +51,37 @@ type authAdminRepository interface {
 	FindByID(ctx context.Context, id int64) (*entity.Admin, error)
 }
 
-type AuthService struct {
-	userRepo    authUserRepository
-	adminRepo   authAdminRepository
-	tokenManger tokenManager
+type registerCodeRepository interface {
+	FindByEmail(ctx context.Context, email string) (*entity.RegisterCode, error)
+	Save(ctx context.Context, code entity.RegisterCode) error
+	Consume(ctx context.Context, email, code string, now time.Time) (bool, error)
 }
 
-func NewAuthService(userRepo authUserRepository, adminRepo authAdminRepository, tokenManager tokenManager) *AuthService {
+type mailSender interface {
+	Send(to, subject, body string) error
+}
+
+type AuthService struct {
+	userRepo         authUserRepository
+	adminRepo        authAdminRepository
+	registerCodeRepo registerCodeRepository
+	tokenManger      tokenManager
+	mailSender       mailSender
+}
+
+func NewAuthService(
+	userRepo authUserRepository,
+	adminRepo authAdminRepository,
+	registerCodeRepo registerCodeRepository,
+	tokenManager tokenManager,
+	mailSender mailSender,
+) *AuthService {
 	return &AuthService{
-		userRepo:    userRepo,
-		adminRepo:   adminRepo,
-		tokenManger: tokenManager,
+		userRepo:         userRepo,
+		adminRepo:        adminRepo,
+		registerCodeRepo: registerCodeRepo,
+		tokenManger:      tokenManager,
+		mailSender:       mailSender,
 	}
 }
 
@@ -66,8 +91,29 @@ func (s *AuthService) Register(ctx context.Context, req request.RegisterRequest)
 	}
 
 	email := strings.TrimSpace(req.Email)
-	if email == "" || strings.TrimSpace(req.Password) == "" {
+	if !isValidEmail(email) {
+		return nil, ErrInvalidEmail
+	}
+	if strings.TrimSpace(req.Password) == "" {
 		return nil, ErrInvalidUserCredentials
+	}
+	existingUser, err := s.userRepo.FindByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+	if existingUser != nil {
+		return nil, ErrEmailAlreadyRegistered
+	}
+	if s.registerCodeRepo == nil {
+		return nil, ErrInvalidRegisterCode
+	}
+
+	consumed, err := s.registerCodeRepo.Consume(ctx, email, strings.TrimSpace(req.Code), time.Now())
+	if err != nil {
+		return nil, err
+	}
+	if !consumed {
+		return nil, ErrInvalidRegisterCode
 	}
 
 	hash, err := password.Hash(req.Password)
@@ -93,17 +139,43 @@ func (s *AuthService) Register(ctx context.Context, req request.RegisterRequest)
 
 func (s *AuthService) SendRegisterCode(ctx context.Context, req request.SendRegisterCodeRequest) (*response.RegisterCodePayload, error) {
 	email := strings.TrimSpace(req.Email)
-	if email == "" {
-		return nil, ErrInvalidUserCredentials
+	if !isValidEmail(email) {
+		return nil, ErrInvalidEmail
+	}
+	if s.userRepo == nil {
+		return nil, ErrUserNotFound
+	}
+	if s.registerCodeRepo == nil || s.mailSender == nil {
+		return nil, ErrInvalidRegisterCode
+	}
+
+	user, err := s.userRepo.FindByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+	if user != nil {
+		return nil, ErrEmailAlreadyRegistered
 	}
 
 	code, err := generateVerificationCode(6)
 	if err != nil {
 		return nil, err
 	}
+	now := time.Now()
+	expiresAt := now.Add(5 * time.Minute)
+	if err := s.registerCodeRepo.Save(ctx, entity.RegisterCode{
+		Email:     email,
+		Code:      code,
+		ExpiresAt: expiresAt,
+	}); err != nil {
+		return nil, err
+	}
+	if err := s.mailSender.Send(email, "邮箱验证码", buildRegisterCodeEmailBody(code)); err != nil {
+		return nil, err
+	}
 
 	return &response.RegisterCodePayload{
-		Code: code,
+		Sent: true,
 	}, nil
 }
 
@@ -305,6 +377,36 @@ func generateVerificationCode(length int) (string, error) {
 	}
 
 	return string(digits), nil
+}
+
+func isValidEmail(email string) bool {
+	parsed, err := mail.ParseAddress(email)
+	return err == nil && strings.EqualFold(strings.TrimSpace(parsed.Address), strings.TrimSpace(email))
+}
+
+func buildRegisterCodeEmailBody(code string) string {
+	return `<div style="margin:0;padding:0;background:#f5f7fa;">
+  <div style="max-width:640px;margin:0 auto;background:#ffffff;font-family:'PingFang SC','Microsoft YaHei',sans-serif;color:#1f2937;">
+    <div style="height:16px;background:linear-gradient(90deg,#2f6fed 0%,#5ab7ff 100%);"></div>
+    <div style="padding:32px 32px 40px;">
+      <div style="font-size:24px;font-weight:700;line-height:1.4;margin-bottom:24px;">明叶同行</div>
+      <div style="font-size:20px;font-weight:600;line-height:1.4;margin-bottom:24px;">邮箱验证码</div>
+      <div style="font-size:15px;line-height:1.9;white-space:pre-line;">尊敬的用户您好！
+
+您的验证码是：` + code + `，请在 5 分钟内进行验证。如果该验证码不为您本人申请，请无视。</div>
+    </div>
+  </div>
+</div>`
+}
+
+type PostalMailSender struct{}
+
+func NewPostalMailSender() *PostalMailSender {
+	return &PostalMailSender{}
+}
+
+func (s *PostalMailSender) Send(to, subject, body string) error {
+	return postal.SendMail(to, subject, body)
 }
 
 func emailSuffix(email string) string {

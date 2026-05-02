@@ -3,6 +3,7 @@ package request
 type RegisterRequest struct {
 	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
+	Code     string `json:"code" binding:"required"`
 }
 
 type SendRegisterCodeRequest struct {
