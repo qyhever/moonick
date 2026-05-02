@@ -3,6 +3,7 @@ import type { AdminTripListResponse } from "../trips/api";
 
 export type AdminUserSummary = {
   id: number;
+  email: string;
   phone: string;
   nickname: string;
   status: string;
@@ -18,6 +19,7 @@ export type AdminUserListResponse = {
 
 export type AdminUserDetail = {
   id: number;
+  email: string;
   phone: string;
   nickname: string;
   avatarUrl: string;

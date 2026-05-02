@@ -11,6 +11,7 @@ import { formatDateTime } from "../../lib/dateTime";
 const columns: ColumnsType<AdminUserSummary> = [
   { title: "ID", dataIndex: "id", width: 90 },
   { title: "昵称", dataIndex: "nickname" },
+  { title: "邮箱", dataIndex: "email" },
   { title: "手机号", dataIndex: "phone" },
   {
     title: "注册时间",
@@ -77,7 +78,7 @@ export default function UserListPage() {
             setKeyword(value);
             void loadUsers(1, pagination.pageSize, value);
           }}
-          placeholder="按昵称或手机号搜索"
+          placeholder="按昵称、邮箱或手机号搜索"
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
         />

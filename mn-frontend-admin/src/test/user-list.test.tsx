@@ -22,6 +22,7 @@ it("requests paginated users and reloads when page changes", async () => {
     items: [
       {
         id: 1,
+        email: "user1@example.com",
         phone: "13800138000",
         nickname: "测试用户",
         status: "active",
@@ -54,6 +55,7 @@ it("requests paginated users and reloads when page changes", async () => {
     items: [
       {
         id: 11,
+        email: "user2@example.com",
         phone: "13900139000",
         nickname: "第二页用户",
         status: "active",

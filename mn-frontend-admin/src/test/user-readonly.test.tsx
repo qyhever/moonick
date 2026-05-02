@@ -17,6 +17,7 @@ import UserDetailPage from "../features/users/UserDetailPage";
 it("does not render destructive actions on user detail page", async () => {
   mockGetAdminUserDetail.mockResolvedValue({
     id: 8,
+    email: "user8@example.com",
     phone: "13800138000",
     nickname: "测试用户",
     avatarUrl: "",

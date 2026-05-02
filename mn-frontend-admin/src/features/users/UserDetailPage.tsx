@@ -62,6 +62,7 @@ export default function UserDetailPage() {
       <Card style={{ marginBottom: 16 }}>
         <Descriptions bordered title="基本资料">
           <Descriptions.Item label="昵称">{user.nickname}</Descriptions.Item>
+          <Descriptions.Item label="邮箱">{user.email}</Descriptions.Item>
           <Descriptions.Item label="手机号">{user.phone}</Descriptions.Item>
           <Descriptions.Item label="状态">{getUserStatusText(user.status)}</Descriptions.Item>
           <Descriptions.Item label="注册时间">{formatDateTime(user.createdAt)}</Descriptions.Item>
