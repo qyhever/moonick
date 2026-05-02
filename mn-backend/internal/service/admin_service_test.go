@@ -18,6 +18,7 @@ func TestAdminService_GetDashboardSummary(t *testing.T) {
 	favoriteRepo := mysql.NewFavoriteRepository()
 
 	userA, err := userRepo.Create(ctx, entity.User{
+		Email:        "user-a@example.com",
 		Phone:        "13800138000",
 		PasswordHash: "hash-a",
 		Nickname:     "用户A",
@@ -27,6 +28,7 @@ func TestAdminService_GetDashboardSummary(t *testing.T) {
 		t.Fatalf("create user a: %v", err)
 	}
 	userB, err := userRepo.Create(ctx, entity.User{
+		Email:        "user-b@example.com",
 		Phone:        "13800138001",
 		PasswordHash: "hash-b",
 		Nickname:     "用户B",
@@ -94,6 +96,7 @@ func TestAdminService_UpdateTripRejectsExpiredStatus(t *testing.T) {
 	favoriteRepo := mysql.NewFavoriteRepository()
 
 	user, err := userRepo.Create(ctx, entity.User{
+		Email:        "user-c@example.com",
 		Phone:        "13800138002",
 		PasswordHash: "hash-a",
 		Nickname:     "用户C",
@@ -132,6 +135,7 @@ func TestAdminService_UpdateTripRejectsChangingExpiredTrip(t *testing.T) {
 	favoriteRepo := mysql.NewFavoriteRepository()
 
 	user, err := userRepo.Create(ctx, entity.User{
+		Email:        "user-d@example.com",
 		Phone:        "13800138003",
 		PasswordHash: "hash-a",
 		Nickname:     "用户D",
@@ -170,6 +174,7 @@ func TestAdminService_GetUserDetailCountsAllPublishedTrips(t *testing.T) {
 	favoriteRepo := mysql.NewFavoriteRepository()
 
 	user, err := userRepo.Create(ctx, entity.User{
+		Email:        "user-e@example.com",
 		Phone:        "13800138004",
 		PasswordHash: "hash-a",
 		Nickname:     "用户E",
@@ -216,6 +221,7 @@ func TestAdminService_ListUsersIncludesCreatedAt(t *testing.T) {
 	favoriteRepo := mysql.NewFavoriteRepository()
 
 	user, err := userRepo.Create(ctx, entity.User{
+		Email:        "list-user@example.com",
 		Phone:        "13800138005",
 		PasswordHash: "hash-list",
 		Nickname:     "列表用户",
@@ -245,6 +251,7 @@ func TestAdminService_UpdateTripDetail(t *testing.T) {
 	favoriteRepo := mysql.NewFavoriteRepository()
 
 	user, err := userRepo.Create(ctx, entity.User{
+		Email:        "user-z@example.com",
 		Phone:        "13800138100",
 		PasswordHash: "hash-z",
 		Nickname:     "用户Z",
@@ -315,6 +322,7 @@ func TestAdminService_UpdateTripDetailPreservesOptionalFieldsWhenOmitted(t *test
 	favoriteRepo := mysql.NewFavoriteRepository()
 
 	user, err := userRepo.Create(ctx, entity.User{
+		Email:        "detail-user@example.com",
 		Phone:        "13800138103",
 		PasswordHash: "hash-keep",
 		Nickname:     "保留用户",
@@ -372,6 +380,7 @@ func TestAdminService_UpdateTripDetailRejectsExpiredTrip(t *testing.T) {
 	favoriteRepo := mysql.NewFavoriteRepository()
 
 	user, err := userRepo.Create(ctx, entity.User{
+		Email:        "closed-user@example.com",
 		Phone:        "13800138101",
 		PasswordHash: "hash-expired",
 		Nickname:     "过期用户",
@@ -423,6 +432,7 @@ func TestAdminService_UpdateTripDetailValidationErrors(t *testing.T) {
 	favoriteRepo := mysql.NewFavoriteRepository()
 
 	user, err := userRepo.Create(ctx, entity.User{
+		Email:        "expired-user@example.com",
 		Phone:        "13800138102",
 		PasswordHash: "hash-v",
 		Nickname:     "校验用户",

@@ -213,6 +213,7 @@ func (s *AdminService) ListUsers(ctx context.Context, req request.ListUserReques
 	for _, user := range users {
 		items = append(items, &response.AdminUserSummary{
 			ID:        user.ID,
+			Email:     user.Email,
 			Phone:     user.Phone,
 			Nickname:  user.Nickname,
 			Status:    user.Status,
@@ -251,6 +252,7 @@ func (s *AdminService) GetUserDetail(ctx context.Context, userID int64) (*respon
 
 	return &response.AdminUserDetail{
 		ID:                 user.ID,
+		Email:              user.Email,
 		Phone:              user.Phone,
 		Nickname:           user.Nickname,
 		AvatarURL:          user.AvatarURL,

@@ -16,7 +16,7 @@ import (
 
 var (
 	ErrUserNotFound           = errors.New("user not found")
-	ErrUserPhoneAlreadyExists = errors.New("user phone already exists")
+	ErrUserEmailAlreadyExists = errors.New("user email already exists")
 )
 
 type UserRepository struct {
@@ -24,7 +24,7 @@ type UserRepository struct {
 	mu             sync.RWMutex
 	nextID         int64
 	usersByID      map[int64]entity.User
-	userIDsByPhone map[string]int64
+	userIDsByEmail map[string]int64
 }
 
 func NewUserRepository(dbs ...*sql.DB) *UserRepository {
@@ -35,7 +35,7 @@ func NewUserRepository(dbs ...*sql.DB) *UserRepository {
 		return &UserRepository{
 			nextID:         1000,
 			usersByID:      make(map[int64]entity.User),
-			userIDsByPhone: make(map[string]int64),
+			userIDsByEmail: make(map[string]int64),
 		}
 	}
 
@@ -46,21 +46,21 @@ func NewUserRepository(dbs ...*sql.DB) *UserRepository {
 	return &UserRepository{
 		nextID:         1000,
 		usersByID:      make(map[int64]entity.User),
-		userIDsByPhone: make(map[string]int64),
+		userIDsByEmail: make(map[string]int64),
 	}
 }
 
-func (r *UserRepository) FindByPhone(ctx context.Context, phone string) (*entity.User, error) {
+func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*entity.User, error) {
 	if r.db != nil {
-		return r.findOne(ctx, `SELECT id, phone, password_hash, nickname, avatar_url, status, default_phone, default_wechat, created_at, updated_at
+		return r.findOne(ctx, `SELECT id, email, phone, password_hash, nickname, avatar_url, status, default_phone, default_wechat, created_at, updated_at
 FROM users
-WHERE phone = ?`, phone)
+WHERE email = ?`, email)
 	}
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	id, ok := r.userIDsByPhone[phone]
+	id, ok := r.userIDsByEmail[email]
 	if !ok {
 		return nil, nil
 	}
@@ -71,7 +71,7 @@ WHERE phone = ?`, phone)
 
 func (r *UserRepository) FindByID(ctx context.Context, id int64) (*entity.User, error) {
 	if r.db != nil {
-		return r.findOne(ctx, `SELECT id, phone, password_hash, nickname, avatar_url, status, default_phone, default_wechat, created_at, updated_at
+		return r.findOne(ctx, `SELECT id, email, phone, password_hash, nickname, avatar_url, status, default_phone, default_wechat, created_at, updated_at
 FROM users
 WHERE id = ?`, id)
 	}
@@ -88,8 +88,9 @@ WHERE id = ?`, id)
 
 func (r *UserRepository) Create(ctx context.Context, user entity.User) (*entity.User, error) {
 	if r.db != nil {
-		result, err := r.db.ExecContext(ctx, `INSERT INTO users (phone, password_hash, nickname, avatar_url, status, default_phone, default_wechat)
-VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		result, err := r.db.ExecContext(ctx, `INSERT INTO users (email, phone, password_hash, nickname, avatar_url, status, default_phone, default_wechat)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			user.Email,
 			user.Phone,
 			user.PasswordHash,
 			user.Nickname,
@@ -99,7 +100,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?)`,
 			user.DefaultWechat,
 		)
 		if isDuplicateKeyError(err) {
-			return nil, ErrUserPhoneAlreadyExists
+			return nil, ErrUserEmailAlreadyExists
 		}
 		if err != nil {
 			return nil, err
@@ -115,8 +116,8 @@ VALUES (?, ?, ?, ?, ?, ?, ?)`,
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if _, exists := r.userIDsByPhone[user.Phone]; exists {
-		return nil, ErrUserPhoneAlreadyExists
+	if _, exists := r.userIDsByEmail[user.Email]; exists {
+		return nil, ErrUserEmailAlreadyExists
 	}
 
 	r.nextID++
@@ -125,7 +126,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?)`,
 	user.CreatedAt = now
 	user.UpdatedAt = now
 	r.usersByID[user.ID] = user
-	r.userIDsByPhone[user.Phone] = user.ID
+	r.userIDsByEmail[user.Email] = user.ID
 	return cloneUser(user), nil
 }
 
@@ -199,7 +200,7 @@ func (r *UserRepository) List(ctx context.Context, offset, limit int, keyword st
 	normalizedKeyword := strings.ToLower(strings.TrimSpace(keyword))
 	for _, user := range r.usersByID {
 		if normalizedKeyword != "" {
-			haystack := strings.ToLower(user.Phone + " " + user.Nickname)
+			haystack := strings.ToLower(user.Email + " " + user.Phone + " " + user.Nickname)
 			if !strings.Contains(haystack, normalizedKeyword) {
 				continue
 			}
@@ -246,6 +247,7 @@ func (r *UserRepository) findOne(ctx context.Context, query string, arg any) (*e
 	var user entity.User
 	err := r.db.QueryRowContext(ctx, query, arg).Scan(
 		&user.ID,
+		&user.Email,
 		&user.Phone,
 		&user.PasswordHash,
 		&user.Nickname,
@@ -268,17 +270,17 @@ func (r *UserRepository) findOne(ctx context.Context, query string, arg any) (*e
 func (r *UserRepository) listFromDB(ctx context.Context, offset, limit int, keyword string) ([]*entity.User, int, error) {
 	normalizedKeyword := strings.TrimSpace(keyword)
 	countQuery := `SELECT COUNT(*) FROM users`
-	listQuery := `SELECT id, phone, password_hash, nickname, avatar_url, status, default_phone, default_wechat, created_at, updated_at
+	listQuery := `SELECT id, email, phone, password_hash, nickname, avatar_url, status, default_phone, default_wechat, created_at, updated_at
 FROM users`
-	args := make([]any, 0, 4)
-	countArgs := make([]any, 0, 2)
+	args := make([]any, 0, 5)
+	countArgs := make([]any, 0, 3)
 	if normalizedKeyword != "" {
 		filter := "%" + normalizedKeyword + "%"
-		whereClause := ` WHERE phone LIKE ? OR nickname LIKE ?`
+		whereClause := ` WHERE email LIKE ? OR phone LIKE ? OR nickname LIKE ?`
 		countQuery += whereClause
 		listQuery += whereClause
-		countArgs = append(countArgs, filter, filter)
-		args = append(args, filter, filter)
+		countArgs = append(countArgs, filter, filter, filter)
+		args = append(args, filter, filter, filter)
 	}
 	listQuery += ` ORDER BY id DESC`
 	if limit > 0 {
@@ -306,6 +308,7 @@ FROM users`
 		var user entity.User
 		if err := rows.Scan(
 			&user.ID,
+			&user.Email,
 			&user.Phone,
 			&user.PasswordHash,
 			&user.Nickname,

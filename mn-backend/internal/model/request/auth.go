@@ -1,12 +1,12 @@
 package request
 
 type RegisterRequest struct {
-	Phone    string `json:"phone" binding:"required"`
+	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 
 type LoginRequest struct {
-	Phone    string `json:"phone" binding:"required"`
+	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 

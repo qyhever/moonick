@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	ErrPhoneAlreadyRegistered  = errors.New("该手机号已注册，请直接登录")
-	ErrInvalidUserCredentials  = errors.New("手机号或密码错误")
+	ErrEmailAlreadyRegistered  = errors.New("该邮箱已注册，请直接登录")
+	ErrInvalidUserCredentials  = errors.New("邮箱或密码错误")
 	ErrInvalidAdminCredentials = errors.New("账号或密码错误")
 	ErrInvalidRefreshToken     = errors.New("refresh token 无效")
 	ErrUserNotFound            = errors.New("用户不存在")
@@ -34,7 +34,7 @@ type tokenManager interface {
 }
 
 type authUserRepository interface {
-	FindByPhone(ctx context.Context, phone string) (*entity.User, error)
+	FindByEmail(ctx context.Context, email string) (*entity.User, error)
 	FindByID(ctx context.Context, id int64) (*entity.User, error)
 	Create(ctx context.Context, user entity.User) (*entity.User, error)
 }
@@ -63,8 +63,8 @@ func (s *AuthService) Register(ctx context.Context, req request.RegisterRequest)
 		return nil, ErrUserNotFound
 	}
 
-	phone := strings.TrimSpace(req.Phone)
-	if phone == "" || strings.TrimSpace(req.Password) == "" {
+	email := strings.TrimSpace(req.Email)
+	if email == "" || strings.TrimSpace(req.Password) == "" {
 		return nil, ErrInvalidUserCredentials
 	}
 
@@ -74,14 +74,14 @@ func (s *AuthService) Register(ctx context.Context, req request.RegisterRequest)
 	}
 
 	user, err := s.userRepo.Create(ctx, entity.User{
-		Phone:        phone,
+		Email:        email,
 		PasswordHash: hash,
-		Nickname:     "用户" + phoneSuffix(phone),
+		Nickname:     "用户" + emailSuffix(email),
 		Status:       "active",
 	})
 	if err != nil {
-		if errors.Is(err, mysql.ErrUserPhoneAlreadyExists) {
-			return nil, ErrPhoneAlreadyRegistered
+		if errors.Is(err, mysql.ErrUserEmailAlreadyExists) {
+			return nil, ErrEmailAlreadyRegistered
 		}
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (s *AuthService) Login(ctx context.Context, req request.LoginRequest) (*res
 		return nil, ErrUserNotFound
 	}
 
-	user, err := s.userRepo.FindByPhone(ctx, strings.TrimSpace(req.Phone))
+	user, err := s.userRepo.FindByEmail(ctx, strings.TrimSpace(req.Email))
 	if err != nil {
 		return nil, err
 	}
@@ -262,6 +262,7 @@ func toUserProfile(user *entity.User) *response.UserProfile {
 
 	return &response.UserProfile{
 		ID:            user.ID,
+		Email:         user.Email,
 		Phone:         user.Phone,
 		Nickname:      user.Nickname,
 		AvatarURL:     user.AvatarURL,
@@ -271,9 +272,13 @@ func toUserProfile(user *entity.User) *response.UserProfile {
 	}
 }
 
-func phoneSuffix(phone string) string {
-	if len(phone) >= 4 {
-		return phone[len(phone)-4:]
+func emailSuffix(email string) string {
+	name := email
+	if at := strings.Index(email, "@"); at > 0 {
+		name = email[:at]
 	}
-	return phone
+	if len(name) >= 4 {
+		return name[len(name)-4:]
+	}
+	return name
 }

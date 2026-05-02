@@ -76,7 +76,7 @@ func TestSetupRouter_UserRefreshSucceedsWithRefreshToken(t *testing.T) {
 	defer restore()
 
 	r := SetupRouter()
-	registerReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewBufferString(`{"phone":"13800138000","password":"secret123"}`))
+	registerReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewBufferString(`{"email":"user@example.com","password":"secret123"}`))
 	registerReq.Header.Set("Content-Type", "application/json")
 	registerRec := httptest.NewRecorder()
 	r.ServeHTTP(registerRec, registerReq)
@@ -116,7 +116,7 @@ func TestSetupRouter_UserRefreshSucceedsWithRefreshToken(t *testing.T) {
 			AccessToken  string `json:"accessToken"`
 			RefreshToken string `json:"refreshToken"`
 			User         struct {
-				Phone string `json:"phone"`
+				Email string `json:"email"`
 			} `json:"user"`
 		} `json:"data"`
 	}
@@ -129,8 +129,8 @@ func TestSetupRouter_UserRefreshSucceedsWithRefreshToken(t *testing.T) {
 	if refreshResp.Data.AccessToken == "" || refreshResp.Data.RefreshToken == "" {
 		t.Fatalf("expected refresh response tokens, body=%s", refreshRec.Body.String())
 	}
-	if refreshResp.Data.User.Phone != "13800138000" {
-		t.Fatalf("expected refreshed user phone, got %#v", refreshResp.Data.User)
+	if refreshResp.Data.User.Email != "user@example.com" {
+		t.Fatalf("expected refreshed user email, got %#v", refreshResp.Data.User)
 	}
 }
 

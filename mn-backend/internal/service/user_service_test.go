@@ -14,7 +14,7 @@ import (
 
 func TestUserService_UpdateAvatarRollbackOnUploadError(t *testing.T) {
 	repo := &userRepoStub{
-		user: &entity.User{ID: 1001, Phone: "13800138000", Nickname: "测试用户", Status: "active"},
+		user: &entity.User{ID: 1001, Email: "user@example.com", Phone: "13800138000", Nickname: "测试用户", Status: "active"},
 	}
 	svc := newUserServiceForTest(repo, &uploadStub{err: errors.New("r2 down")})
 

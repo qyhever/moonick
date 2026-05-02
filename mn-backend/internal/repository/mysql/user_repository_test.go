@@ -8,11 +8,12 @@ import (
 	"moonick/internal/model/entity"
 )
 
-func TestUserRepository_CreateRejectsDuplicatePhone(t *testing.T) {
+func TestUserRepository_CreateRejectsDuplicateEmail(t *testing.T) {
 	db := newRepositoryTestDB(t)
 	repo := NewUserRepository(db)
 
 	if _, err := repo.Create(context.Background(), entity.User{
+		Email:        "user@example.com",
 		Phone:        "13800138000",
 		PasswordHash: "hash-1",
 		Nickname:     "用户8000",
@@ -22,13 +23,14 @@ func TestUserRepository_CreateRejectsDuplicatePhone(t *testing.T) {
 	}
 
 	_, err := repo.Create(context.Background(), entity.User{
+		Email:        "user@example.com",
 		Phone:        "13800138000",
 		PasswordHash: "hash-2",
 		Nickname:     "重复用户",
 		Status:       "active",
 	})
-	if !errors.Is(err, ErrUserPhoneAlreadyExists) {
-		t.Fatalf("expected duplicate phone error, got %v", err)
+	if !errors.Is(err, ErrUserEmailAlreadyExists) {
+		t.Fatalf("expected duplicate email error, got %v", err)
 	}
 }
 
@@ -40,6 +42,7 @@ func TestUserRepository_DatabaseFlow(t *testing.T) {
 	}
 
 	created, err := repo.Create(context.Background(), entity.User{
+		Email:        "db-user@example.com",
 		Phone:        "13900139000",
 		PasswordHash: "hash-db",
 		Nickname:     "数据库用户",
@@ -51,12 +54,12 @@ func TestUserRepository_DatabaseFlow(t *testing.T) {
 		t.Fatalf("create user: %v", err)
 	}
 
-	byPhone, err := repo.FindByPhone(context.Background(), created.Phone)
+	byEmail, err := repo.FindByEmail(context.Background(), created.Email)
 	if err != nil {
-		t.Fatalf("find by phone: %v", err)
+		t.Fatalf("find by email: %v", err)
 	}
-	if byPhone == nil || byPhone.ID != created.ID {
-		t.Fatalf("unexpected user by phone: %#v", byPhone)
+	if byEmail == nil || byEmail.ID != created.ID {
+		t.Fatalf("unexpected user by email: %#v", byEmail)
 	}
 
 	byID, err := repo.FindByID(context.Background(), created.ID)
@@ -119,6 +122,7 @@ func TestUserRepository_NilDBFallsBackToMemoryEvenIfSharedDBExists(t *testing.T)
 	}
 
 	created, err := repo.Create(context.Background(), entity.User{
+		Email:        "memory-user@example.com",
 		Phone:        "13700137000",
 		PasswordHash: "hash-memory",
 		Nickname:     "内存用户",
@@ -145,6 +149,7 @@ func TestUserRepository_UpdateSameValueDoesNotReturnNotFound(t *testing.T) {
 	repo := NewUserRepository(db)
 
 	created, err := repo.Create(context.Background(), entity.User{
+		Email:         "same-user@example.com",
 		Phone:         "13600136000",
 		PasswordHash:  "hash-same",
 		Nickname:      "同值用户",
@@ -173,9 +178,9 @@ func TestUserRepository_ListWithoutLimitStillHonorsOffset(t *testing.T) {
 	repo := NewUserRepository(db)
 
 	for _, user := range []entity.User{
-		{Phone: "13500135001", PasswordHash: "hash-1", Nickname: "用户1", Status: "active"},
-		{Phone: "13500135002", PasswordHash: "hash-2", Nickname: "用户2", Status: "active"},
-		{Phone: "13500135003", PasswordHash: "hash-3", Nickname: "用户3", Status: "active"},
+		{Email: "user1@example.com", Phone: "13500135001", PasswordHash: "hash-1", Nickname: "用户1", Status: "active"},
+		{Email: "user2@example.com", Phone: "13500135002", PasswordHash: "hash-2", Nickname: "用户2", Status: "active"},
+		{Email: "user3@example.com", Phone: "13500135003", PasswordHash: "hash-3", Nickname: "用户3", Status: "active"},
 	} {
 		if _, err := repo.Create(context.Background(), user); err != nil {
 			t.Fatalf("create user %s: %v", user.Phone, err)

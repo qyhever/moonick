@@ -7,6 +7,7 @@ type TokenPair struct {
 
 type UserProfile struct {
 	ID            int64  `json:"id"`
+	Email         string `json:"email"`
 	Phone         string `json:"phone"`
 	Nickname      string `json:"nickname"`
 	AvatarURL     string `json:"avatarUrl"`

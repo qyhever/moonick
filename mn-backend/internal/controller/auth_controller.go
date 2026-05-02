@@ -35,7 +35,7 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	resp, err := c.authService.Register(ctx, req)
 	if err != nil {
 		switch {
-		case errors.Is(err, service.ErrPhoneAlreadyRegistered):
+		case errors.Is(err, service.ErrEmailAlreadyRegistered):
 			ResponseFailedWithMsg(ctx, CodeUserExist, err.Error())
 		case errors.Is(err, service.ErrInvalidUserCredentials):
 			ResponseFailedWithMsg(ctx, CodeInvalidParam, err.Error())

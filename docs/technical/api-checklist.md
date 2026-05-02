@@ -31,6 +31,7 @@ mysql -h <host> -P <port> -u <user> -p <database> < docs/sql/001_init.sql
 说明：
 
 - `mn-backend/docs/sql/001_init.sql` 当前已去掉 `trips.remark` 的 `TEXT DEFAULT ''` 定义，兼容本地联调使用的 MySQL 版本
+- 如果目标库已经存在旧版手机号登录结构的 `users` 表，需额外执行 `mn-backend/docs/sql/004_migrate_users_email_auth.sql`
 - 如果导入过程曾中途失败，重跑前先清空目标库或删除已创建表，避免留下半套结构
 
 - [ ] 已确认初始化脚本路径：`mn-backend/docs/sql/001_init.sql`

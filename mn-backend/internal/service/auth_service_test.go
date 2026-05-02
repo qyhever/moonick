@@ -16,7 +16,7 @@ func TestAuthService_RegisterAndLogin(t *testing.T) {
 	svc := newAuthServiceForTest()
 
 	registerResp, err := svc.Register(context.Background(), request.RegisterRequest{
-		Phone:    "13800138000",
+		Email:    "user@example.com",
 		Password: "secret123",
 	})
 	if err != nil {
@@ -27,22 +27,22 @@ func TestAuthService_RegisterAndLogin(t *testing.T) {
 	}
 
 	loginResp, err := svc.Login(context.Background(), request.LoginRequest{
-		Phone:    "13800138000",
+		Email:    "user@example.com",
 		Password: "secret123",
 	})
 	if err != nil {
 		t.Fatalf("login returned error: %v", err)
 	}
-	if loginResp == nil || loginResp.User == nil || loginResp.User.Phone != "13800138000" {
-		t.Fatalf("expected login user phone to be 13800138000, got %#v", loginResp)
+	if loginResp == nil || loginResp.User == nil || loginResp.User.Email != "user@example.com" {
+		t.Fatalf("expected login user email to be user@example.com, got %#v", loginResp)
 	}
 }
 
-func TestAuthService_RegisterRejectsDuplicatePhone(t *testing.T) {
+func TestAuthService_RegisterRejectsDuplicateEmail(t *testing.T) {
 	svc := newAuthServiceForTest()
 
 	_, err := svc.Register(context.Background(), request.RegisterRequest{
-		Phone:    "13800138000",
+		Email:    "user@example.com",
 		Password: "secret123",
 	})
 	if err != nil {
@@ -50,14 +50,14 @@ func TestAuthService_RegisterRejectsDuplicatePhone(t *testing.T) {
 	}
 
 	_, err = svc.Register(context.Background(), request.RegisterRequest{
-		Phone:    "13800138000",
+		Email:    "user@example.com",
 		Password: "secret123",
 	})
 	if err == nil {
 		t.Fatal("expected duplicate register to fail")
 	}
-	if err != ErrPhoneAlreadyRegistered {
-		t.Fatalf("expected ErrPhoneAlreadyRegistered, got %v", err)
+	if err != ErrEmailAlreadyRegistered {
+		t.Fatalf("expected ErrEmailAlreadyRegistered, got %v", err)
 	}
 }
 
@@ -65,7 +65,7 @@ func TestAuthService_RefreshUserToken(t *testing.T) {
 	svc := newAuthServiceForTest()
 
 	registerResp, err := svc.Register(context.Background(), request.RegisterRequest{
-		Phone:    "13800138000",
+		Email:    "user@example.com",
 		Password: "secret123",
 	})
 	if err != nil {
@@ -79,7 +79,7 @@ func TestAuthService_RefreshUserToken(t *testing.T) {
 	if refreshResp == nil || refreshResp.AccessToken == "" || refreshResp.RefreshToken == "" {
 		t.Fatalf("expected token pair from refresh, got %#v", refreshResp)
 	}
-	if refreshResp.User == nil || refreshResp.User.Phone != "13800138000" {
+	if refreshResp.User == nil || refreshResp.User.Email != "user@example.com" {
 		t.Fatalf("expected refreshed user profile, got %#v", refreshResp)
 	}
 }

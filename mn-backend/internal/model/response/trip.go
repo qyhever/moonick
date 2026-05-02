@@ -56,6 +56,7 @@ type AdminDashboardSummary struct {
 
 type AdminUserSummary struct {
 	ID        int64  `json:"id"`
+	Email     string `json:"email"`
 	Phone     string `json:"phone"`
 	Nickname  string `json:"nickname"`
 	Status    string `json:"status"`
@@ -64,6 +65,7 @@ type AdminUserSummary struct {
 
 type AdminUserDetail struct {
 	ID                 int64  `json:"id"`
+	Email              string `json:"email"`
 	Phone              string `json:"phone"`
 	Nickname           string `json:"nickname"`
 	AvatarURL          string `json:"avatarUrl"`

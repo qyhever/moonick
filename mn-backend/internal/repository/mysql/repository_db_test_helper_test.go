@@ -37,7 +37,7 @@ func newRepositoryTestDB(t *testing.T) *sql.DB {
 		nextUserID:     1000,
 		nextTripID:     0,
 		usersByID:      make(map[int64]entity.User),
-		userIDsByPhone: make(map[string]int64),
+		userIDsByEmail: make(map[string]int64),
 		tripsByID:      make(map[int64]entity.Trip),
 		favoritesByKey: make(map[string]entity.Favorite),
 		adminsByID:     make(map[int64]entity.Admin),
@@ -100,7 +100,7 @@ type repositoryTestState struct {
 	nextUserID     int64
 	nextTripID     int64
 	usersByID      map[int64]entity.User
-	userIDsByPhone map[string]int64
+	userIDsByEmail map[string]int64
 	tripsByID      map[int64]entity.Trip
 	favoritesByKey map[string]entity.Favorite
 	adminsByID     map[int64]entity.Admin
@@ -144,8 +144,8 @@ func (s *repositoryTestState) query(query string, args []driver.NamedValue) (dri
 
 	sqlText := normalizeRepositorySQL(query)
 	switch {
-	case strings.Contains(sqlText, "from users where phone = ?"):
-		return s.queryUserByPhone(args)
+	case strings.Contains(sqlText, "from users where email = ?"):
+		return s.queryUserByEmail(args)
 	case strings.Contains(sqlText, "select 1 from users where id = ?"):
 		return s.queryUserExistsByID(args)
 	case strings.Contains(sqlText, "from users where id = ?"):
@@ -180,27 +180,28 @@ func (s *repositoryTestState) query(query string, args []driver.NamedValue) (dri
 }
 
 func (s *repositoryTestState) execInsertUser(args []driver.NamedValue) (driver.Result, error) {
-	phone := stringArg(args[0])
-	if _, exists := s.userIDsByPhone[phone]; exists {
-		return nil, &mysqlDriver.MySQLError{Number: 1062, Message: "duplicate phone"}
+	email := stringArg(args[0])
+	if _, exists := s.userIDsByEmail[email]; exists {
+		return nil, &mysqlDriver.MySQLError{Number: 1062, Message: "duplicate email"}
 	}
 
 	s.nextUserID++
 	now := time.Now()
 	user := entity.User{
 		ID:            s.nextUserID,
-		Phone:         phone,
-		PasswordHash:  stringArg(args[1]),
-		Nickname:      stringArg(args[2]),
-		AvatarURL:     stringArg(args[3]),
-		Status:        stringArg(args[4]),
-		DefaultPhone:  stringArg(args[5]),
-		DefaultWechat: stringArg(args[6]),
+		Email:         email,
+		Phone:         stringArg(args[1]),
+		PasswordHash:  stringArg(args[2]),
+		Nickname:      stringArg(args[3]),
+		AvatarURL:     stringArg(args[4]),
+		Status:        stringArg(args[5]),
+		DefaultPhone:  stringArg(args[6]),
+		DefaultWechat: stringArg(args[7]),
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}
 	s.usersByID[user.ID] = user
-	s.userIDsByPhone[user.Phone] = user.ID
+	s.userIDsByEmail[user.Email] = user.ID
 	return repositoryTestResult{lastInsertID: user.ID, rowsAffected: 1}, nil
 }
 
@@ -366,8 +367,8 @@ func (s *repositoryTestState) execDeleteFavorite(args []driver.NamedValue) (driv
 	return repositoryTestResult{rowsAffected: 1}, nil
 }
 
-func (s *repositoryTestState) queryUserByPhone(args []driver.NamedValue) (driver.Rows, error) {
-	id, ok := s.userIDsByPhone[stringArg(args[0])]
+func (s *repositoryTestState) queryUserByEmail(args []driver.NamedValue) (driver.Rows, error) {
+	id, ok := s.userIDsByEmail[stringArg(args[0])]
 	if !ok {
 		return newRepositoryRows(userColumns, nil), nil
 	}
@@ -412,12 +413,12 @@ func (s *repositoryTestState) queryUserList(args []driver.NamedValue, filtered b
 	if filtered {
 		keyword = likeKeyword(args[0])
 		switch len(args) {
+		case 5:
+			limitArg = int(int64Arg(args[3]))
+			offsetArg = int(int64Arg(args[4]))
 		case 4:
-			limitArg = int(int64Arg(args[2]))
-			offsetArg = int(int64Arg(args[3]))
-		case 3:
 			limitArg = -1
-			offsetArg = int(int64Arg(args[2]))
+			offsetArg = int(int64Arg(args[3]))
 		}
 	} else {
 		switch len(args) {
@@ -617,7 +618,7 @@ func (r *repositoryRows) Next(dest []driver.Value) error {
 }
 
 var userColumns = []string{
-	"id", "phone", "password_hash", "nickname", "avatar_url", "status", "default_phone", "default_wechat", "created_at", "updated_at",
+	"id", "email", "phone", "password_hash", "nickname", "avatar_url", "status", "default_phone", "default_wechat", "created_at", "updated_at",
 }
 
 var adminColumns = []string{
@@ -637,6 +638,7 @@ var favoriteColumns = []string{
 func userRow(user entity.User) []driver.Value {
 	return []driver.Value{
 		user.ID,
+		user.Email,
 		user.Phone,
 		user.PasswordHash,
 		user.Nickname,
@@ -750,7 +752,7 @@ func likeKeyword(arg driver.NamedValue) string {
 }
 
 func matchUserKeyword(user entity.User, keyword string) bool {
-	haystack := strings.ToLower(user.Phone + " " + user.Nickname)
+	haystack := strings.ToLower(user.Email + " " + user.Phone + " " + user.Nickname)
 	return strings.Contains(haystack, keyword)
 }
 

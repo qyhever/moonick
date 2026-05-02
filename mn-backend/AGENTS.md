@@ -86,6 +86,7 @@ mysql -h <host> -P <port> -u <user> -p <database> < docs/sql/001_init.sql
 初始化脚本路径：
 
 - `docs/sql/001_init.sql`
+- 如果库已存在旧版 `users` 表且仍是手机号登录结构，先执行 `docs/sql/004_migrate_users_email_auth.sql`
 
 补充说明：
 
