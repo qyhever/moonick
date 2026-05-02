@@ -148,3 +148,17 @@ it("hides edit entry and disables saving for expired trip", async () => {
 
   expect(await screen.findByRole("button", { name: /保\s*存/ })).toBeDisabled();
 });
+
+it("formats createdAt and updatedAt in trip detail page", async () => {
+  mockGetAdminTripDetail.mockResolvedValue({
+    ...tripDetail,
+    createdAt: "2026-05-02T09:45:03+08:00",
+    updatedAt: "2026-05-02T10:15:30+08:00",
+  });
+
+  renderTripDetailPage();
+
+  expect(await screen.findByText("2026-05-02 09:45:03")).toBeInTheDocument();
+  expect(screen.getByText("2026-05-02 10:15:30")).toBeInTheDocument();
+  expect(screen.queryByText("2026-05-02T09:45:03+08:00")).not.toBeInTheDocument();
+});

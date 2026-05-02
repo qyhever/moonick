@@ -16,6 +16,15 @@ function formatPrice(trip: AdminTripDetail) {
   return `${trip.priceAmount} 元`;
 }
 
+function formatDateTime(value: string) {
+  const matched = value.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2})/);
+  if (matched) {
+    return `${matched[1]} ${matched[2]}`;
+  }
+
+  return value;
+}
+
 export default function TripDetailPage() {
   const { id = "" } = useParams();
   const [trip, setTrip] = useState<AdminTripDetail | null>(null);
@@ -60,8 +69,8 @@ export default function TripDetailPage() {
           <Descriptions.Item label="微信号">{trip.contactWechat || "未填写"}</Descriptions.Item>
           <Descriptions.Item label="手机号">{trip.contactPhone || "未填写"}</Descriptions.Item>
           <Descriptions.Item label="备注" span={2}>{trip.remark || "未填写"}</Descriptions.Item>
-          <Descriptions.Item label="发布时间">{trip.createdAt}</Descriptions.Item>
-          <Descriptions.Item label="更新时间">{trip.updatedAt}</Descriptions.Item>
+          <Descriptions.Item label="发布时间">{formatDateTime(trip.createdAt)}</Descriptions.Item>
+          <Descriptions.Item label="更新时间">{formatDateTime(trip.updatedAt)}</Descriptions.Item>
         </Descriptions>
       </Card>
     </Space>
