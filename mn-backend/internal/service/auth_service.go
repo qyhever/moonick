@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"moonick/htmls"
 	"moonick/internal/model/entity"
 	"moonick/internal/model/request"
 	"moonick/internal/model/response"
@@ -385,18 +386,7 @@ func isValidEmail(email string) bool {
 }
 
 func buildRegisterCodeEmailBody(code string) string {
-	return `<div style="margin:0;padding:0;background:#f5f7fa;">
-  <div style="max-width:640px;margin:0 auto;background:#ffffff;font-family:'PingFang SC','Microsoft YaHei',sans-serif;color:#1f2937;">
-    <div style="height:16px;background:linear-gradient(90deg,#2f6fed 0%,#5ab7ff 100%);"></div>
-    <div style="padding:32px 32px 40px;">
-      <div style="font-size:24px;font-weight:700;line-height:1.4;margin-bottom:24px;">明叶同行</div>
-      <div style="font-size:20px;font-weight:600;line-height:1.4;margin-bottom:24px;">邮箱验证码</div>
-      <div style="font-size:15px;line-height:1.9;white-space:pre-line;">尊敬的用户您好！
-
-您的验证码是：` + code + `，请在 5 分钟内进行验证。如果该验证码不为您本人申请，请无视。</div>
-    </div>
-  </div>
-</div>`
+	return htmls.RenderRegisterCodeTemplateA1(code)
 }
 
 type PostalMailSender struct{}

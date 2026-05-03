@@ -153,6 +153,18 @@ func TestAuthService_SendRegisterCode(t *testing.T) {
 	if !strings.Contains(msg.Body, stored.Code) {
 		t.Fatalf("expected email body to contain code %s, body=%s", stored.Code, msg.Body)
 	}
+	if strings.Contains(msg.Body, "{{CODE}}") {
+		t.Fatalf("expected template placeholder to be rendered, body=%s", msg.Body)
+	}
+	if !strings.Contains(msg.Body, "MINGYE CARPOOL") {
+		t.Fatalf("expected email body to contain template brand label, body=%s", msg.Body)
+	}
+	if !strings.Contains(msg.Body, "5 分钟内有效") {
+		t.Fatalf("expected email body to contain expiration badge, body=%s", msg.Body)
+	}
+	if !strings.Contains(msg.Body, "安全登录与注册验证邮件") {
+		t.Fatalf("expected email body to contain template subtitle, body=%s", msg.Body)
+	}
 }
 
 func TestAuthService_SendRegisterCodeReplacesOldCode(t *testing.T) {
