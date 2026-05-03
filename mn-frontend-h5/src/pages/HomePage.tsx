@@ -238,9 +238,6 @@ export default function HomePage() {
           明叶<span>同行</span>
         </div>
         <div className="nav-actions">
-          <div className="nav-pill" aria-hidden="true">
-            新
-          </div>
           <Link
             className="nav-avatar"
             to={accessToken ? "/me/profile" : "/login?redirect=%2Fme%2Fprofile"}

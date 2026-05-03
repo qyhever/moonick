@@ -100,13 +100,17 @@ export async function toggleFavorite(id: string | number) {
   return unwrapApiResponse(response.data);
 }
 
-export async function getMyTrips() {
-  const response = await api.get<ApiResponse<TripListResponse>>("/api/v1/me/trips");
+export async function getMyTrips(query?: TripQuery) {
+  const response = await api.get<ApiResponse<TripListResponse>>("/api/v1/me/trips", {
+    params: query,
+  });
   return unwrapApiResponse(response.data);
 }
 
-export async function getMyFavorites() {
-  const response = await api.get<ApiResponse<TripListResponse>>("/api/v1/me/favorites");
+export async function getMyFavorites(query?: TripQuery) {
+  const response = await api.get<ApiResponse<TripListResponse>>("/api/v1/me/favorites", {
+    params: query,
+  });
   return unwrapApiResponse(response.data);
 }
 
