@@ -64,6 +64,8 @@ func (c *AuthController) SendRegisterCode(ctx *gin.Context) {
 		switch {
 		case errors.Is(err, service.ErrEmailAlreadyRegistered):
 			ResponseFailedWithMsg(ctx, CodeUserExist, err.Error())
+		case errors.Is(err, service.ErrRegisterCodeSendTooFrequent):
+			ResponseFailedWithMsg(ctx, CodeInvalidParam, err.Error())
 		case errors.Is(err, service.ErrInvalidEmail):
 			ResponseFailedWithMsg(ctx, CodeInvalidParam, err.Error())
 		default:

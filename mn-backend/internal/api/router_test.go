@@ -543,8 +543,10 @@ func sendRegisterCodeAndExtract(t *testing.T, r http.Handler, mailbox *fakeMailb
 }
 
 func extractCodeFromBody(body string) string {
-	matched := regexp.MustCompile(`\b\d{6}\b`).FindString(body)
-	return matched
+	if matched := regexp.MustCompile(`>\s*(\d{6})\s*<`).FindStringSubmatch(body); len(matched) == 2 {
+		return matched[1]
+	}
+	return ""
 }
 
 func assertResponseCode(t *testing.T, rec *httptest.ResponseRecorder, expectedCode controller.MyCode) {

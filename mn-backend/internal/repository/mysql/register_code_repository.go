@@ -10,9 +10,9 @@ import (
 )
 
 type RegisterCodeRepository struct {
-	db     *sql.DB
-	mu     sync.RWMutex
-	codes  map[string]entity.RegisterCode
+	db    *sql.DB
+	mu    sync.RWMutex
+	codes map[string]entity.RegisterCode
 }
 
 func NewRegisterCodeRepository(dbs ...*sql.DB) *RegisterCodeRepository {
@@ -35,15 +35,20 @@ func NewRegisterCodeRepository(dbs ...*sql.DB) *RegisterCodeRepository {
 func (r *RegisterCodeRepository) FindByEmail(ctx context.Context, email string) (*entity.RegisterCode, error) {
 	if r.db != nil {
 		var (
-			item   entity.RegisterCode
-			usedAt sql.NullTime
+			item                entity.RegisterCode
+			usedAt              sql.NullTime
+			lastSentAt          sql.NullTime
+			sendWindowStartedAt sql.NullTime
 		)
-		err := r.db.QueryRowContext(ctx, `SELECT email, code, expires_at, used_at, created_at, updated_at
+		err := r.db.QueryRowContext(ctx, `SELECT email, code, expires_at, last_sent_at, send_window_started_at, send_count_in_window, used_at, created_at, updated_at
 FROM register_codes
 WHERE email = ?`, email).Scan(
 			&item.Email,
 			&item.Code,
 			&item.ExpiresAt,
+			&lastSentAt,
+			&sendWindowStartedAt,
+			&item.SendCountInWindow,
 			&usedAt,
 			&item.CreatedAt,
 			&item.UpdatedAt,
@@ -56,6 +61,12 @@ WHERE email = ?`, email).Scan(
 		}
 		if usedAt.Valid {
 			item.UsedAt = usedAt.Time
+		}
+		if lastSentAt.Valid {
+			item.LastSentAt = lastSentAt.Time
+		}
+		if sendWindowStartedAt.Valid {
+			item.SendWindowStartedAt = sendWindowStartedAt.Time
 		}
 		return &item, nil
 	}
@@ -73,12 +84,15 @@ WHERE email = ?`, email).Scan(
 
 func (r *RegisterCodeRepository) Save(ctx context.Context, code entity.RegisterCode) error {
 	if r.db != nil {
-		_, err := r.db.ExecContext(ctx, `INSERT INTO register_codes (email, code, expires_at, used_at)
-VALUES (?, ?, ?, NULL)
-ON DUPLICATE KEY UPDATE code = VALUES(code), expires_at = VALUES(expires_at), used_at = NULL, updated_at = CURRENT_TIMESTAMP`,
+		_, err := r.db.ExecContext(ctx, `INSERT INTO register_codes (email, code, expires_at, last_sent_at, send_window_started_at, send_count_in_window, used_at)
+VALUES (?, ?, ?, ?, ?, ?, NULL)
+ON DUPLICATE KEY UPDATE code = VALUES(code), expires_at = VALUES(expires_at), last_sent_at = VALUES(last_sent_at), send_window_started_at = VALUES(send_window_started_at), send_count_in_window = VALUES(send_count_in_window), used_at = NULL, updated_at = CURRENT_TIMESTAMP`,
 			code.Email,
 			code.Code,
 			code.ExpiresAt,
+			nullTimeArg(code.LastSentAt),
+			nullTimeArg(code.SendWindowStartedAt),
+			code.SendCountInWindow,
 		)
 		return err
 	}
@@ -93,10 +107,20 @@ ON DUPLICATE KEY UPDATE code = VALUES(code), expires_at = VALUES(expires_at), us
 	} else {
 		code.CreatedAt = now
 	}
+	if code.SendCountInWindow <= 0 {
+		code.SendCountInWindow = 1
+	}
 	code.UsedAt = time.Time{}
 	code.UpdatedAt = now
 	r.codes[code.Email] = code
 	return nil
+}
+
+func nullTimeArg(value time.Time) any {
+	if value.IsZero() {
+		return nil
+	}
+	return value
 }
 
 func (r *RegisterCodeRepository) Consume(ctx context.Context, email, code string, now time.Time) (bool, error) {

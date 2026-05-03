@@ -21,18 +21,25 @@ import (
 )
 
 var (
-	ErrEmailAlreadyRegistered  = errors.New("该邮箱已注册，请直接登录")
-	ErrInvalidUserCredentials  = errors.New("邮箱或密码错误")
-	ErrInvalidEmail            = errors.New("请输入有效的邮箱地址")
-	ErrInvalidRegisterCode     = errors.New("验证码错误或已失效")
-	ErrInvalidAdminCredentials = errors.New("账号或密码错误")
-	ErrInvalidRefreshToken     = errors.New("refresh token 无效")
-	ErrUserNotFound            = errors.New("用户不存在")
-	ErrAdminNotFound           = errors.New("管理员不存在")
-	ErrStorageNotConfigured    = errors.New("storage not configured")
-	ErrEmptyNickname           = errors.New("昵称不能为空")
-	ErrEmptyContact            = errors.New("请填写至少一种联系方式")
-	ErrAvatarFileRequired      = errors.New("请选择头像文件")
+	ErrEmailAlreadyRegistered      = errors.New("该邮箱已注册，请直接登录")
+	ErrInvalidUserCredentials      = errors.New("邮箱或密码错误")
+	ErrInvalidEmail                = errors.New("请输入有效的邮箱地址")
+	ErrInvalidRegisterCode         = errors.New("验证码错误或已失效")
+	ErrRegisterCodeSendTooFrequent = errors.New("请勿频繁操作")
+	ErrInvalidAdminCredentials     = errors.New("账号或密码错误")
+	ErrInvalidRefreshToken         = errors.New("refresh token 无效")
+	ErrUserNotFound                = errors.New("用户不存在")
+	ErrAdminNotFound               = errors.New("管理员不存在")
+	ErrStorageNotConfigured        = errors.New("storage not configured")
+	ErrEmptyNickname               = errors.New("昵称不能为空")
+	ErrEmptyContact                = errors.New("请填写至少一种联系方式")
+	ErrAvatarFileRequired          = errors.New("请选择头像文件")
+)
+
+const (
+	registerCodeTTL              = 5 * time.Minute
+	registerCodeResendWindow     = time.Minute
+	registerCodeMaxSendPerWindow = 2
 )
 
 type tokenManager interface {
@@ -158,26 +165,58 @@ func (s *AuthService) SendRegisterCode(ctx context.Context, req request.SendRegi
 		return nil, ErrEmailAlreadyRegistered
 	}
 
-	code, err := generateVerificationCode(6)
+	now := time.Now()
+	registerCode, err := s.prepareRegisterCodeForSend(ctx, email, now)
 	if err != nil {
 		return nil, err
 	}
-	now := time.Now()
-	expiresAt := now.Add(5 * time.Minute)
-	if err := s.registerCodeRepo.Save(ctx, entity.RegisterCode{
-		Email:     email,
-		Code:      code,
-		ExpiresAt: expiresAt,
-	}); err != nil {
+	if err := s.registerCodeRepo.Save(ctx, *registerCode); err != nil {
 		return nil, err
 	}
-	if err := s.mailSender.Send(email, "邮箱验证码", buildRegisterCodeEmailBody(code)); err != nil {
+	if err := s.mailSender.Send(email, "邮箱验证码", buildRegisterCodeEmailBody(registerCode.Code)); err != nil {
 		return nil, err
 	}
 
 	return &response.RegisterCodePayload{
 		Sent: true,
 	}, nil
+}
+
+func (s *AuthService) prepareRegisterCodeForSend(ctx context.Context, email string, now time.Time) (*entity.RegisterCode, error) {
+	current, err := s.registerCodeRepo.FindByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+
+	if current == nil || !current.ExpiresAt.After(now) {
+		code, err := generateVerificationCode(6)
+		if err != nil {
+			return nil, err
+		}
+
+		return &entity.RegisterCode{
+			Email:               email,
+			Code:                code,
+			ExpiresAt:           now.Add(registerCodeTTL),
+			LastSentAt:          now,
+			SendWindowStartedAt: now,
+			SendCountInWindow:   1,
+		}, nil
+	}
+
+	next := *current
+	if next.SendWindowStartedAt.IsZero() || now.Sub(next.SendWindowStartedAt) >= registerCodeResendWindow {
+		next.SendWindowStartedAt = now
+		next.SendCountInWindow = 1
+	} else {
+		if next.SendCountInWindow >= registerCodeMaxSendPerWindow {
+			return nil, ErrRegisterCodeSendTooFrequent
+		}
+		next.SendCountInWindow++
+	}
+	next.LastSentAt = now
+	next.UsedAt = time.Time{}
+	return &next, nil
 }
 
 func (s *AuthService) Login(ctx context.Context, req request.LoginRequest) (*response.AuthPayload, error) {

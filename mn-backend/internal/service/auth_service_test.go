@@ -167,7 +167,35 @@ func TestAuthService_SendRegisterCode(t *testing.T) {
 	}
 }
 
-func TestAuthService_SendRegisterCodeReplacesOldCode(t *testing.T) {
+func TestAuthService_SendRegisterCodeReplacesExpiredCode(t *testing.T) {
+	svc := newAuthServiceForTest()
+
+	if _, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+		Email: "user@example.com",
+	}); err != nil {
+		t.Fatalf("first send register code returned error: %v", err)
+	}
+
+	codeRepo := svc.registerCodeRepo.(*testRegisterCodeRepository)
+	first := codeRepo.mustGet("user@example.com")
+	first.ExpiresAt = time.Now().Add(-time.Minute)
+	if err := codeRepo.Save(context.Background(), first); err != nil {
+		t.Fatalf("save expired register code returned error: %v", err)
+	}
+
+	if _, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+		Email: "user@example.com",
+	}); err != nil {
+		t.Fatalf("second send register code returned error: %v", err)
+	}
+
+	second := codeRepo.mustGet("user@example.com")
+	if first.Code == second.Code {
+		t.Fatalf("expected resend to replace expired code, first=%#v second=%#v", first, second)
+	}
+}
+
+func TestAuthService_SendRegisterCodeReusesActiveCodeOnResend(t *testing.T) {
 	svc := newAuthServiceForTest()
 
 	if _, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
@@ -186,8 +214,27 @@ func TestAuthService_SendRegisterCodeReplacesOldCode(t *testing.T) {
 	}
 
 	second := codeRepo.mustGet("user@example.com")
-	if first.Code == second.Code {
-		t.Fatalf("expected resend to replace old code, first=%#v second=%#v", first, second)
+	if first.Code != second.Code {
+		t.Fatalf("expected resend to reuse active code, first=%#v second=%#v", first, second)
+	}
+}
+
+func TestAuthService_SendRegisterCodeRejectsTooFrequentResend(t *testing.T) {
+	svc := newAuthServiceForTest()
+
+	for i := 0; i < 2; i++ {
+		if _, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+			Email: "user@example.com",
+		}); err != nil {
+			t.Fatalf("send #%d register code returned error: %v", i+1, err)
+		}
+	}
+
+	_, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+		Email: "user@example.com",
+	})
+	if !errors.Is(err, ErrRegisterCodeSendTooFrequent) {
+		t.Fatalf("expected ErrRegisterCodeSendTooFrequent, got %v", err)
 	}
 }
 

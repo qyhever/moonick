@@ -279,6 +279,24 @@ it("sends register verification code and restores countdown after remount", asyn
   expect(screen.getByRole("button", { name: "发送验证码" })).toBeEnabled();
 });
 
+it("shows resend helper text only during register code countdown", async () => {
+  const { unmount } = renderWithRouter("/register");
+
+  fireEvent.change(screen.getByLabelText("邮箱"), {
+    target: { value: "user@example.com" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "发送验证码" }));
+
+  expect(await screen.findByText("没收到验证码？60s 后可重新发送")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "60s后重试" })).toBeDisabled();
+
+  window.localStorage.setItem("mn-h5-register-code-expires-at", String(Date.now() - 1000));
+  unmount();
+  renderWithRouter("/register");
+
+  expect(screen.queryByText("没收到验证码？60s 后可重新发送")).not.toBeInTheDocument();
+});
+
 it("blocks register submit when email format is invalid", async () => {
   mockPost.mockImplementation(async (url: string) => {
     if (url === "/api/v1/auth/refresh") {

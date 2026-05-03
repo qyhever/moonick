@@ -1161,6 +1161,12 @@ textarea {
   box-shadow: 0 4px 12px rgba(26, 22, 18, 0.08);
 }
 
+.auth-code__hint {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(59, 73, 72, 0.72);
+}
+
 .auth-actions {
   display: grid;
   gap: 12px;

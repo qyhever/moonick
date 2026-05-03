@@ -210,6 +210,9 @@ export default function RegisterPage() {
                 {sendButtonText}
               </button>
             </div>
+            {countdownSeconds > 0 ? (
+              <p className="auth-code__hint">没收到验证码？{countdownSeconds}s 后可重新发送</p>
+            ) : null}
           </div>
           {error ? <p role="alert">{error}</p> : null}
           <div className="auth-actions">
