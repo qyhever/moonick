@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Menu } from "lucide-react";
 import { Link } from "react-router-dom";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 import TripCard from "../features/trips/components/TripCard";
 import { getTrips, type TripQuery, type TripSummary } from "../features/trips/api";
@@ -38,10 +39,12 @@ const datePresetOptions: Array<{ label: string; value: HomeDatePreset }> = [
   { label: "明天", value: "tomorrow" },
 ];
 
-function buildTripQuery(filters: HomeFilters): TripQuery {
+const PAGE_SIZE = 10;
+
+function buildTripQuery(filters: HomeFilters, pageNum: number, pageSize = PAGE_SIZE): TripQuery {
   const query: TripQuery = {
-    pageNum: 1,
-    pageSize: 10,
+    pageNum,
+    pageSize,
   };
 
   query.tripType = filters.tripType;
@@ -80,7 +83,11 @@ export default function HomePage() {
   const currentUser = useAuthStore((state) => state.user);
   const [trips, setTrips] = useState<TripSummary[]>([]);
   const [total, setTotal] = useState(0);
+  const [pageNum, setPageNum] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [filters, setFilters] = useState<HomeFilters>(defaultFilters);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
@@ -91,19 +98,31 @@ export default function HomePage() {
     onlyAvailable: defaultFilters.onlyAvailable,
     negotiableOnly: defaultFilters.negotiableOnly,
   });
+  const pageNumRef = useRef(1);
+  const tripsLengthRef = useRef(0);
+
+  useEffect(() => {
+    pageNumRef.current = pageNum;
+  }, [pageNum]);
+
+  useEffect(() => {
+    tripsLengthRef.current = trips.length;
+  }, [trips.length]);
 
   useEffect(() => {
     let active = true;
 
-    async function loadTrips() {
+    async function loadFirstPage() {
       setLoading(true);
       setError("");
 
       try {
-        const nextTrips = await getTrips(buildTripQuery(filters));
+        const nextTrips = await getTrips(buildTripQuery(filters, 1));
         if (active) {
           setTrips(nextTrips.items);
           setTotal(nextTrips.total);
+          setPageNum(nextTrips.pageNum);
+          setHasMore(nextTrips.items.length < nextTrips.total);
         }
       } catch (loadError) {
         if (active) {
@@ -116,12 +135,54 @@ export default function HomePage() {
       }
     }
 
-    void loadTrips();
+    void loadFirstPage();
 
     return () => {
       active = false;
     };
   }, [filters.datePreset, filters.fromText, filters.toText, filters.tripType]);
+
+  async function loadNextPage() {
+    if (loading || loadingMore || refreshing || !hasMore) {
+      return;
+    }
+
+    setLoadingMore(true);
+
+    try {
+      const nextTrips = await getTrips(buildTripQuery(filters, pageNumRef.current + 1));
+      setTrips((current) => [...current, ...nextTrips.items]);
+      setTotal(nextTrips.total);
+      setPageNum(nextTrips.pageNum);
+      setHasMore(tripsLengthRef.current + nextTrips.items.length < nextTrips.total);
+      setError("");
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "加载更多失败");
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
+  async function refreshTrips() {
+    if (loading || refreshing) {
+      return;
+    }
+
+    setRefreshing(true);
+
+    try {
+      const nextTrips = await getTrips(buildTripQuery(filters, 1));
+      setTrips(nextTrips.items);
+      setTotal(nextTrips.total);
+      setPageNum(nextTrips.pageNum);
+      setHasMore(nextTrips.items.length < nextTrips.total);
+      setError("");
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "刷新失败");
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   function updateQuickFilter<K extends keyof HomeFilters>(key: K, value: HomeFilters[K]) {
     setFilters((current) => ({
@@ -228,15 +289,30 @@ export default function HomePage() {
           <div className="section-link">{visibleTotal} 条结果</div>
         </div>
 
-        {loading ? <p className="subtle-text">正在加载首页行程...</p> : null}
-        {error ? <p role="alert">{error}</p> : null}
+        {loading && trips.length === 0 ? <p className="subtle-text">正在加载首页行程...</p> : null}
+        {error && trips.length === 0 ? <p role="alert">{error}</p> : null}
         {!loading && !error && visibleTrips.length === 0 ? <p className="subtle-text">当前还没有可展示的行程。</p> : null}
 
-        <div className="trip-list">
-          {visibleTrips.map((trip) => (
-            <TripCard key={trip.id} disableLink={trip.status === "full"} trip={trip} />
-          ))}
-        </div>
+        {error && trips.length === 0 ? null : (
+          <InfiniteScroll
+            dataLength={trips.length}
+            endMessage={!loading && visibleTrips.length > 0 ? <p className="subtle-text">已经到底了</p> : undefined}
+            hasMore={hasMore}
+            loader={<p className="subtle-text">正在加载更多...</p>}
+            next={loadNextPage}
+            pullDownToRefresh
+            pullDownToRefreshContent={<p className="subtle-text">下拉刷新</p>}
+            pullDownToRefreshThreshold={70}
+            refreshFunction={refreshTrips}
+            releaseToRefreshContent={<p className="subtle-text">松开立即刷新</p>}
+          >
+            <div className="trip-list">
+              {visibleTrips.map((trip) => (
+                <TripCard key={trip.id} disableLink={trip.status === "full"} trip={trip} />
+              ))}
+            </div>
+          </InfiniteScroll>
+        )}
       </section>
 
       {isFilterDrawerOpen ? (

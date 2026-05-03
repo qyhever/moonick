@@ -1391,3 +1391,6 @@ textarea {
 .section-link {
   margin: 10px 0;
 }
+.subtle-text {
+  text-align: center;
+}

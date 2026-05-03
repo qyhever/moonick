@@ -1,8 +1,9 @@
 import "@testing-library/jest-dom/vitest";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, vi } from "vitest";
+import type { ReactNode } from "react";
 
 const { mockGetTrips } = vi.hoisted(() => ({
   mockGetTrips: vi.fn(),
@@ -12,40 +13,86 @@ vi.mock("../features/trips/api", () => ({
   getTrips: mockGetTrips,
 }));
 
+vi.mock("react-infinite-scroll-component", () => ({
+  default: ({
+    children,
+    next,
+    hasMore,
+    refreshFunction,
+    dataLength,
+  }: {
+    children: ReactNode;
+    next: () => void;
+    hasMore: boolean;
+    refreshFunction?: () => void | Promise<void>;
+    dataLength: number;
+  }) => (
+    <div
+      data-testid="infinite-scroll"
+      data-has-more={String(hasMore)}
+      data-length={String(dataLength)}
+    >
+      <button
+        type="button"
+        onClick={() => {
+          if (hasMore) {
+            next();
+          }
+        }}
+      >
+        触发加载更多
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          void refreshFunction?.();
+        }}
+      >
+        触发下拉刷新
+      </button>
+      {children}
+    </div>
+  ),
+}));
+
 import AppLayout from "../components/MobileTabBar";
 import HomePage from "../pages/HomePage";
 import { useAuthStore } from "../store/auth";
 
+function createTrip(
+  id: number,
+  fromText: string,
+  toText: string,
+  overrides?: Partial<{
+    tripType: "driver_post" | "passenger_post";
+    status: "active" | "full" | "closed" | "expired";
+    isPriceNegotiable: boolean;
+  }>,
+) {
+  return {
+    id,
+    userId: id + 100,
+    tripType: overrides?.tripType ?? "driver_post",
+    fromText,
+    toText,
+    departureDate: "2026-05-01",
+    departureTime: "09:00",
+    seatCount: 3,
+    isPriceNegotiable: overrides?.isPriceNegotiable ?? true,
+    status: overrides?.status ?? "active",
+    favorited: false,
+    unavailable: false,
+  };
+}
+
 const defaultTripListResponse = {
   items: [
-    {
-      id: 1,
-      userId: 2,
-      tripType: "driver_post" as const,
-      fromText: "上海虹桥",
-      toText: "杭州东站",
-      departureDate: "2026-05-01",
-      departureTime: "09:00",
-      seatCount: 3,
-      isPriceNegotiable: true,
-      status: "active" as const,
-      favorited: false,
-      unavailable: false,
-    },
-    {
-      id: 2,
-      userId: 3,
-      tripType: "passenger_post" as const,
-      fromText: "苏州园区",
-      toText: "南京南站",
-      departureDate: "2026-05-02",
-      departureTime: "14:00",
-      seatCount: 1,
+    createTrip(1, "上海虹桥", "杭州东站"),
+    createTrip(2, "苏州园区", "南京南站", {
+      tripType: "passenger_post",
+      status: "full",
       isPriceNegotiable: false,
-      status: "full" as const,
-      favorited: false,
-      unavailable: false,
-    },
+    }),
   ],
   total: 2,
   pageNum: 1,
@@ -170,6 +217,156 @@ it("applies date preset from drawer after confirmation", async () => {
   });
 
   expect(screen.queryByText("时间与低频条件收进这里，首页保持轻量")).not.toBeInTheDocument();
+});
+
+it("loads next page and appends trips when infinite scroll requests more", async () => {
+  const user = userEvent.setup();
+
+  mockGetTrips
+    .mockResolvedValueOnce({
+      items: [createTrip(1, "上海虹桥", "杭州东站")],
+      total: 2,
+      pageNum: 1,
+      pageSize: 10,
+    })
+    .mockResolvedValueOnce({
+      items: [createTrip(2, "北京南站", "天津西站")],
+      total: 2,
+      pageNum: 2,
+      pageSize: 10,
+    });
+
+  render(
+    <MemoryRouter>
+      <HomePage />
+    </MemoryRouter>,
+  );
+
+  expect(await screen.findByText("上海虹桥")).toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "触发加载更多" }));
+
+  await waitFor(() => {
+    expect(mockGetTrips).toHaveBeenLastCalledWith({
+      pageNum: 2,
+      pageSize: 10,
+      tripType: "driver_post",
+    });
+  });
+
+  expect(await screen.findByText("北京南站")).toBeInTheDocument();
+  expect(screen.getByText("上海虹桥")).toBeInTheDocument();
+});
+
+it("refreshes trips from page one and replaces old items", async () => {
+  const user = userEvent.setup();
+
+  mockGetTrips
+    .mockResolvedValueOnce({
+      items: [createTrip(1, "上海虹桥", "杭州东站")],
+      total: 1,
+      pageNum: 1,
+      pageSize: 10,
+    })
+    .mockResolvedValueOnce({
+      items: [createTrip(3, "北京南站", "天津西站")],
+      total: 1,
+      pageNum: 1,
+      pageSize: 10,
+    });
+
+  render(
+    <MemoryRouter>
+      <HomePage />
+    </MemoryRouter>,
+  );
+
+  expect(await screen.findByText("上海虹桥")).toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "触发下拉刷新" }));
+
+  await waitFor(() => {
+    expect(mockGetTrips).toHaveBeenLastCalledWith({
+      pageNum: 1,
+      pageSize: 10,
+      tripType: "driver_post",
+    });
+  });
+
+  expect(await screen.findByText("北京南站")).toBeInTheDocument();
+  expect(screen.queryByText("上海虹桥")).not.toBeInTheDocument();
+});
+
+it("resets pagination to page one when filters change after loading more", async () => {
+  const user = userEvent.setup();
+
+  mockGetTrips
+    .mockResolvedValueOnce({
+      items: [createTrip(1, "上海虹桥", "杭州东站")],
+      total: 20,
+      pageNum: 1,
+      pageSize: 10,
+    })
+    .mockResolvedValueOnce({
+      items: [createTrip(2, "北京南站", "天津西站")],
+      total: 20,
+      pageNum: 2,
+      pageSize: 10,
+    })
+    .mockResolvedValueOnce({
+      items: [createTrip(4, "深圳北站", "广州南站", { tripType: "passenger_post" })],
+      total: 1,
+      pageNum: 1,
+      pageSize: 10,
+    });
+
+  render(
+    <MemoryRouter>
+      <HomePage />
+    </MemoryRouter>,
+  );
+
+  await waitFor(() => {
+    expect(mockGetTrips).toHaveBeenNthCalledWith(1, {
+      pageNum: 1,
+      pageSize: 10,
+      tripType: "driver_post",
+    });
+  });
+
+  await user.click(screen.getByRole("button", { name: "触发加载更多" }));
+
+  await waitFor(() => {
+    expect(mockGetTrips).toHaveBeenNthCalledWith(2, {
+      pageNum: 2,
+      pageSize: 10,
+      tripType: "driver_post",
+    });
+  });
+
+  await user.click(screen.getByRole("button", { name: "人找车" }));
+
+  await waitFor(() => {
+    expect(mockGetTrips).toHaveBeenLastCalledWith({
+      pageNum: 1,
+      pageSize: 10,
+      tripType: "passenger_post",
+    });
+  });
+
+  expect(await screen.findByText("深圳北站")).toBeInTheDocument();
+});
+
+it("disables further load-more when all trips are loaded", async () => {
+  render(
+    <MemoryRouter>
+      <HomePage />
+    </MemoryRouter>,
+  );
+
+  await waitFor(() => {
+    expect(screen.getByTestId("infinite-scroll")).toHaveAttribute("data-has-more", "false");
+  });
 });
 
 it("applies real drawer conditions and supports reset and close", async () => {
