@@ -87,6 +87,7 @@ it("toggles favorite state and shows success toast", async () => {
   await waitFor(() => {
     expect(button).toHaveAttribute("data-favorited", "true");
   });
+  expect(await screen.findByRole("button", { name: "已收藏" })).toBeInTheDocument();
   expect(await screen.findByText("收藏成功")).toBeInTheDocument();
 });
 

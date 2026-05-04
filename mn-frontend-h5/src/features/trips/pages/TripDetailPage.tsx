@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Star } from "lucide-react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
 import Toast from "../../../components/Toast";
@@ -227,12 +228,20 @@ export default function TripDetailPage() {
             <>
               <button
                 type="button"
-                className="primary-button primary-button--ghost"
+                className={`primary-button primary-button--ghost trip-detail__favorite-button${
+                  trip.favorited ? " trip-detail__favorite-button--active" : ""
+                }`}
                 data-favorited={trip.favorited}
                 disabled={trip.status !== "active" || submitting}
                 onClick={handleToggleFavorite}
               >
-                收藏
+                <Star
+                  aria-hidden="true"
+                  size={16}
+                  strokeWidth={2}
+                  fill={trip.favorited ? "currentColor" : "none"}
+                />
+                {trip.favorited ? "已收藏" : "收藏"}
               </button>
               {trip.contactPhone ? (
                 <a className="secondary-link" href={`tel:${trip.contactPhone}`}>

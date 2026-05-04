@@ -941,6 +941,16 @@ textarea {
   box-shadow: none;
 }
 
+.trip-detail__favorite-button {
+  gap: 8px;
+}
+
+.trip-detail__favorite-button--active {
+  border-color: rgba(232, 104, 58, 0.22);
+  background: rgba(232, 104, 58, 0.1);
+  color: var(--accent-orange);
+}
+
 .secondary-link--button {
   min-height: 48px;
   padding: 0 14px;
