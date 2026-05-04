@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ChevronLeft, House, Plus, UserRound } from "lucide-react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 
@@ -123,6 +124,7 @@ export default function AppLayout() {
 
   return (
     <>
+      <ScrollToTopOnRouteChange />
       {shouldShowTopBar ? <PageTopBar backFallback={frame.backFallback} title={frame.title} /> : null}
       <div className={shouldShowTopBar ? "app-route app-route--with-topbar" : "app-route"}>
         <Outlet />
@@ -130,6 +132,16 @@ export default function AppLayout() {
       {frame.showTabBar ? <MobileTabBar /> : null}
     </>
   );
+}
+
+function ScrollToTopOnRouteChange() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [pathname]);
+
+  return null;
 }
 
 function PageTopBar({ title, backFallback }: { title: string; backFallback: string }) {

@@ -101,6 +101,7 @@ const defaultTripListResponse = {
 
 beforeEach(() => {
   window.localStorage.clear();
+  window.scrollTo = vi.fn();
   useAuthStore.setState({
     accessToken: "",
     refreshToken: "",
