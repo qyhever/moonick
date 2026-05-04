@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
-
 * {
   -webkit-tap-highlight-color: transparent;
 }
@@ -7,7 +5,7 @@
 :root {
   color: #1a1612;
   background: linear-gradient(180deg, #faf7f2 0%, #f5f0e8 100%);
-  font-family: "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
   line-height: 1.5;
   font-weight: 400;
   text-rendering: optimizeLegibility;
@@ -178,7 +176,7 @@ textarea {
 .auth-card h1,
 .section-title {
   margin: 0;
-  font-family: "Playfair Display", "STSong", "Songti SC", serif;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 .hero-card__title {
@@ -339,7 +337,7 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: "Playfair Display", "STSong", "Songti SC", serif;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 28px;
   color: #fff7ef;
 }
@@ -387,7 +385,7 @@ textarea {
 }
 
 .profile-stat-card__value {
-  font-family: "Playfair Display", "STSong", "Songti SC", serif;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 24px;
   line-height: 1;
 }
@@ -1202,7 +1200,7 @@ textarea {
 }
 
 .nav-brand {
-  font-family: "Playfair Display", "STSong", "Songti SC", serif;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 20px;
   font-weight: 700;
   color: var(--text-dark);
