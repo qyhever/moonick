@@ -19,6 +19,15 @@ type HomeFilters = {
   negotiableOnly: boolean;
 };
 
+type HomePageSnapshot = {
+  trips: TripSummary[];
+  total: number;
+  pageNum: number;
+  hasMore: boolean;
+  filters: HomeFilters;
+  scrollY: number;
+};
+
 const defaultFilters: HomeFilters = {
   tripType: "driver_post",
   fromText: "",
@@ -40,6 +49,33 @@ const datePresetOptions: Array<{ label: string; value: HomeDatePreset }> = [
 ];
 
 const PAGE_SIZE = 10;
+let cachedHomePageSnapshot: HomePageSnapshot | null = null;
+let shouldRestoreHomePageSnapshot = false;
+
+function cloneHomePageSnapshot(snapshot: HomePageSnapshot): HomePageSnapshot {
+  return {
+    trips: [...snapshot.trips],
+    total: snapshot.total,
+    pageNum: snapshot.pageNum,
+    hasMore: snapshot.hasMore,
+    filters: { ...snapshot.filters },
+    scrollY: snapshot.scrollY,
+  };
+}
+
+function saveHomePageSnapshot(snapshot: HomePageSnapshot) {
+  cachedHomePageSnapshot = cloneHomePageSnapshot(snapshot);
+  shouldRestoreHomePageSnapshot = true;
+}
+
+function consumeHomePageSnapshot() {
+  if (!shouldRestoreHomePageSnapshot || !cachedHomePageSnapshot) {
+    return null;
+  }
+
+  shouldRestoreHomePageSnapshot = false;
+  return cloneHomePageSnapshot(cachedHomePageSnapshot);
+}
 
 function buildTripQuery(filters: HomeFilters, pageNum: number, pageSize = PAGE_SIZE): TripQuery {
   const query: TripQuery = {
@@ -79,27 +115,38 @@ function applyClientFilters(trips: TripSummary[], filters: HomeFilters) {
 }
 
 export default function HomePage() {
+  const restoreSnapshotRef = useRef<HomePageSnapshot | null>(consumeHomePageSnapshot());
+  const restoredSnapshot = restoreSnapshotRef.current;
   const accessToken = useAuthStore((state) => state.accessToken);
   const currentUser = useAuthStore((state) => state.user);
-  const [trips, setTrips] = useState<TripSummary[]>([]);
-  const [total, setTotal] = useState(0);
-  const [pageNum, setPageNum] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(true);
+  const [trips, setTrips] = useState<TripSummary[]>(restoredSnapshot?.trips ?? []);
+  const [total, setTotal] = useState(restoredSnapshot?.total ?? 0);
+  const [pageNum, setPageNum] = useState(restoredSnapshot?.pageNum ?? 1);
+  const [hasMore, setHasMore] = useState(restoredSnapshot?.hasMore ?? true);
+  const [loading, setLoading] = useState(!restoredSnapshot);
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
-  const [filters, setFilters] = useState<HomeFilters>(defaultFilters);
+  const [filters, setFilters] = useState<HomeFilters>(restoredSnapshot?.filters ?? defaultFilters);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [draftDrawerFilters, setDraftDrawerFilters] = useState({
-    fromText: defaultFilters.fromText,
-    toText: defaultFilters.toText,
-    datePreset: defaultFilters.datePreset,
-    onlyAvailable: defaultFilters.onlyAvailable,
-    negotiableOnly: defaultFilters.negotiableOnly,
+    fromText: restoredSnapshot?.filters.fromText ?? defaultFilters.fromText,
+    toText: restoredSnapshot?.filters.toText ?? defaultFilters.toText,
+    datePreset: restoredSnapshot?.filters.datePreset ?? defaultFilters.datePreset,
+    onlyAvailable: restoredSnapshot?.filters.onlyAvailable ?? defaultFilters.onlyAvailable,
+    negotiableOnly: restoredSnapshot?.filters.negotiableOnly ?? defaultFilters.negotiableOnly,
   });
   const pageNumRef = useRef(1);
   const tripsLengthRef = useRef(0);
+  const shouldSkipInitialFetchRef = useRef(Boolean(restoredSnapshot));
+  const snapshotRef = useRef<HomePageSnapshot>({
+    trips: restoredSnapshot?.trips ?? [],
+    total: restoredSnapshot?.total ?? 0,
+    pageNum: restoredSnapshot?.pageNum ?? 1,
+    hasMore: restoredSnapshot?.hasMore ?? true,
+    filters: restoredSnapshot?.filters ?? defaultFilters,
+    scrollY: restoredSnapshot?.scrollY ?? 0,
+  });
 
   useEffect(() => {
     pageNumRef.current = pageNum;
@@ -110,6 +157,30 @@ export default function HomePage() {
   }, [trips.length]);
 
   useEffect(() => {
+    snapshotRef.current = {
+      trips,
+      total,
+      pageNum,
+      hasMore,
+      filters,
+      scrollY: window.scrollY,
+    };
+  }, [filters, hasMore, pageNum, total, trips]);
+
+  useEffect(() => {
+    if (!restoredSnapshot) {
+      return;
+    }
+
+    window.scrollTo({ top: restoredSnapshot.scrollY, left: 0, behavior: "auto" });
+  }, [restoredSnapshot]);
+
+  useEffect(() => {
+    if (shouldSkipInitialFetchRef.current) {
+      shouldSkipInitialFetchRef.current = false;
+      return;
+    }
+
     let active = true;
 
     async function loadFirstPage() {
@@ -228,6 +299,13 @@ export default function HomePage() {
     });
   }
 
+  function rememberCurrentPageState() {
+    saveHomePageSnapshot({
+      ...snapshotRef.current,
+      scrollY: window.scrollY,
+    });
+  }
+
   const visibleTrips = applyClientFilters(trips, filters);
   const visibleTotal = visibleTrips.length;
 
@@ -305,7 +383,12 @@ export default function HomePage() {
           >
             <div className="trip-list">
               {visibleTrips.map((trip) => (
-                <TripCard key={trip.id} disableLink={trip.status === "full"} trip={trip} />
+                <TripCard
+                  key={trip.id}
+                  disableLink={trip.status === "full"}
+                  onNavigate={rememberCurrentPageState}
+                  trip={trip}
+                />
               ))}
             </div>
           </InfiniteScroll>

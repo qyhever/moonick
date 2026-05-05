@@ -34,6 +34,7 @@ type TripCardProps = {
   trip: TripSummary;
   footer?: ReactNode;
   disableLink?: boolean;
+  onNavigate?: (trip: TripSummary) => void;
 };
 
 function TripCardBody({ trip }: { trip: TripSummary }) {
@@ -65,7 +66,7 @@ function TripCardBody({ trip }: { trip: TripSummary }) {
   );
 }
 
-export default function TripCard({ trip, footer, disableLink = false }: TripCardProps) {
+export default function TripCard({ trip, footer, disableLink = false, onNavigate }: TripCardProps) {
   const blocked = disableLink || trip.unavailable;
 
   return (
@@ -81,7 +82,7 @@ export default function TripCard({ trip, footer, disableLink = false }: TripCard
             <TripCardBody trip={trip} />
           </div>
         ) : (
-          <Link className="trip-card__link" to={`/trips/${trip.id}`}>
+          <Link className="trip-card__link" to={`/trips/${trip.id}`} onClick={() => onNavigate?.(trip)}>
             <TripCardBody trip={trip} />
           </Link>
         )}

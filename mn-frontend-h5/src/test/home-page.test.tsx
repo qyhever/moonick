@@ -100,8 +100,22 @@ const defaultTripListResponse = {
 };
 
 beforeEach(() => {
+  let scrollYValue = 0;
   window.localStorage.clear();
-  window.scrollTo = vi.fn();
+  Object.defineProperty(window, "scrollY", {
+    configurable: true,
+    get: () => scrollYValue,
+  });
+  window.scrollTo = vi.fn((options?: ScrollToOptions | number, y?: number) => {
+    if (typeof options === "object") {
+      scrollYValue = options.top ?? scrollYValue;
+      return;
+    }
+
+    if (typeof options === "number" && typeof y === "number") {
+      scrollYValue = y;
+    }
+  });
   useAuthStore.setState({
     accessToken: "",
     refreshToken: "",
@@ -447,4 +461,63 @@ it("keeps filter drawer available when rendered inside app layout with bottom ta
 
   expect(screen.getByRole("button", { name: "确定" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "重置" })).toBeInTheDocument();
+});
+
+it("restores loaded trips and scroll position when returning from trip detail", async () => {
+  const user = userEvent.setup();
+  const scrollToSpy = vi.mocked(window.scrollTo);
+
+  mockGetTrips
+    .mockResolvedValueOnce({
+      items: [createTrip(1, "上海虹桥", "杭州东站")],
+      total: 20,
+      pageNum: 1,
+      pageSize: 10,
+    })
+    .mockResolvedValueOnce({
+      items: [createTrip(2, "北京南站", "天津西站")],
+      total: 20,
+      pageNum: 2,
+      pageSize: 10,
+    });
+
+  render(
+    <MemoryRouter initialEntries={["/"]}>
+      <Routes>
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/trips/:id" element={<div>详情页</div>} />
+        </Route>
+      </Routes>
+    </MemoryRouter>,
+  );
+
+  expect(await screen.findByText("上海虹桥")).toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "触发加载更多" }));
+
+  expect(await screen.findByText("北京南站")).toBeInTheDocument();
+
+  scrollToSpy.mockClear();
+  Object.defineProperty(window, "scrollY", {
+    configurable: true,
+    get: () => 640,
+  });
+
+  const detailLink = screen
+    .getAllByRole("link")
+    .find((link) => link.getAttribute("href") === "/trips/2");
+
+  expect(detailLink).toBeTruthy();
+
+  await user.click(detailLink!);
+
+  expect(await screen.findByText("详情页")).toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "返回上一页" }));
+
+  expect(await screen.findByText("北京南站")).toBeInTheDocument();
+  expect(screen.getByText("上海虹桥")).toBeInTheDocument();
+  expect(mockGetTrips).toHaveBeenCalledTimes(2);
+  expect(scrollToSpy).toHaveBeenLastCalledWith({ top: 640, left: 0, behavior: "auto" });
 });
