@@ -188,6 +188,25 @@ func (r *UserRepository) UpdateAvatarURL(ctx context.Context, userID int64, avat
 	return nil
 }
 
+func (r *UserRepository) UpdatePassword(ctx context.Context, userID int64, passwordHash string) error {
+	if r.db != nil {
+		return r.updateUser(ctx, userID, `UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, passwordHash, userID)
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	user, ok := r.usersByID[userID]
+	if !ok {
+		return ErrUserNotFound
+	}
+
+	user.PasswordHash = passwordHash
+	user.UpdatedAt = time.Now()
+	r.usersByID[userID] = user
+	return nil
+}
+
 func (r *UserRepository) List(ctx context.Context, offset, limit int, keyword string) ([]*entity.User, int, error) {
 	if r.db != nil {
 		return r.listFromDB(ctx, offset, limit, keyword)

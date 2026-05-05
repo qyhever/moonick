@@ -78,7 +78,7 @@ beforeEach(() => {
       };
     }
 
-    if (url === "/api/v1/auth/register/code" && payload) {
+    if (url === "/api/v1/auth/code" && payload) {
       return {
         data: {
           code: 1000,
@@ -261,8 +261,9 @@ it("sends register verification code and restores countdown after remount", asyn
   });
   fireEvent.click(screen.getByRole("button", { name: "发送验证码" }));
 
-  expect(mockPost).toHaveBeenCalledWith("/api/v1/auth/register/code", {
+  expect(mockPost).toHaveBeenCalledWith("/api/v1/auth/code", {
     email: "user@example.com",
+    type: "register",
   });
   await waitFor(() => {
     expect(screen.getByRole("button", { name: "60s后重试" })).toBeDisabled();

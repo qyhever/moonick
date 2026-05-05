@@ -52,18 +52,20 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	ResponseSuccess(ctx, resp)
 }
 
-func (c *AuthController) SendRegisterCode(ctx *gin.Context) {
-	var req request.SendRegisterCodeRequest
+func (c *AuthController) SendVerificationCode(ctx *gin.Context) {
+	var req request.SendVerificationCodeRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ResponseFailedWithMsg(ctx, CodeInvalidParam, "请求参数错误: "+err.Error())
 		return
 	}
 
-	resp, err := c.authService.SendRegisterCode(ctx, req)
+	resp, err := c.authService.SendVerificationCode(ctx, req)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrEmailAlreadyRegistered):
 			ResponseFailedWithMsg(ctx, CodeUserExist, err.Error())
+		case errors.Is(err, service.ErrEmailNotRegistered):
+			ResponseFailedWithMsg(ctx, CodeUserNotExist, err.Error())
 		case errors.Is(err, service.ErrRegisterCodeSendTooFrequent):
 			ResponseFailedWithMsg(ctx, CodeInvalidParam, err.Error())
 		case errors.Is(err, service.ErrInvalidEmail):
@@ -75,6 +77,32 @@ func (c *AuthController) SendRegisterCode(ctx *gin.Context) {
 	}
 
 	ResponseSuccess(ctx, resp)
+}
+
+func (c *AuthController) ResetPassword(ctx *gin.Context) {
+	var req request.ResetPasswordRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ResponseFailedWithMsg(ctx, CodeInvalidParam, "请求参数错误: "+err.Error())
+		return
+	}
+
+	if err := c.authService.ResetPassword(ctx, req); err != nil {
+		switch {
+		case errors.Is(err, service.ErrEmailNotRegistered):
+			ResponseFailedWithMsg(ctx, CodeUserNotExist, err.Error())
+		case errors.Is(err, service.ErrInvalidRegisterCode):
+			ResponseFailedWithMsg(ctx, CodeInvalidParam, err.Error())
+		case errors.Is(err, service.ErrInvalidEmail):
+			ResponseFailedWithMsg(ctx, CodeInvalidParam, err.Error())
+		case errors.Is(err, service.ErrInvalidUserCredentials):
+			ResponseFailedWithMsg(ctx, CodeInvalidParam, err.Error())
+		default:
+			ResponseFailedWithMsg(ctx, CodeServerBusy, err.Error())
+		}
+		return
+	}
+
+	ResponseSuccess(ctx, gin.H{"ok": true})
 }
 
 func (c *AuthController) Login(ctx *gin.Context) {

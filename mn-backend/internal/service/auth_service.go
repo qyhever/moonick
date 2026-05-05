@@ -22,6 +22,7 @@ import (
 
 var (
 	ErrEmailAlreadyRegistered      = errors.New("该邮箱已注册，请直接登录")
+	ErrEmailNotRegistered          = errors.New("该邮箱未注册")
 	ErrInvalidUserCredentials      = errors.New("邮箱或密码错误")
 	ErrInvalidEmail                = errors.New("请输入有效的邮箱地址")
 	ErrInvalidRegisterCode         = errors.New("验证码错误或已失效")
@@ -52,6 +53,7 @@ type authUserRepository interface {
 	FindByEmail(ctx context.Context, email string) (*entity.User, error)
 	FindByID(ctx context.Context, id int64) (*entity.User, error)
 	Create(ctx context.Context, user entity.User) (*entity.User, error)
+	UpdatePassword(ctx context.Context, userID int64, passwordHash string) error
 }
 
 type authAdminRepository interface {
@@ -60,9 +62,9 @@ type authAdminRepository interface {
 }
 
 type registerCodeRepository interface {
-	FindByEmail(ctx context.Context, email string) (*entity.RegisterCode, error)
+	FindByEmailAndType(ctx context.Context, email, codeType string) (*entity.RegisterCode, error)
 	Save(ctx context.Context, code entity.RegisterCode) error
-	Consume(ctx context.Context, email, code string, now time.Time) (bool, error)
+	ConsumeByType(ctx context.Context, email, codeType, code string, now time.Time) (bool, error)
 }
 
 type mailSender interface {
@@ -116,7 +118,13 @@ func (s *AuthService) Register(ctx context.Context, req request.RegisterRequest)
 		return nil, ErrInvalidRegisterCode
 	}
 
-	consumed, err := s.registerCodeRepo.Consume(ctx, email, strings.TrimSpace(req.Code), time.Now())
+	consumed, err := s.registerCodeRepo.ConsumeByType(
+		ctx,
+		email,
+		request.VerificationCodeTypeRegister,
+		strings.TrimSpace(req.Code),
+		time.Now(),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -145,10 +153,14 @@ func (s *AuthService) Register(ctx context.Context, req request.RegisterRequest)
 	return s.buildUserAuthPayload(user)
 }
 
-func (s *AuthService) SendRegisterCode(ctx context.Context, req request.SendRegisterCodeRequest) (*response.RegisterCodePayload, error) {
+func (s *AuthService) SendVerificationCode(ctx context.Context, req request.SendVerificationCodeRequest) (*response.RegisterCodePayload, error) {
 	email := strings.TrimSpace(req.Email)
 	if !isValidEmail(email) {
 		return nil, ErrInvalidEmail
+	}
+	codeType := normalizeVerificationCodeType(req.Type)
+	if codeType == "" {
+		return nil, ErrInvalidRegisterCode
 	}
 	if s.userRepo == nil {
 		return nil, ErrUserNotFound
@@ -161,19 +173,28 @@ func (s *AuthService) SendRegisterCode(ctx context.Context, req request.SendRegi
 	if err != nil {
 		return nil, err
 	}
-	if user != nil {
-		return nil, ErrEmailAlreadyRegistered
+	switch codeType {
+	case request.VerificationCodeTypeRegister:
+		if user != nil {
+			return nil, ErrEmailAlreadyRegistered
+		}
+	case request.VerificationCodeTypeResetPassword:
+		if user == nil {
+			return nil, ErrEmailNotRegistered
+		}
+	default:
+		return nil, ErrInvalidRegisterCode
 	}
 
 	now := time.Now()
-	registerCode, err := s.prepareRegisterCodeForSend(ctx, email, now)
+	registerCode, err := s.prepareRegisterCodeForSend(ctx, email, codeType, now)
 	if err != nil {
 		return nil, err
 	}
 	if err := s.registerCodeRepo.Save(ctx, *registerCode); err != nil {
 		return nil, err
 	}
-	if err := s.mailSender.Send(email, "邮箱验证码", buildRegisterCodeEmailBody(registerCode.Code)); err != nil {
+	if err := s.mailSender.Send(email, buildVerificationCodeEmailSubject(codeType), buildVerificationCodeEmailBody(registerCode.Code, codeType)); err != nil {
 		return nil, err
 	}
 
@@ -182,8 +203,58 @@ func (s *AuthService) SendRegisterCode(ctx context.Context, req request.SendRegi
 	}, nil
 }
 
-func (s *AuthService) prepareRegisterCodeForSend(ctx context.Context, email string, now time.Time) (*entity.RegisterCode, error) {
-	current, err := s.registerCodeRepo.FindByEmail(ctx, email)
+func (s *AuthService) ResetPassword(ctx context.Context, req request.ResetPasswordRequest) error {
+	if s.userRepo == nil || s.registerCodeRepo == nil {
+		return ErrUserNotFound
+	}
+
+	email := strings.TrimSpace(req.Email)
+	if !isValidEmail(email) {
+		return ErrInvalidEmail
+	}
+	if strings.TrimSpace(req.Password) == "" {
+		return ErrInvalidUserCredentials
+	}
+
+	user, err := s.userRepo.FindByEmail(ctx, email)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return ErrEmailNotRegistered
+	}
+
+	consumed, err := s.registerCodeRepo.ConsumeByType(
+		ctx,
+		email,
+		request.VerificationCodeTypeResetPassword,
+		strings.TrimSpace(req.Code),
+		time.Now(),
+	)
+	if err != nil {
+		return err
+	}
+	if !consumed {
+		return ErrInvalidRegisterCode
+	}
+
+	hash, err := password.Hash(req.Password)
+	if err != nil {
+		return err
+	}
+
+	return normalizeUserRepoError(s.userRepo.UpdatePassword(ctx, user.ID, hash))
+}
+
+func (s *AuthService) SendRegisterCode(ctx context.Context, req request.SendVerificationCodeRequest) (*response.RegisterCodePayload, error) {
+	if strings.TrimSpace(req.Type) == "" {
+		req.Type = request.VerificationCodeTypeRegister
+	}
+	return s.SendVerificationCode(ctx, req)
+}
+
+func (s *AuthService) prepareRegisterCodeForSend(ctx context.Context, email, codeType string, now time.Time) (*entity.RegisterCode, error) {
+	current, err := s.registerCodeRepo.FindByEmailAndType(ctx, email, codeType)
 	if err != nil {
 		return nil, err
 	}
@@ -196,6 +267,7 @@ func (s *AuthService) prepareRegisterCodeForSend(ctx context.Context, email stri
 
 		return &entity.RegisterCode{
 			Email:               email,
+			Type:                codeType,
 			Code:                code,
 			ExpiresAt:           now.Add(registerCodeTTL),
 			LastSentAt:          now,
@@ -217,6 +289,36 @@ func (s *AuthService) prepareRegisterCodeForSend(ctx context.Context, email stri
 	next.LastSentAt = now
 	next.UsedAt = time.Time{}
 	return &next, nil
+}
+
+func normalizeVerificationCodeType(codeType string) string {
+	switch strings.TrimSpace(codeType) {
+	case request.VerificationCodeTypeRegister:
+		return request.VerificationCodeTypeRegister
+	case request.VerificationCodeTypeResetPassword:
+		return request.VerificationCodeTypeResetPassword
+	default:
+		return ""
+	}
+}
+
+func buildVerificationCodeEmailSubject(codeType string) string {
+	if codeType == request.VerificationCodeTypeResetPassword {
+		return "重置密码验证码"
+	}
+	return "邮箱验证码"
+}
+
+func buildVerificationCodeEmailBody(code, codeType string) string {
+	body := htmls.RenderRegisterCodeTemplateA1(code)
+	if codeType != request.VerificationCodeTypeResetPassword {
+		return body
+	}
+
+	body = strings.ReplaceAll(body, "邮箱验证码", "重置密码验证码")
+	body = strings.ReplaceAll(body, "安全登录与注册验证邮件", "重置密码验证邮件")
+	body = strings.ReplaceAll(body, "完成注册或登录操作", "完成重置密码操作")
+	return body
 }
 
 func (s *AuthService) Login(ctx context.Context, req request.LoginRequest) (*response.AuthPayload, error) {
@@ -422,10 +524,6 @@ func generateVerificationCode(length int) (string, error) {
 func isValidEmail(email string) bool {
 	parsed, err := mail.ParseAddress(email)
 	return err == nil && strings.EqualFold(strings.TrimSpace(parsed.Address), strings.TrimSpace(email))
-}
-
-func buildRegisterCodeEmailBody(code string) string {
-	return htmls.RenderRegisterCodeTemplateA1(code)
 }
 
 type PostalMailSender struct{}

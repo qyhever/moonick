@@ -19,8 +19,9 @@ import (
 func TestAuthService_RegisterAndLogin(t *testing.T) {
 	svc := newAuthServiceForTest()
 
-	if _, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+	if _, err := svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
 		Email: "user@example.com",
+		Type:  request.VerificationCodeTypeRegister,
 	}); err != nil {
 		t.Fatalf("send register code returned error: %v", err)
 	}
@@ -30,7 +31,7 @@ func TestAuthService_RegisterAndLogin(t *testing.T) {
 	registerResp, err := svc.Register(context.Background(), request.RegisterRequest{
 		Email:    "user@example.com",
 		Password: "secret123",
-		Code:     codeRepo.mustGet("user@example.com").Code,
+		Code:     codeRepo.mustGet("user@example.com", request.VerificationCodeTypeRegister).Code,
 	})
 	if err != nil {
 		t.Fatalf("register returned error: %v", err)
@@ -54,8 +55,9 @@ func TestAuthService_RegisterAndLogin(t *testing.T) {
 func TestAuthService_RegisterRejectsDuplicateEmail(t *testing.T) {
 	svc := newAuthServiceForTest()
 
-	if _, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+	if _, err := svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
 		Email: "user@example.com",
+		Type:  request.VerificationCodeTypeRegister,
 	}); err != nil {
 		t.Fatalf("send register code returned error: %v", err)
 	}
@@ -64,7 +66,7 @@ func TestAuthService_RegisterRejectsDuplicateEmail(t *testing.T) {
 	_, err := svc.Register(context.Background(), request.RegisterRequest{
 		Email:    "user@example.com",
 		Password: "secret123",
-		Code:     codeRepo.mustGet("user@example.com").Code,
+		Code:     codeRepo.mustGet("user@example.com", request.VerificationCodeTypeRegister).Code,
 	})
 	if err != nil {
 		t.Fatalf("first register returned error: %v", err)
@@ -73,7 +75,7 @@ func TestAuthService_RegisterRejectsDuplicateEmail(t *testing.T) {
 	_, err = svc.Register(context.Background(), request.RegisterRequest{
 		Email:    "user@example.com",
 		Password: "secret123",
-		Code:     codeRepo.mustGet("user@example.com").Code,
+		Code:     codeRepo.mustGet("user@example.com", request.VerificationCodeTypeRegister).Code,
 	})
 	if err == nil {
 		t.Fatal("expected duplicate register to fail")
@@ -86,8 +88,9 @@ func TestAuthService_RegisterRejectsDuplicateEmail(t *testing.T) {
 func TestAuthService_RefreshUserToken(t *testing.T) {
 	svc := newAuthServiceForTest()
 
-	if _, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+	if _, err := svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
 		Email: "user@example.com",
+		Type:  request.VerificationCodeTypeRegister,
 	}); err != nil {
 		t.Fatalf("send register code returned error: %v", err)
 	}
@@ -96,7 +99,7 @@ func TestAuthService_RefreshUserToken(t *testing.T) {
 	registerResp, err := svc.Register(context.Background(), request.RegisterRequest{
 		Email:    "user@example.com",
 		Password: "secret123",
-		Code:     codeRepo.mustGet("user@example.com").Code,
+		Code:     codeRepo.mustGet("user@example.com", request.VerificationCodeTypeRegister).Code,
 	})
 	if err != nil {
 		t.Fatalf("register returned error: %v", err)
@@ -117,8 +120,9 @@ func TestAuthService_RefreshUserToken(t *testing.T) {
 func TestAuthService_SendRegisterCode(t *testing.T) {
 	svc := newAuthServiceForTest()
 
-	resp, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+	resp, err := svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
 		Email: "user@example.com",
+		Type:  request.VerificationCodeTypeRegister,
 	})
 	if err != nil {
 		t.Fatalf("send register code returned error: %v", err)
@@ -131,7 +135,7 @@ func TestAuthService_SendRegisterCode(t *testing.T) {
 	}
 
 	codeRepo := svc.registerCodeRepo.(*testRegisterCodeRepository)
-	stored := codeRepo.mustGet("user@example.com")
+	stored := codeRepo.mustGet("user@example.com", request.VerificationCodeTypeRegister)
 	if matched := regexp.MustCompile(`^\d{6}$`).MatchString(stored.Code); !matched {
 		t.Fatalf("expected stored 6 digit code, got %#v", stored)
 	}
@@ -170,26 +174,28 @@ func TestAuthService_SendRegisterCode(t *testing.T) {
 func TestAuthService_SendRegisterCodeReplacesExpiredCode(t *testing.T) {
 	svc := newAuthServiceForTest()
 
-	if _, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+	if _, err := svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
 		Email: "user@example.com",
+		Type:  request.VerificationCodeTypeRegister,
 	}); err != nil {
 		t.Fatalf("first send register code returned error: %v", err)
 	}
 
 	codeRepo := svc.registerCodeRepo.(*testRegisterCodeRepository)
-	first := codeRepo.mustGet("user@example.com")
+	first := codeRepo.mustGet("user@example.com", request.VerificationCodeTypeRegister)
 	first.ExpiresAt = time.Now().Add(-time.Minute)
 	if err := codeRepo.Save(context.Background(), first); err != nil {
 		t.Fatalf("save expired register code returned error: %v", err)
 	}
 
-	if _, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+	if _, err := svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
 		Email: "user@example.com",
+		Type:  request.VerificationCodeTypeRegister,
 	}); err != nil {
 		t.Fatalf("second send register code returned error: %v", err)
 	}
 
-	second := codeRepo.mustGet("user@example.com")
+	second := codeRepo.mustGet("user@example.com", request.VerificationCodeTypeRegister)
 	if first.Code == second.Code {
 		t.Fatalf("expected resend to replace expired code, first=%#v second=%#v", first, second)
 	}
@@ -198,22 +204,24 @@ func TestAuthService_SendRegisterCodeReplacesExpiredCode(t *testing.T) {
 func TestAuthService_SendRegisterCodeReusesActiveCodeOnResend(t *testing.T) {
 	svc := newAuthServiceForTest()
 
-	if _, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+	if _, err := svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
 		Email: "user@example.com",
+		Type:  request.VerificationCodeTypeRegister,
 	}); err != nil {
 		t.Fatalf("first send register code returned error: %v", err)
 	}
 
 	codeRepo := svc.registerCodeRepo.(*testRegisterCodeRepository)
-	first := codeRepo.mustGet("user@example.com")
+	first := codeRepo.mustGet("user@example.com", request.VerificationCodeTypeRegister)
 
-	if _, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+	if _, err := svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
 		Email: "user@example.com",
+		Type:  request.VerificationCodeTypeRegister,
 	}); err != nil {
 		t.Fatalf("second send register code returned error: %v", err)
 	}
 
-	second := codeRepo.mustGet("user@example.com")
+	second := codeRepo.mustGet("user@example.com", request.VerificationCodeTypeRegister)
 	if first.Code != second.Code {
 		t.Fatalf("expected resend to reuse active code, first=%#v second=%#v", first, second)
 	}
@@ -223,15 +231,17 @@ func TestAuthService_SendRegisterCodeRejectsTooFrequentResend(t *testing.T) {
 	svc := newAuthServiceForTest()
 
 	for i := 0; i < 2; i++ {
-		if _, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+		if _, err := svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
 			Email: "user@example.com",
+			Type:  request.VerificationCodeTypeRegister,
 		}); err != nil {
 			t.Fatalf("send #%d register code returned error: %v", i+1, err)
 		}
 	}
 
-	_, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+	_, err := svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
 		Email: "user@example.com",
+		Type:  request.VerificationCodeTypeRegister,
 	})
 	if !errors.Is(err, ErrRegisterCodeSendTooFrequent) {
 		t.Fatalf("expected ErrRegisterCodeSendTooFrequent, got %v", err)
@@ -241,8 +251,9 @@ func TestAuthService_SendRegisterCodeRejectsTooFrequentResend(t *testing.T) {
 func TestAuthService_SendRegisterCodeRejectsRegisteredEmail(t *testing.T) {
 	svc := newAuthServiceForTest()
 
-	if _, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+	if _, err := svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
 		Email: "user@example.com",
+		Type:  request.VerificationCodeTypeRegister,
 	}); err != nil {
 		t.Fatalf("send register code returned error: %v", err)
 	}
@@ -251,14 +262,15 @@ func TestAuthService_SendRegisterCodeRejectsRegisteredEmail(t *testing.T) {
 	_, err := svc.Register(context.Background(), request.RegisterRequest{
 		Email:    "user@example.com",
 		Password: "secret123",
-		Code:     codeRepo.mustGet("user@example.com").Code,
+		Code:     codeRepo.mustGet("user@example.com", request.VerificationCodeTypeRegister).Code,
 	})
 	if err != nil {
 		t.Fatalf("register returned error: %v", err)
 	}
 
-	_, err = svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+	_, err = svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
 		Email: "user@example.com",
+		Type:  request.VerificationCodeTypeRegister,
 	})
 	if !errors.Is(err, ErrEmailAlreadyRegistered) {
 		t.Fatalf("expected ErrEmailAlreadyRegistered, got %v", err)
@@ -268,14 +280,15 @@ func TestAuthService_SendRegisterCodeRejectsRegisteredEmail(t *testing.T) {
 func TestAuthService_RegisterRejectsInvalidOrUsedCode(t *testing.T) {
 	svc := newAuthServiceForTest()
 
-	if _, err := svc.SendRegisterCode(context.Background(), request.SendRegisterCodeRequest{
+	if _, err := svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
 		Email: "user@example.com",
+		Type:  request.VerificationCodeTypeRegister,
 	}); err != nil {
 		t.Fatalf("send register code returned error: %v", err)
 	}
 
 	codeRepo := svc.registerCodeRepo.(*testRegisterCodeRepository)
-	code := codeRepo.mustGet("user@example.com").Code
+	code := codeRepo.mustGet("user@example.com", request.VerificationCodeTypeRegister).Code
 
 	_, err := svc.Register(context.Background(), request.RegisterRequest{
 		Email:    "user@example.com",
@@ -305,6 +318,115 @@ func TestAuthService_RegisterRejectsInvalidOrUsedCode(t *testing.T) {
 	})
 	if !errors.Is(err, ErrInvalidRegisterCode) {
 		t.Fatalf("expected ErrInvalidRegisterCode for used code, got %v", err)
+	}
+}
+
+func TestAuthService_ResetPasswordUsesIndependentVerificationCodeType(t *testing.T) {
+	svc := newAuthServiceForTest()
+
+	if _, err := svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
+		Email: "user@example.com",
+		Type:  request.VerificationCodeTypeRegister,
+	}); err != nil {
+		t.Fatalf("send register code returned error: %v", err)
+	}
+
+	codeRepo := svc.registerCodeRepo.(*testRegisterCodeRepository)
+	registerCode := codeRepo.mustGet("user@example.com", request.VerificationCodeTypeRegister).Code
+
+	_, err := svc.Register(context.Background(), request.RegisterRequest{
+		Email:    "user@example.com",
+		Password: "secret123",
+		Code:     registerCode,
+	})
+	if err != nil {
+		t.Fatalf("register returned error: %v", err)
+	}
+
+	if _, err := svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
+		Email: "user@example.com",
+		Type:  request.VerificationCodeTypeResetPassword,
+	}); err != nil {
+		t.Fatalf("send reset password code returned error: %v", err)
+	}
+
+	resetCode := codeRepo.mustGet("user@example.com", request.VerificationCodeTypeResetPassword).Code
+	if registerCode == resetCode {
+		t.Fatalf("expected reset password code to be independent from register code, register=%s reset=%s", registerCode, resetCode)
+	}
+
+	err = svc.ResetPassword(context.Background(), request.ResetPasswordRequest{
+		Email:    "user@example.com",
+		Password: "secret456",
+		Code:     registerCode,
+	})
+	if !errors.Is(err, ErrInvalidRegisterCode) {
+		t.Fatalf("expected register code to be rejected by reset password flow, got %v", err)
+	}
+
+	if err := svc.ResetPassword(context.Background(), request.ResetPasswordRequest{
+		Email:    "user@example.com",
+		Password: "secret456",
+		Code:     resetCode,
+	}); err != nil {
+		t.Fatalf("reset password returned error: %v", err)
+	}
+}
+
+func TestAuthService_ResetPasswordReplacesLoginCredential(t *testing.T) {
+	svc := newAuthServiceForTest()
+
+	if _, err := svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
+		Email: "user@example.com",
+		Type:  request.VerificationCodeTypeRegister,
+	}); err != nil {
+		t.Fatalf("send register code returned error: %v", err)
+	}
+
+	codeRepo := svc.registerCodeRepo.(*testRegisterCodeRepository)
+	registerCode := codeRepo.mustGet("user@example.com", request.VerificationCodeTypeRegister).Code
+
+	if _, err := svc.Register(context.Background(), request.RegisterRequest{
+		Email:    "user@example.com",
+		Password: "secret123",
+		Code:     registerCode,
+	}); err != nil {
+		t.Fatalf("register returned error: %v", err)
+	}
+
+	if _, err := svc.SendVerificationCode(context.Background(), request.SendVerificationCodeRequest{
+		Email: "user@example.com",
+		Type:  request.VerificationCodeTypeResetPassword,
+	}); err != nil {
+		t.Fatalf("send reset password code returned error: %v", err)
+	}
+
+	resetCode := codeRepo.mustGet("user@example.com", request.VerificationCodeTypeResetPassword).Code
+	if err := svc.ResetPassword(context.Background(), request.ResetPasswordRequest{
+		Email:    "user@example.com",
+		Password: "secret456",
+		Code:     resetCode,
+	}); err != nil {
+		t.Fatalf("reset password returned error: %v", err)
+	}
+
+	_, err := svc.Login(context.Background(), request.LoginRequest{
+		Email:    "user@example.com",
+		Password: "secret123",
+	})
+	if !errors.Is(err, ErrInvalidUserCredentials) {
+		t.Fatalf("expected old password to be rejected, got %v", err)
+	}
+
+	loginResp, err := svc.Login(context.Background(), request.LoginRequest{
+		Email:    "user@example.com",
+		Password: "secret456",
+	})
+	if err != nil {
+		t.Fatalf("login with new password returned error: %v", err)
+	}
+	if loginResp == nil || loginResp.AccessToken == "" {
+		t.Fatalf("expected auth payload after reset password, got %#v", loginResp)
 	}
 }
 
@@ -381,10 +503,14 @@ func newTestRegisterCodeRepository() *testRegisterCodeRepository {
 }
 
 func (r *testRegisterCodeRepository) FindByEmail(_ context.Context, email string) (*entity.RegisterCode, error) {
+	return r.FindByEmailAndType(context.Background(), email, request.VerificationCodeTypeRegister)
+}
+
+func (r *testRegisterCodeRepository) FindByEmailAndType(_ context.Context, email, codeType string) (*entity.RegisterCode, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	code, ok := r.codes[email]
+	code, ok := r.codes[buildRegisterCodeKey(email, codeType)]
 	if !ok {
 		return nil, nil
 	}
@@ -396,32 +522,40 @@ func (r *testRegisterCodeRepository) Save(_ context.Context, code entity.Registe
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	r.codes[code.Email] = code
+	r.codes[buildRegisterCodeKey(code.Email, code.Type)] = code
 	return nil
 }
 
 func (r *testRegisterCodeRepository) Consume(_ context.Context, email, code string, now time.Time) (bool, error) {
+	return r.ConsumeByType(context.Background(), email, request.VerificationCodeTypeRegister, code, now)
+}
+
+func (r *testRegisterCodeRepository) ConsumeByType(_ context.Context, email, codeType, code string, now time.Time) (bool, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	current, ok := r.codes[email]
+	current, ok := r.codes[buildRegisterCodeKey(email, codeType)]
 	if !ok || current.Code != code || !current.UsedAt.IsZero() || !current.ExpiresAt.After(now) {
 		return false, nil
 	}
 	current.UsedAt = now
-	r.codes[email] = current
+	r.codes[buildRegisterCodeKey(email, codeType)] = current
 	return true, nil
 }
 
-func (r *testRegisterCodeRepository) mustGet(email string) entity.RegisterCode {
+func (r *testRegisterCodeRepository) mustGet(email, codeType string) entity.RegisterCode {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	code, ok := r.codes[email]
+	code, ok := r.codes[buildRegisterCodeKey(email, codeType)]
 	if !ok {
-		panic("register code not found for " + email)
+		panic("register code not found for " + email + ":" + codeType)
 	}
 	return code
+}
+
+func buildRegisterCodeKey(email, codeType string) string {
+	return email + ":" + codeType
 }
 
 type testMailMessage struct {

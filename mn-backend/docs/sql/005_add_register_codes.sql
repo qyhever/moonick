@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS register_codes (
-    email VARCHAR(128) NOT NULL PRIMARY KEY,
+    email VARCHAR(128) NOT NULL,
+    type VARCHAR(32) NOT NULL DEFAULT 'register',
     code VARCHAR(6) NOT NULL,
     expires_at DATETIME NOT NULL,
     last_sent_at DATETIME NULL DEFAULT NULL,
@@ -8,5 +9,6 @@ CREATE TABLE IF NOT EXISTS register_codes (
     used_at DATETIME NULL DEFAULT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (email, type),
     KEY idx_register_codes_expires_at (expires_at)
 );

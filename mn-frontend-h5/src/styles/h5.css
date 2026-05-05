@@ -1334,6 +1334,90 @@ textarea {
   color: var(--accent-orange);
 }
 
+.password-reset-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.password-reset-hero {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 10px;
+  padding: 24px 22px;
+  background: linear-gradient(135deg, #1f1a17 0%, #332922 100%);
+  color: #fff;
+}
+
+.password-reset-hero::before {
+  content: "";
+  position: absolute;
+  top: -28px;
+  right: -24px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(242, 132, 92, 0.3), transparent 72%);
+}
+
+.password-reset-hero::after {
+  content: "";
+  position: absolute;
+  left: -20px;
+  bottom: -32px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(196, 154, 60, 0.18), transparent 72%);
+}
+
+.password-reset-hero .password-reset-hero__eyebrow,
+.password-reset-hero .password-reset-hero__title {
+  position: relative;
+  z-index: 1;
+}
+
+.password-reset-hero .password-reset-hero__title {
+  color: #fff;
+}
+
+.password-reset-hero__eyebrow {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #f3bf8f;
+}
+
+.password-reset-hero__title {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.35;
+  color: #fff;
+}
+
+.password-reset-hero__subtitle {
+  margin: 0;
+  max-width: 28ch;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.password-reset-form-card,
+.password-reset-tips {
+  display: grid;
+  gap: 12px;
+}
+
+.password-reset-form {
+  display: grid;
+  gap: 14px;
+}
+
+.password-reset-form [role="alert"] {
+  margin-top: -4px;
+}
+
 .tab-item__icon {
   display: inline-flex;
   align-items: center;

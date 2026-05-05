@@ -32,7 +32,7 @@ func NewRegisterCodeRepository(dbs ...*sql.DB) *RegisterCodeRepository {
 	}
 }
 
-func (r *RegisterCodeRepository) FindByEmail(ctx context.Context, email string) (*entity.RegisterCode, error) {
+func (r *RegisterCodeRepository) FindByEmailAndType(ctx context.Context, email, codeType string) (*entity.RegisterCode, error) {
 	if r.db != nil {
 		var (
 			item                entity.RegisterCode
@@ -40,10 +40,11 @@ func (r *RegisterCodeRepository) FindByEmail(ctx context.Context, email string) 
 			lastSentAt          sql.NullTime
 			sendWindowStartedAt sql.NullTime
 		)
-		err := r.db.QueryRowContext(ctx, `SELECT email, code, expires_at, last_sent_at, send_window_started_at, send_count_in_window, used_at, created_at, updated_at
+		err := r.db.QueryRowContext(ctx, `SELECT email, type, code, expires_at, last_sent_at, send_window_started_at, send_count_in_window, used_at, created_at, updated_at
 FROM register_codes
-WHERE email = ?`, email).Scan(
+WHERE email = ? AND type = ?`, email, codeType).Scan(
 			&item.Email,
+			&item.Type,
 			&item.Code,
 			&item.ExpiresAt,
 			&lastSentAt,
@@ -74,7 +75,7 @@ WHERE email = ?`, email).Scan(
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	item, ok := r.codes[email]
+	item, ok := r.codes[buildRegisterCodeCacheKey(email, codeType)]
 	if !ok {
 		return nil, nil
 	}
@@ -84,10 +85,11 @@ WHERE email = ?`, email).Scan(
 
 func (r *RegisterCodeRepository) Save(ctx context.Context, code entity.RegisterCode) error {
 	if r.db != nil {
-		_, err := r.db.ExecContext(ctx, `INSERT INTO register_codes (email, code, expires_at, last_sent_at, send_window_started_at, send_count_in_window, used_at)
-VALUES (?, ?, ?, ?, ?, ?, NULL)
+		_, err := r.db.ExecContext(ctx, `INSERT INTO register_codes (email, type, code, expires_at, last_sent_at, send_window_started_at, send_count_in_window, used_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
 ON DUPLICATE KEY UPDATE code = VALUES(code), expires_at = VALUES(expires_at), last_sent_at = VALUES(last_sent_at), send_window_started_at = VALUES(send_window_started_at), send_count_in_window = VALUES(send_count_in_window), used_at = NULL, updated_at = CURRENT_TIMESTAMP`,
 			code.Email,
+			code.Type,
 			code.Code,
 			code.ExpiresAt,
 			nullTimeArg(code.LastSentAt),
@@ -101,7 +103,8 @@ ON DUPLICATE KEY UPDATE code = VALUES(code), expires_at = VALUES(expires_at), la
 	defer r.mu.Unlock()
 
 	now := time.Now()
-	current, ok := r.codes[code.Email]
+	key := buildRegisterCodeCacheKey(code.Email, code.Type)
+	current, ok := r.codes[key]
 	if ok {
 		code.CreatedAt = current.CreatedAt
 	} else {
@@ -112,7 +115,7 @@ ON DUPLICATE KEY UPDATE code = VALUES(code), expires_at = VALUES(expires_at), la
 	}
 	code.UsedAt = time.Time{}
 	code.UpdatedAt = now
-	r.codes[code.Email] = code
+	r.codes[key] = code
 	return nil
 }
 
@@ -123,13 +126,14 @@ func nullTimeArg(value time.Time) any {
 	return value
 }
 
-func (r *RegisterCodeRepository) Consume(ctx context.Context, email, code string, now time.Time) (bool, error) {
+func (r *RegisterCodeRepository) ConsumeByType(ctx context.Context, email, codeType, code string, now time.Time) (bool, error) {
 	if r.db != nil {
 		result, err := r.db.ExecContext(ctx, `UPDATE register_codes
 SET used_at = ?, updated_at = CURRENT_TIMESTAMP
-WHERE email = ? AND code = ? AND used_at IS NULL AND expires_at > ?`,
+WHERE email = ? AND type = ? AND code = ? AND used_at IS NULL AND expires_at > ?`,
 			now,
 			email,
+			codeType,
 			code,
 			now,
 		)
@@ -146,12 +150,17 @@ WHERE email = ? AND code = ? AND used_at IS NULL AND expires_at > ?`,
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	current, ok := r.codes[email]
+	key := buildRegisterCodeCacheKey(email, codeType)
+	current, ok := r.codes[key]
 	if !ok || current.Code != code || !current.UsedAt.IsZero() || !current.ExpiresAt.After(now) {
 		return false, nil
 	}
 	current.UsedAt = now
 	current.UpdatedAt = now
-	r.codes[email] = current
+	r.codes[key] = current
 	return true, nil
+}
+
+func buildRegisterCodeCacheKey(email, codeType string) string {
+	return email + ":" + codeType
 }

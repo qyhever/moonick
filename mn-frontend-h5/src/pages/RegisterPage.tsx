@@ -139,8 +139,9 @@ export default function RegisterPage() {
     setIsSendingCode(true);
 
     try {
-      const response = await api.post<ApiResponse<RegisterCodeResponse>>("/api/v1/auth/register/code", {
+      const response = await api.post<ApiResponse<RegisterCodeResponse>>("/api/v1/auth/code", {
         email,
+        type: "register",
       });
       const payload = unwrapApiResponse(response.data);
       if (!payload.sent) {

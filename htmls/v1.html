@@ -142,6 +142,7 @@ body::before {
   color: var(--text-dark);
   font-size: 20px;
   font-weight: 700;
+  text-decoration: none;
 }
 
 .page-topbar__title {
@@ -908,9 +909,26 @@ textarea.field__input {
 }
 
 .profile-setting-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
   padding: 14px 0;
   border-bottom: 1px solid var(--border);
   align-items: flex-start;
+}
+
+.profile-setting-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.profile-setting-link .profile-setting-row {
+  position: relative;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.profile-setting-link .profile-setting-row:active {
+  transform: scale(0.99);
 }
 
 .profile-setting-row:last-child {
@@ -940,6 +958,132 @@ textarea.field__input {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+.security-note {
+  margin-top: 16px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(250, 247, 242, 0.96), rgba(245, 240, 232, 0.92));
+  border: 1px solid rgba(196, 154, 60, 0.16);
+}
+
+.security-note__label {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.security-note__text {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-body);
+}
+
+.password-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 24px 22px;
+  background: linear-gradient(135deg, #1f1a17 0%, #332922 100%);
+  color: #fff;
+}
+
+.password-hero::before {
+  content: '';
+  position: absolute;
+  top: -28px;
+  right: -24px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(242, 132, 92, 0.3), transparent 72%);
+}
+
+.password-hero::after {
+  content: '';
+  position: absolute;
+  left: -20px;
+  bottom: -32px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(196, 154, 60, 0.18), transparent 72%);
+}
+
+.password-hero__eyebrow,
+.password-hero__title,
+.password-hero__subtitle {
+  position: relative;
+  z-index: 1;
+}
+
+.password-hero__eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #f3bf8f;
+  margin-bottom: 12px;
+}
+
+.password-hero__title {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.password-hero__subtitle {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.password-tips {
+  display: grid;
+  gap: 10px;
+}
+
+.password-tip {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.password-tip:last-child {
+  border-bottom: none;
+}
+
+.password-tip__icon {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 12px;
+  background: rgba(232, 104, 58, 0.12);
+  color: var(--accent-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.password-tip__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.password-tip__text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
 }
 
 /* Tab Bar */
@@ -1357,7 +1501,7 @@ textarea.field__input {
   </div>
 
   <!-- Account Settings Page -->
-  <p class="page-divider">账户设置</p>
+  <p class="page-divider" id="account-settings-page">账户设置</p>
 
   <div class="page-topbar">
     <div class="page-topbar__back">‹</div>
@@ -1414,18 +1558,55 @@ textarea.field__input {
     <div class="section-header">
       <div>
         <h2 class="section-title">安全管理</h2>
-        <p class="section-subtitle">为后续密码、设备与风控能力预留结构</p>
+        <p class="section-subtitle">优先保留最核心的登录密码修改入口</p>
       </div>
     </div>
     <div class="profile-settings">
-      <div class="profile-setting-row">
-        <div>
-          <p class="profile-setting-row__label">账号安全</p>
-          <p class="profile-setting-row__value">登录状态正常，支持后续接入密码与设备管理</p>
+      <a class="profile-setting-link" href="#reset-password-page">
+        <div class="profile-setting-row">
+          <div>
+            <p class="profile-setting-row__label">重置密码</p>
+            <p class="profile-setting-row__value">定期更新登录密码，保护账户登录安全</p>
+          </div>
+          <span class="profile-setting-row__action">去修改</span>
         </div>
-        <span class="profile-setting-row__action">去管理</span>
+      </a>
+    </div>
+  </div>
+
+  <p class="page-divider" id="reset-password-page">重置密码</p>
+
+  <div class="page-topbar">
+    <a class="page-topbar__back" href="#account-settings-page">‹</a>
+    <div class="page-topbar__title">重置密码</div>
+    <div class="page-topbar__spacer"></div>
+  </div>
+
+  <div class="card password-hero">
+    <p class="password-hero__eyebrow">Password Reset</p>
+    <h2 class="password-hero__title">请设置新的登录密码，<br>让账户安全保持在你手里。</h2>
+    <p class="password-hero__subtitle">这是一个重置密码场景，不需要输入当前密码。完成后，下次登录请使用新密码。</p>
+  </div>
+
+  <div class="card form-card">
+    <h2 class="form-title">重置密码</h2>
+    <p class="form-subtitle">输入新的登录密码，并再次确认，避免因输入错误影响后续登录。</p>
+    <div class="field">
+      <label class="field__label">新密码</label>
+      <input class="field__input" type="password" placeholder="请输入新的登录密码">
+    </div>
+    <div class="field">
+      <label class="field__label">确认密码</label>
+      <input class="field__input" type="password" placeholder="请再次输入新的登录密码">
+    </div>
+    <div class="field">
+      <label class="field__label">验证码</label>
+      <div class="field__control">
+        <input class="field__input" type="text" inputmode="numeric" placeholder="请输入验证码">
+        <button class="field__send-btn" type="button">发送验证码</button>
       </div>
     </div>
+    <button class="btn-solid">确认</button>
   </div>
 
   <div class="profile-footer-actions">

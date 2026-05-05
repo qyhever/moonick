@@ -1,13 +1,25 @@
 package request
 
+const (
+	VerificationCodeTypeRegister      = "register"
+	VerificationCodeTypeResetPassword = "reset_password"
+)
+
 type RegisterRequest struct {
 	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
 	Code     string `json:"code" binding:"required"`
 }
 
-type SendRegisterCodeRequest struct {
+type SendVerificationCodeRequest struct {
 	Email string `json:"email" binding:"required"`
+	Type  string `json:"type" binding:"required"`
+}
+
+type ResetPasswordRequest struct {
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	Code     string `json:"code" binding:"required"`
 }
 
 type LoginRequest struct {

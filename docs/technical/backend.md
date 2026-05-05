@@ -126,11 +126,12 @@ internal/
 | `created_at` | datetime | 创建时间 |
 | `updated_at` | datetime | 更新时间 |
 
-### 4.3 注册验证码表 `register_codes`
+### 4.3 验证码表 `register_codes`
 
 | 字段 | 类型建议 | 说明 |
 |------|----------|------|
-| `email` | varchar(128) PK | 注册邮箱，同一时间只保留一条有效记录 |
+| `email` | varchar(128) | 邮箱 |
+| `type` | varchar(32) | 验证码用途，当前为 `register / reset_password` |
 | `code` | varchar(6) | 6 位数字验证码 |
 | `expires_at` | datetime | 过期时间，固定为发送后 5 分钟 |
 | `used_at` | datetime null | 使用时间，未使用时为空 |
@@ -139,7 +140,7 @@ internal/
 
 索引建议：
 
-- 主键：`email`
+- 主键：`(email, type)`
 - 索引：`idx_register_codes_expires_at(expires_at)`
 
 ### 4.4 行程表 `trips`
@@ -237,6 +238,19 @@ internal/
 ## 6. 服务模块设计
 
 ### 6.1 Auth 模块
+
+用户端认证相关接口：
+
+- `POST /api/v1/auth/code`
+  - `type=register`：仅允许未注册邮箱发送
+  - `type=reset_password`：仅允许已注册邮箱发送
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/password/reset`
+
+实现约束：
+
+- 验证码按 `(email, type)` 维度隔离，注册和重置密码不得互相消费
+- 重置密码成功后仅更新密码哈希，不直接签发新 token
 
 职责：
 

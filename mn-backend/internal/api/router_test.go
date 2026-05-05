@@ -79,7 +79,7 @@ func TestSetupRouter_UserRefreshSucceedsWithRefreshToken(t *testing.T) {
 	mailbox := useFakeMailSender(t)
 
 	r := SetupRouter()
-	code := sendRegisterCodeAndExtract(t, r, mailbox, "user@example.com")
+	code := sendRegisterCodeAndExtract(t, r, mailbox, "user@example.com", "register")
 	registerReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewBufferString(`{"email":"user@example.com","password":"secret123","code":"`+code+`"}`))
 	registerReq.Header.Set("Content-Type", "application/json")
 	registerRec := httptest.NewRecorder()
@@ -144,7 +144,7 @@ func TestSetupRouter_RegisterCodeSendsMailWithoutReturningCode(t *testing.T) {
 	mailbox := useFakeMailSender(t)
 
 	r := SetupRouter()
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register/code", bytes.NewBufferString(`{"email":"user@example.com"}`))
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/code", bytes.NewBufferString(`{"email":"user@example.com","type":"register"}`))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
@@ -175,6 +175,58 @@ func TestSetupRouter_RegisterCodeSendsMailWithoutReturningCode(t *testing.T) {
 	if extractCodeFromBody(mailbox.messages[0].body) == "" {
 		t.Fatalf("expected email body to contain 6 digit code, body=%s", mailbox.messages[0].body)
 	}
+}
+
+func TestSetupRouter_ResetPasswordRequiresDedicatedVerificationCodeType(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+	mailbox := useFakeMailSender(t)
+
+	r := SetupRouter()
+	registerCode := sendRegisterCodeAndExtract(t, r, mailbox, "user@example.com", "register")
+	registerReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewBufferString(`{"email":"user@example.com","password":"secret123","code":"`+registerCode+`"}`))
+	registerReq.Header.Set("Content-Type", "application/json")
+	registerRec := httptest.NewRecorder()
+	r.ServeHTTP(registerRec, registerReq)
+	assertResponseCode(t, registerRec, controller.CodeSuccess)
+
+	resetCodeReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/code", bytes.NewBufferString(`{"email":"user@example.com","type":"reset_password"}`))
+	resetCodeReq.Header.Set("Content-Type", "application/json")
+	resetCodeReq.RemoteAddr = "198.51.100.2:1234"
+	resetCodeRec := httptest.NewRecorder()
+	r.ServeHTTP(resetCodeRec, resetCodeReq)
+	assertResponseCode(t, resetCodeRec, controller.CodeSuccess)
+
+	resetCode := extractCodeFromBody(mailbox.messages[len(mailbox.messages)-1].body)
+	if resetCode == "" {
+		t.Fatalf("expected reset password email body to contain 6 digit code, body=%s", mailbox.messages[len(mailbox.messages)-1].body)
+	}
+
+	invalidResetReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/password/reset", bytes.NewBufferString(`{"email":"user@example.com","password":"secret456","code":"`+registerCode+`"}`))
+	invalidResetReq.Header.Set("Content-Type", "application/json")
+	invalidResetRec := httptest.NewRecorder()
+	r.ServeHTTP(invalidResetRec, invalidResetReq)
+	assertResponseCode(t, invalidResetRec, controller.CodeInvalidParam)
+
+	resetReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/password/reset", bytes.NewBufferString(`{"email":"user@example.com","password":"secret456","code":"`+resetCode+`"}`))
+	resetReq.Header.Set("Content-Type", "application/json")
+	resetReq.RemoteAddr = "203.0.113.3:1234"
+	resetRec := httptest.NewRecorder()
+	r.ServeHTTP(resetRec, resetReq)
+	assertResponseCode(t, resetRec, controller.CodeSuccess)
+
+	oldLoginReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", bytes.NewBufferString(`{"email":"user@example.com","password":"secret123"}`))
+	oldLoginReq.Header.Set("Content-Type", "application/json")
+	oldLoginRec := httptest.NewRecorder()
+	r.ServeHTTP(oldLoginRec, oldLoginReq)
+	assertResponseCode(t, oldLoginRec, controller.CodeInvalidPassword)
+
+	newLoginReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", bytes.NewBufferString(`{"email":"user@example.com","password":"secret456"}`))
+	newLoginReq.Header.Set("Content-Type", "application/json")
+	newLoginReq.RemoteAddr = "203.0.113.4:1234"
+	newLoginRec := httptest.NewRecorder()
+	r.ServeHTTP(newLoginRec, newLoginReq)
+	assertResponseCode(t, newLoginRec, controller.CodeSuccess)
 }
 
 func TestSetupRouter_AdminRouteRejectsRefreshToken(t *testing.T) {
@@ -555,10 +607,10 @@ func useFakeMailSender(t *testing.T) *fakeMailbox {
 	return mailbox
 }
 
-func sendRegisterCodeAndExtract(t *testing.T, r http.Handler, mailbox *fakeMailbox, email string) string {
+func sendRegisterCodeAndExtract(t *testing.T, r http.Handler, mailbox *fakeMailbox, email string, codeType string) string {
 	t.Helper()
 
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register/code", bytes.NewBufferString(`{"email":"`+email+`"}`))
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/code", bytes.NewBufferString(`{"email":"`+email+`","type":"`+codeType+`"}`))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)

@@ -82,7 +82,8 @@ func SetupRouter() *gin.Engine {
 
 	v1.GET("/meta", metaController.GetMeta)
 	apiV1.POST("/auth/register", middleware.NewIPRateLimit(registerIPRateLimitWindow), authController.Register)
-	apiV1.POST("/auth/register/code", middleware.NewIPRateLimit(registerCodeIPRateLimitWindow), authController.SendRegisterCode)
+	apiV1.POST("/auth/code", middleware.NewIPRateLimit(registerCodeIPRateLimitWindow), authController.SendVerificationCode)
+	apiV1.POST("/auth/password/reset", middleware.NewIPRateLimit(registerIPRateLimitWindow), authController.ResetPassword)
 	apiV1.POST("/auth/login", middleware.NewIPRateLimit(loginIPRateLimitWindow), authController.Login)
 	apiV1.POST("/auth/refresh", authController.Refresh)
 	apiV1.GET("/auth/me", middleware.RequireUserAuth(jwtManager), authController.Me)

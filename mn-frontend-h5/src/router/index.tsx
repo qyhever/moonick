@@ -3,6 +3,7 @@ import { Navigate, type RouteObject, createBrowserRouter, useLocation } from "re
 
 import AppLayout from "../components/MobileTabBar";
 import AccountSettingsPage from "../features/profile/pages/AccountSettingsPage";
+import PasswordResetPage from "../features/profile/pages/PasswordResetPage";
 import ProfilePage from "../features/profile/pages/ProfilePage";
 import EditTripPage from "../features/trips/pages/EditTripPage";
 import MyFavoritesPage from "../features/trips/pages/MyFavoritesPage";
@@ -103,6 +104,14 @@ export const routes: RouteObject[] = [
         element: (
           <RequireAuth>
             <AccountSettingsPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: "/me/settings/password-reset",
+        element: (
+          <RequireAuth>
+            <PasswordResetPage />
           </RequireAuth>
         ),
       },

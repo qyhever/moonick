@@ -1,5 +1,6 @@
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { getCurrentUserProfile, updateUserContact, updateUserProfile } from "../api";
 import AvatarUploader from "../components/AvatarUploader";
 import UserAvatar from "../components/UserAvatar";
@@ -8,8 +9,8 @@ import { maskEmail } from "../utils";
 import { useAuthStore } from "../../../store/auth";
 
 export default function AccountSettingsPage() {
+  const accessToken = useAuthStore((state) => state.accessToken);
   const user = useAuthStore((state) => state.user);
-  const userId = user?.id ?? null;
   const setUser = useAuthStore((state) => state.setUser);
   const logout = useAuthStore((state) => state.logout);
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? "");
@@ -21,7 +22,7 @@ export default function AccountSettingsPage() {
   const [editingField, setEditingField] = useState<"nickname" | "contact" | null>(null);
 
   useEffect(() => {
-    if (!userId) {
+    if (!accessToken) {
       return;
     }
 
@@ -51,7 +52,7 @@ export default function AccountSettingsPage() {
     return () => {
       active = false;
     };
-  }, [setUser, userId]);
+  }, [accessToken, setUser]);
 
   const displayName = nickname || user?.nickname || "旅途用户";
   const displayEmail = maskEmail(user?.email || "");
@@ -209,15 +210,13 @@ export default function AccountSettingsPage() {
             </div>
 
             <div className="profile-setting-list">
-              <div className="profile-setting-item">
+              <Link className="profile-setting-entry" to="/me/settings/password-reset">
                 <div>
-                  <p className="profile-setting-item__label">账号安全</p>
-                  <p className="profile-setting-item__value">登录状态正常，支持后续接入密码与设备管理</p>
+                  <p className="profile-setting-item__label">重置密码</p>
+                  <p className="profile-setting-item__value">定期更新登录密码，保护账户登录安全</p>
                 </div>
-                <button className="secondary-link secondary-link--button" type="button">
-                  去管理
-                </button>
-              </div>
+                <span className="profile-setting-entry__action">去修改</span>
+              </Link>
             </div>
           </section>
 

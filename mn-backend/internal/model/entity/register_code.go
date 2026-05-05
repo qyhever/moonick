@@ -4,6 +4,7 @@ import "time"
 
 type RegisterCode struct {
 	Email               string
+	Type                string
 	Code                string
 	ExpiresAt           time.Time
 	LastSentAt          time.Time

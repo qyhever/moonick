@@ -91,6 +91,15 @@ function getRouteFrame(pathname: string): RouteFrame {
     };
   }
 
+  if (pathname === "/me/settings/password-reset") {
+    return {
+      title: "重置密码",
+      showTopBar: true,
+      showTabBar: false,
+      backFallback: "/me/settings",
+    };
+  }
+
   if (pathname.endsWith("/edit")) {
     return {
       title: "编辑行程",
@@ -138,7 +147,9 @@ function ScrollToTopOnRouteChange() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    if (typeof window.scrollTo === "function") {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
   }, [pathname]);
 
   return null;
