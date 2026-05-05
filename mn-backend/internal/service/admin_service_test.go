@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"math"
 	"testing"
 	"time"
@@ -313,6 +314,99 @@ func TestAdminService_UpdateTripDetail(t *testing.T) {
 	if detail.Status != entity.TripStatusFull {
 		t.Fatalf("expected status=%s, got %#v", entity.TripStatusFull, detail)
 	}
+}
+
+func TestAdminService_CreateAdmin(t *testing.T) {
+	ctx := context.Background()
+	svc := &AdminService{
+		adminRepo: &stubAdminManageRepository{},
+	}
+
+	resp, err := svc.CreateAdmin(ctx, request.CreateAdminRequest{
+		Username: "ops-admin",
+		Password: "secret123",
+		Name:     "运营管理员",
+	})
+	if err != nil {
+		t.Fatalf("CreateAdmin returned error: %v", err)
+	}
+	if resp == nil || resp.Username != "ops-admin" || resp.Name != "运营管理员" || resp.Status != "active" {
+		t.Fatalf("unexpected response: %#v", resp)
+	}
+}
+
+func TestAdminService_CreateAdminFallsBackNameToUsername(t *testing.T) {
+	ctx := context.Background()
+	repo := &stubAdminManageRepository{}
+	svc := &AdminService{
+		adminRepo: repo,
+	}
+
+	resp, err := svc.CreateAdmin(ctx, request.CreateAdminRequest{
+		Username: "ops-admin",
+		Password: "secret123",
+		Name:     "   ",
+	})
+	if err != nil {
+		t.Fatalf("CreateAdmin returned error: %v", err)
+	}
+	if resp == nil || resp.Name != "ops-admin" {
+		t.Fatalf("expected fallback name, got %#v", resp)
+	}
+	if repo.created == nil || repo.created.Name != "ops-admin" {
+		t.Fatalf("expected persisted fallback name, got %#v", repo.created)
+	}
+}
+
+func TestAdminService_CreateAdminRejectsDuplicateUsername(t *testing.T) {
+	ctx := context.Background()
+	svc := &AdminService{
+		adminRepo: &stubAdminManageRepository{
+			createErr: mysql.ErrAdminUsernameAlreadyExists,
+		},
+	}
+
+	_, err := svc.CreateAdmin(ctx, request.CreateAdminRequest{
+		Username: "ops-admin",
+		Password: "secret123",
+		Name:     "运营管理员",
+	})
+	if !errors.Is(err, ErrAdminUsernameAlreadyExists) {
+		t.Fatalf("expected ErrAdminUsernameAlreadyExists, got %v", err)
+	}
+}
+
+type stubAdminManageRepository struct {
+	nextID    int64
+	createErr error
+	created   *entity.Admin
+}
+
+func (r *stubAdminManageRepository) FindByUsername(context.Context, string) (*entity.Admin, error) {
+	return nil, nil
+}
+
+func (r *stubAdminManageRepository) FindByID(context.Context, int64) (*entity.Admin, error) {
+	return nil, nil
+}
+
+func (r *stubAdminManageRepository) Upsert(context.Context, entity.Admin) error {
+	return nil
+}
+
+func (r *stubAdminManageRepository) Create(_ context.Context, admin entity.Admin) (*entity.Admin, error) {
+	if r.createErr != nil {
+		return nil, r.createErr
+	}
+	r.nextID++
+	if r.nextID == 0 {
+		r.nextID = 1
+	}
+	admin.ID = r.nextID
+	admin.CreatedAt = time.Now()
+	admin.UpdatedAt = admin.CreatedAt
+	r.created = &admin
+	return &admin, nil
 }
 
 func TestAdminService_UpdateTripDetailPreservesOptionalFieldsWhenOmitted(t *testing.T) {

@@ -4,7 +4,7 @@ set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DEPLOY_HOST="${DEPLOY_HOST:-qyhever}"
-DEPLOY_PATH="${DEPLOY_PATH:-/usr/share/nginx/html/moonick}"
+DEPLOY_PATH="${DEPLOY_PATH:-/usr/share/nginx/html/moonick-admin}"
 BUILD_DIR="${BUILD_DIR:-dist}"
 
 log() {

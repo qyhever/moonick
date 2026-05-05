@@ -323,6 +323,75 @@ func TestSetupRouter_AdminRefreshSucceedsWithRefreshToken(t *testing.T) {
 	}
 }
 
+func TestSetupRouter_AdminCreateRequiresLogin(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	r := SetupRouter()
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/v1/admins", bytes.NewBufferString(`{"username":"ops-admin","password":"secret123","name":"运营管理员"}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+	assertResponseCode(t, rec, controller.CodeNeedLogin)
+}
+
+func TestSetupRouter_AdminCreateSucceedsWithAdminToken(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	config.GlobalConfig.Auth.Admin = config.AdminSeedConfig{
+		Username: "root-admin",
+		Password: "secret123",
+		Name:     "Root Admin",
+	}
+
+	r := SetupRouter()
+	loginReq := httptest.NewRequest(http.MethodPost, "/api/admin/v1/auth/login", bytes.NewBufferString(`{"username":"root-admin","password":"secret123"}`))
+	loginReq.Header.Set("Content-Type", "application/json")
+	loginRec := httptest.NewRecorder()
+	r.ServeHTTP(loginRec, loginReq)
+	assertResponseCode(t, loginRec, controller.CodeSuccess)
+
+	var loginResp struct {
+		Data struct {
+			AccessToken string `json:"accessToken"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(loginRec.Body.Bytes(), &loginResp); err != nil {
+		t.Fatalf("unmarshal admin login response: %v, body=%s", err, loginRec.Body.String())
+	}
+
+	createReq := httptest.NewRequest(http.MethodPost, "/api/admin/v1/admins", bytes.NewBufferString(`{"username":"ops-admin","password":"secret123","name":"运营管理员"}`))
+	createReq.Header.Set("Content-Type", "application/json")
+	createReq.Header.Set("Authorization", "Bearer "+loginResp.Data.AccessToken)
+	createRec := httptest.NewRecorder()
+	r.ServeHTTP(createRec, createReq)
+
+	if createRec.Code != http.StatusOK {
+		t.Fatalf("expected http status %d, got %d, body=%s", http.StatusOK, createRec.Code, createRec.Body.String())
+	}
+
+	var createResp struct {
+		Code controller.MyCode `json:"code"`
+		Data struct {
+			ID       int64  `json:"id"`
+			Username string `json:"username"`
+			Name     string `json:"name"`
+			Status   string `json:"status"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(createRec.Body.Bytes(), &createResp); err != nil {
+		t.Fatalf("unmarshal create admin response: %v, body=%s", err, createRec.Body.String())
+	}
+	if createResp.Code != controller.CodeSuccess {
+		t.Fatalf("expected success code, got %d, body=%s", createResp.Code, createRec.Body.String())
+	}
+	if createResp.Data.ID == 0 || createResp.Data.Username != "ops-admin" || createResp.Data.Name != "运营管理员" || createResp.Data.Status != "active" {
+		t.Fatalf("unexpected create admin data: %#v", createResp.Data)
+	}
+}
+
 func TestSetupRouter_UserProfileUpdateReturnsUserNotExistWhenTokenSubjectMissing(t *testing.T) {
 	restore := useValidJWTConfig(t)
 	defer restore()

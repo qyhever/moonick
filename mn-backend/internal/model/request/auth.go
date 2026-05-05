@@ -32,6 +32,12 @@ type AdminLoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type CreateAdminRequest struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	Name     string `json:"name"`
+}
+
 type UpdateProfileRequest struct {
 	Nickname string `json:"nickname"`
 }

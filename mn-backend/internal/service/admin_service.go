@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -9,6 +10,14 @@ import (
 	"moonick/internal/model/request"
 	"moonick/internal/model/response"
 	"moonick/internal/pkg/pagination"
+	"moonick/internal/pkg/password"
+	"moonick/internal/repository/mysql"
+)
+
+var (
+	ErrAdminUsernameRequired      = errors.New("管理员账号不能为空")
+	ErrAdminPasswordRequired      = errors.New("管理员密码不能为空")
+	ErrAdminUsernameAlreadyExists = errors.New("管理员账号已存在")
 )
 
 type adminUserRepository interface {
@@ -28,20 +37,77 @@ type adminFavoriteRepository interface {
 	CountByUser(ctx context.Context, userID int64) (int, error)
 }
 
+type adminManageRepository interface {
+	FindByUsername(ctx context.Context, username string) (*entity.Admin, error)
+	FindByID(ctx context.Context, id int64) (*entity.Admin, error)
+	Upsert(ctx context.Context, admin entity.Admin) error
+	Create(ctx context.Context, admin entity.Admin) (*entity.Admin, error)
+}
+
 type AdminService struct {
+	adminRepo    adminManageRepository
 	userRepo     adminUserRepository
 	tripRepo     adminTripRepository
 	favoriteRepo adminFavoriteRepository
 	now          func() time.Time
 }
 
-func NewAdminService(userRepo adminUserRepository, tripRepo adminTripRepository, favoriteRepo adminFavoriteRepository) *AdminService {
+func NewAdminService(userRepo adminUserRepository, tripRepo adminTripRepository, favoriteRepo adminFavoriteRepository, adminRepos ...adminManageRepository) *AdminService {
+	var adminRepo adminManageRepository
+	if len(adminRepos) > 0 {
+		adminRepo = adminRepos[0]
+	}
 	return &AdminService{
+		adminRepo:    adminRepo,
 		userRepo:     userRepo,
 		tripRepo:     tripRepo,
 		favoriteRepo: favoriteRepo,
 		now:          time.Now,
 	}
+}
+
+func (s *AdminService) CreateAdmin(ctx context.Context, req request.CreateAdminRequest) (*response.AdminProfile, error) {
+	if s.adminRepo == nil {
+		return nil, ErrAdminNotFound
+	}
+
+	username := strings.TrimSpace(req.Username)
+	if username == "" {
+		return nil, ErrAdminUsernameRequired
+	}
+	if strings.TrimSpace(req.Password) == "" {
+		return nil, ErrAdminPasswordRequired
+	}
+
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		name = username
+	}
+
+	hash, err := password.Hash(req.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	admin, err := s.adminRepo.Create(ctx, entity.Admin{
+		Username:     username,
+		PasswordHash: hash,
+		Name:         name,
+		Status:       "active",
+	})
+	if err != nil {
+		if errors.Is(err, mysql.ErrAdminUsernameAlreadyExists) {
+			return nil, ErrAdminUsernameAlreadyExists
+		}
+		return nil, err
+	}
+
+	return &response.AdminProfile{
+		ID:       admin.ID,
+		Username: admin.Username,
+		Name:     admin.Name,
+		Status:   admin.Status,
+	}, nil
 }
 
 func (s *AdminService) GetDashboardSummary(ctx context.Context) (*response.AdminDashboardSummary, error) {

@@ -121,6 +121,8 @@ func (s *repositoryTestState) exec(query string, args []driver.NamedValue) (driv
 		return s.execUpdateUserContact(args)
 	case strings.Contains(sqlText, "update users set avatar_url"):
 		return s.execUpdateUserAvatar(args)
+	case strings.Contains(sqlText, "insert into admins") && !strings.Contains(sqlText, "on duplicate key update"):
+		return s.execInsertAdmin(args)
 	case strings.Contains(sqlText, "insert into admins"):
 		return s.execUpsertAdmin(args)
 	case strings.Contains(sqlText, "insert into trips"):
@@ -272,6 +274,27 @@ func (s *repositoryTestState) execUpsertAdmin(args []driver.NamedValue) (driver.
 	s.adminsByID[id] = admin
 	s.adminIDsByName[admin.Username] = admin.ID
 	return repositoryTestResult{rowsAffected: 1}, nil
+}
+
+func (s *repositoryTestState) execInsertAdmin(args []driver.NamedValue) (driver.Result, error) {
+	username := stringArg(args[1])
+	if _, exists := s.adminIDsByName[username]; exists {
+		return nil, &mysqlDriver.MySQLError{Number: 1062, Message: "duplicate admin username"}
+	}
+
+	now := time.Now()
+	admin := entity.Admin{
+		ID:           int64Arg(args[0]),
+		Username:     username,
+		PasswordHash: stringArg(args[2]),
+		Name:         stringArg(args[3]),
+		Status:       stringArg(args[4]),
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+	s.adminsByID[admin.ID] = admin
+	s.adminIDsByName[admin.Username] = admin.ID
+	return repositoryTestResult{lastInsertID: admin.ID, rowsAffected: 1}, nil
 }
 
 func (s *repositoryTestState) execInsertTrip(args []driver.NamedValue) (driver.Result, error) {

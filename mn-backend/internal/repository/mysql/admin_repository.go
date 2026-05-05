@@ -5,14 +5,23 @@ import (
 	"database/sql"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"moonick/internal/model/entity"
+
+	mysqlDriver "github.com/go-sql-driver/mysql"
+)
+
+var (
+	ErrAdminUsernameAlreadyExists = errors.New("admin username already exists")
+	adminIDSequence               atomic.Int64
 )
 
 type AdminRepository struct {
 	db             *sql.DB
 	mu             sync.RWMutex
+	nextID         int64
 	adminsByID     map[int64]entity.Admin
 	adminIDsByName map[string]int64
 }
@@ -31,12 +40,16 @@ func NewAdminRepository(admins ...entity.Admin) *AdminRepository {
 
 func newInMemoryAdminRepository(admins ...entity.Admin) *AdminRepository {
 	repo := &AdminRepository{
+		nextID:         1,
 		adminsByID:     make(map[int64]entity.Admin),
 		adminIDsByName: make(map[string]int64),
 	}
 	for _, admin := range admins {
 		repo.adminsByID[admin.ID] = admin
 		repo.adminIDsByName[admin.Username] = admin.ID
+		if admin.ID >= repo.nextID {
+			repo.nextID = admin.ID + 1
+		}
 	}
 	return repo
 }
@@ -126,6 +139,54 @@ ON DUPLICATE KEY UPDATE
 	return nil
 }
 
+func (r *AdminRepository) Create(ctx context.Context, admin entity.Admin) (*entity.Admin, error) {
+	if r.db != nil {
+		now := time.Now()
+		if admin.Status == "" {
+			admin.Status = "active"
+		}
+		admin.ID = nextAdminID()
+		admin.CreatedAt = now
+		admin.UpdatedAt = now
+
+		_, err := r.db.ExecContext(ctx, `INSERT INTO admins (id, username, password_hash, display_name, status, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			admin.ID,
+			admin.Username,
+			admin.PasswordHash,
+			admin.Name,
+			admin.Status,
+			admin.CreatedAt,
+			admin.UpdatedAt,
+		)
+		if isDuplicateAdminUsernameError(err) {
+			return nil, ErrAdminUsernameAlreadyExists
+		}
+		if err != nil {
+			return nil, err
+		}
+		return r.FindByID(ctx, admin.ID)
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, exists := r.adminIDsByName[admin.Username]; exists {
+		return nil, ErrAdminUsernameAlreadyExists
+	}
+	if admin.Status == "" {
+		admin.Status = "active"
+	}
+	now := time.Now()
+	admin.ID = r.nextID
+	r.nextID++
+	admin.CreatedAt = now
+	admin.UpdatedAt = now
+	r.adminsByID[admin.ID] = admin
+	r.adminIDsByName[admin.Username] = admin.ID
+	return cloneAdmin(admin), nil
+}
+
 func (r *AdminRepository) findOne(ctx context.Context, query string, arg any) (*entity.Admin, error) {
 	var admin entity.Admin
 	err := r.db.QueryRowContext(ctx, query, arg).Scan(
@@ -149,4 +210,23 @@ func (r *AdminRepository) findOne(ctx context.Context, query string, arg any) (*
 func cloneAdmin(admin entity.Admin) *entity.Admin {
 	copied := admin
 	return &copied
+}
+
+func nextAdminID() int64 {
+	for {
+		now := time.Now().UnixNano()
+		current := adminIDSequence.Load()
+		next := now
+		if current >= next {
+			next = current + 1
+		}
+		if adminIDSequence.CompareAndSwap(current, next) {
+			return next
+		}
+	}
+}
+
+func isDuplicateAdminUsernameError(err error) bool {
+	var mysqlErr *mysqlDriver.MySQLError
+	return errors.As(err, &mysqlErr) && mysqlErr.Number == 1062
 }

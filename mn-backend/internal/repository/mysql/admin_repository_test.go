@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"moonick/internal/model/entity"
@@ -99,5 +100,58 @@ func TestAdminRepository_UpsertRenamedAdminInvalidatesOldUsername(t *testing.T) 
 	}
 	if newAdmin == nil || newAdmin.ID != 1 || newAdmin.PasswordHash != "hash-2" {
 		t.Fatalf("expected new username to resolve to updated admin, got %#v", newAdmin)
+	}
+}
+
+func TestAdminRepository_Create(t *testing.T) {
+	db := newRepositoryTestDB(t)
+	repo := NewAdminRepositoryWithDB(db)
+
+	admin, err := repo.Create(context.Background(), entity.Admin{
+		Username:     "ops-admin",
+		PasswordHash: "hash-1",
+		Name:         "运营管理员",
+		Status:       "active",
+	})
+	if err != nil {
+		t.Fatalf("create admin: %v", err)
+	}
+	if admin == nil || admin.ID == 0 {
+		t.Fatalf("expected created admin with id, got %#v", admin)
+	}
+	if admin.Username != "ops-admin" || admin.Name != "运营管理员" || admin.Status != "active" {
+		t.Fatalf("unexpected created admin: %#v", admin)
+	}
+
+	got, err := repo.FindByUsername(context.Background(), "ops-admin")
+	if err != nil {
+		t.Fatalf("find by username: %v", err)
+	}
+	if got == nil || got.ID != admin.ID {
+		t.Fatalf("expected persisted admin, got %#v", got)
+	}
+}
+
+func TestAdminRepository_CreateRejectsDuplicateUsername(t *testing.T) {
+	db := newRepositoryTestDB(t)
+	repo := NewAdminRepositoryWithDB(db)
+
+	if _, err := repo.Create(context.Background(), entity.Admin{
+		Username:     "ops-admin",
+		PasswordHash: "hash-1",
+		Name:         "运营管理员",
+		Status:       "active",
+	}); err != nil {
+		t.Fatalf("first create admin: %v", err)
+	}
+
+	_, err := repo.Create(context.Background(), entity.Admin{
+		Username:     "ops-admin",
+		PasswordHash: "hash-2",
+		Name:         "重复管理员",
+		Status:       "active",
+	})
+	if !errors.Is(err, ErrAdminUsernameAlreadyExists) {
+		t.Fatalf("expected ErrAdminUsernameAlreadyExists, got %v", err)
 	}
 }
