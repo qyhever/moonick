@@ -44,11 +44,16 @@
 
 默认开发配置文件：
 
+- `internal/config/app.yml`
 - `internal/config/dev.yml`
 
 可选本地覆盖：
 
 - `internal/config/dev.local.yml`
+
+加载顺序：
+
+- `app.yml` → `${MOONICK_ENV}.yml` → `${MOONICK_ENV}.local.yml` → `MOONICK_*` 环境变量
 
 当前开发环境默认端口：
 

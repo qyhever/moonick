@@ -1,7 +1,5 @@
 mode: "dev"
 
-server:
-  port: 6303
 database:
   mysql:
     addr: "localhost:3306"
@@ -12,21 +10,9 @@ jwt:
   secret: "foobar"
   access_expires_in: "2h"
   refresh_expires_in: "72h"
-logger:
-  level: "debug"
-  filename: "./log/moonick.log"
-  max_size: 1000
-  max_age: 3600
-  max_backups: 5
 r2:
   bucket_name: "bucket_name"
   account_id: "account_id"
   access_key_id: "access_key_id"
   access_key_secret: "access_key_secret"
   public_base_url: "https://pub-c986c455c9884a098d2751147be48ba8.r2.dev/"
-auth:
-  whitelist:
-    - "GET:/foo"
-    - "GET:/@vite/client"
-    - "GET:/"
-    - "POST:/app/getHelloInfo"

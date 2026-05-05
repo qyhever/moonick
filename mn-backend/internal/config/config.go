@@ -119,77 +119,27 @@ func Init() error {
 		return fmt.Errorf("获取工作目录失败: %w", err)
 	}
 
-	// 设置配置文件搜索路径
-	viper.AddConfigPath(filepath.Join(workDir, "internal/config"))
-	viper.AddConfigPath("./internal/config")
-	viper.AddConfigPath(".")
+	loader := viper.New()
+	addConfigPaths(loader, workDir)
+	bindEnvVars(loader)
 
-	// 动态设置配置文件名
-	viper.SetConfigName(env)
-	viper.SetConfigType("yml")
+	if err := readRequiredConfig(loader, "app"); err != nil {
+		return fmt.Errorf("读取配置文件 app.yml 失败: %w", err)
+	}
 
-	// 设置环境变量前缀
-	viper.SetEnvPrefix("MOONICK")
-	viper.AutomaticEnv()
-
-	// 绑定具体的环境变量
-	viper.BindEnv("mode", "MOONICK_MODE")
-
-	viper.BindEnv("server.port", "MOONICK_SERVER_PORT")
-
-	viper.BindEnv("database.mysql.addr", "MOONICK_DATABASE_MYSQL_ADDR")
-	viper.BindEnv("database.mysql.user", "MOONICK_DATABASE_MYSQL_USER")
-	viper.BindEnv("database.mysql.password", "MOONICK_DATABASE_MYSQL_PASSWORD")
-	viper.BindEnv("database.mysql.db_name", "MOONICK_DATABASE_MYSQL_DB_NAME")
-
-	viper.BindEnv("jwt.secret", "MOONICK_JWT_SECRET")
-	viper.BindEnv("jwt.access_token_ttl", "MOONICK_JWT_ACCESS_TOKEN_TTL")
-	viper.BindEnv("jwt.refresh_token_ttl", "MOONICK_JWT_REFRESH_TOKEN_TTL")
-	viper.BindEnv("jwt.remember_me_refresh_token_ttl", "MOONICK_JWT_REMEMBER_ME_REFRESH_TOKEN_TTL")
-	viper.BindEnv("jwt.access_expires_in", "MOONICK_JWT_ACCESS_EXPIRES_IN")
-	viper.BindEnv("jwt.refresh_expires_in", "MOONICK_JWT_REFRESH_EXPIRES_IN")
-	viper.BindEnv("jwt.remember_me_refresh_expires_in", "MOONICK_JWT_REMEMBER_ME_REFRESH_EXPIRES_IN")
-
-	viper.BindEnv("auth.admin.username", "MOONICK_AUTH_ADMIN_USERNAME")
-	viper.BindEnv("auth.admin.password", "MOONICK_AUTH_ADMIN_PASSWORD")
-	viper.BindEnv("auth.admin.name", "MOONICK_AUTH_ADMIN_NAME")
-
-	viper.BindEnv("logger.level", "MOONICK_LOGGER_LEVEL")
-	viper.BindEnv("logger.filename", "MOONICK_LOGGER_FILENAME")
-	viper.BindEnv("logger.max_size", "MOONICK_LOGGER_MAX_SIZE")
-	viper.BindEnv("logger.max_age", "MOONICK_LOGGER_MAX_AGE")
-	viper.BindEnv("logger.max_backups", "MOONICK_LOGGER_MAX_BACKUPS")
-
-	viper.BindEnv("r2.bucket_name", "MOONICK_R2_BUCKET_NAME")
-	viper.BindEnv("r2.account_id", "MOONICK_R2_ACCOUNT_ID")
-	viper.BindEnv("r2.access_key_id", "MOONICK_R2_ACCESS_KEY_ID")
-	viper.BindEnv("r2.access_key_secret", "MOONICK_R2_ACCESS_KEY_SECRET")
-	viper.BindEnv("r2.public_base_url", "MOONICK_R2_PUBLIC_BASE_URL")
-
-	// 1. 读取环境配置文件 (如 dev.yml)
-	if err := viper.ReadInConfig(); err != nil {
+	if err := mergeRequiredConfig(loader, env); err != nil {
 		return fmt.Errorf("读取配置文件 %s.yml 失败: %w", env, err)
 	}
 
-	// 2. 尝试加载本地配置文件 (如 dev.local.yml)，用于本地覆盖
-	// 注意：MergeInConfig 会查找并合并同名配置项
-	viper.SetConfigName(env + ".local")
-	if err := viper.MergeInConfig(); err == nil {
+	if merged, err := mergeOptionalConfig(loader, env+".local"); err != nil {
+		return fmt.Errorf("读取配置文件 %s.local.yml 失败: %w", env, err)
+	} else if merged {
 		log.Printf("已合并本地配置文件: %s.local.yml", env)
-	} else {
-		// 如果是文件未找到错误，则忽略；否则记录错误
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			// 在某些 viper 版本或场景下，MergeInConfig 未找到文件可能并不返回 ConfigFileNotFoundError，
-			// 但通常如果是文件不存在，err != nil 且包含特定信息。
-			// 这里我们仅当明确报错且不是 "Config File ... Not Found" 时才视为异常
-			// 为了简化，我们假设 MergeInConfig 在文件不存在时会报错，我们可以选择忽略它或者打印日志
-			// 这里选择仅在 debug 模式下或特定错误下打印，或者直接忽略文件不存在的情况
-		}
 	}
 
 	// 将配置解析到结构体
 	GlobalConfig = &Config{}
-	if err := viper.Unmarshal(GlobalConfig); err != nil {
+	if err := loader.Unmarshal(GlobalConfig); err != nil {
 		return fmt.Errorf("解析配置文件失败: %w", err)
 	}
 
@@ -197,8 +147,76 @@ func Init() error {
 	GlobalConfig.Auth.Admin.normalize()
 
 	log.Printf("当前环境: %s", env)
-	log.Printf("配置文件加载成功: %s", viper.ConfigFileUsed())
+	log.Printf("配置文件加载成功: app.yml -> %s.yml", env)
 	return nil
+}
+
+func addConfigPaths(loader *viper.Viper, workDir string) {
+	loader.AddConfigPath(filepath.Join(workDir, "internal/config"))
+	loader.AddConfigPath("./internal/config")
+	loader.AddConfigPath(".")
+}
+
+func bindEnvVars(loader *viper.Viper) {
+	loader.SetEnvPrefix("MOONICK")
+	loader.AutomaticEnv()
+
+	loader.BindEnv("mode", "MOONICK_MODE")
+
+	loader.BindEnv("server.port", "MOONICK_SERVER_PORT")
+
+	loader.BindEnv("database.mysql.addr", "MOONICK_DATABASE_MYSQL_ADDR")
+	loader.BindEnv("database.mysql.user", "MOONICK_DATABASE_MYSQL_USER")
+	loader.BindEnv("database.mysql.password", "MOONICK_DATABASE_MYSQL_PASSWORD")
+	loader.BindEnv("database.mysql.db_name", "MOONICK_DATABASE_MYSQL_DB_NAME")
+
+	loader.BindEnv("jwt.secret", "MOONICK_JWT_SECRET")
+	loader.BindEnv("jwt.access_token_ttl", "MOONICK_JWT_ACCESS_TOKEN_TTL")
+	loader.BindEnv("jwt.refresh_token_ttl", "MOONICK_JWT_REFRESH_TOKEN_TTL")
+	loader.BindEnv("jwt.remember_me_refresh_token_ttl", "MOONICK_JWT_REMEMBER_ME_REFRESH_TOKEN_TTL")
+	loader.BindEnv("jwt.access_expires_in", "MOONICK_JWT_ACCESS_EXPIRES_IN")
+	loader.BindEnv("jwt.refresh_expires_in", "MOONICK_JWT_REFRESH_EXPIRES_IN")
+	loader.BindEnv("jwt.remember_me_refresh_expires_in", "MOONICK_JWT_REMEMBER_ME_REFRESH_EXPIRES_IN")
+
+	loader.BindEnv("auth.admin.username", "MOONICK_AUTH_ADMIN_USERNAME")
+	loader.BindEnv("auth.admin.password", "MOONICK_AUTH_ADMIN_PASSWORD")
+	loader.BindEnv("auth.admin.name", "MOONICK_AUTH_ADMIN_NAME")
+
+	loader.BindEnv("logger.level", "MOONICK_LOGGER_LEVEL")
+	loader.BindEnv("logger.filename", "MOONICK_LOGGER_FILENAME")
+	loader.BindEnv("logger.max_size", "MOONICK_LOGGER_MAX_SIZE")
+	loader.BindEnv("logger.max_age", "MOONICK_LOGGER_MAX_AGE")
+	loader.BindEnv("logger.max_backups", "MOONICK_LOGGER_MAX_BACKUPS")
+
+	loader.BindEnv("r2.bucket_name", "MOONICK_R2_BUCKET_NAME")
+	loader.BindEnv("r2.account_id", "MOONICK_R2_ACCOUNT_ID")
+	loader.BindEnv("r2.access_key_id", "MOONICK_R2_ACCESS_KEY_ID")
+	loader.BindEnv("r2.access_key_secret", "MOONICK_R2_ACCESS_KEY_SECRET")
+	loader.BindEnv("r2.public_base_url", "MOONICK_R2_PUBLIC_BASE_URL")
+}
+
+func readRequiredConfig(loader *viper.Viper, name string) error {
+	loader.SetConfigName(name)
+	loader.SetConfigType("yml")
+	return loader.ReadInConfig()
+}
+
+func mergeRequiredConfig(loader *viper.Viper, name string) error {
+	loader.SetConfigName(name)
+	loader.SetConfigType("yml")
+	return loader.MergeInConfig()
+}
+
+func mergeOptionalConfig(loader *viper.Viper, name string) (bool, error) {
+	loader.SetConfigName(name)
+	loader.SetConfigType("yml")
+	if err := loader.MergeInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 // GetConfig 获取全局配置

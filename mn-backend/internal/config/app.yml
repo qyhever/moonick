@@ -1,0 +1,15 @@
+
+server:
+  port: 6303
+auth:
+  whitelist:
+    - "GET:/foo"
+    - "GET:/@vite/client"
+    - "GET:/"
+    - "POST:/app/getHelloInfo"
+logger:
+  level: "debug"
+  filename: "./log/moonick.log"
+  max_size: 1000
+  max_age: 3600
+  max_backups: 5
