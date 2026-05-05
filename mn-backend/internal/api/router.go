@@ -25,9 +25,8 @@ import (
 
 func SetupRouter() *gin.Engine {
 	const (
-		loginIPRateLimitWindow        = 5 * time.Second
-		registerIPRateLimitWindow     = 10 * time.Second
-		registerCodeIPRateLimitWindow = 10 * time.Second
+		authIPRateLimitWindow = time.Minute
+		authIPRateLimitLimit  = 10
 	)
 
 	isProd := config.IsProduction()
@@ -81,15 +80,15 @@ func SetupRouter() *gin.Engine {
 	adminV1 := r.Group("/api/admin/v1")
 
 	v1.GET("/meta", metaController.GetMeta)
-	apiV1.POST("/auth/register", middleware.NewIPRateLimit(registerIPRateLimitWindow), authController.Register)
-	apiV1.POST("/auth/code", middleware.NewIPRateLimit(registerCodeIPRateLimitWindow), authController.SendVerificationCode)
-	apiV1.POST("/auth/password/reset", middleware.NewIPRateLimit(registerIPRateLimitWindow), authController.ResetPassword)
-	apiV1.POST("/auth/login", middleware.NewIPRateLimit(loginIPRateLimitWindow), authController.Login)
+	apiV1.POST("/auth/register", middleware.NewIPRateLimit(authIPRateLimitWindow, authIPRateLimitLimit), authController.Register)
+	apiV1.POST("/auth/code", middleware.NewIPRateLimit(authIPRateLimitWindow, authIPRateLimitLimit), authController.SendVerificationCode)
+	apiV1.POST("/auth/password/reset", middleware.NewIPRateLimit(authIPRateLimitWindow, authIPRateLimitLimit), authController.ResetPassword)
+	apiV1.POST("/auth/login", middleware.NewIPRateLimit(authIPRateLimitWindow, authIPRateLimitLimit), authController.Login)
 	apiV1.POST("/auth/refresh", authController.Refresh)
 	apiV1.GET("/auth/me", middleware.RequireUserAuth(jwtManager), authController.Me)
 	apiV1.GET("/trips", tripController.List)
 	apiV1.GET("/trips/:id", tripController.Detail)
-	adminV1.POST("/auth/login", middleware.NewIPRateLimit(loginIPRateLimitWindow), adminAuthController.Login)
+	adminV1.POST("/auth/login", middleware.NewIPRateLimit(authIPRateLimitWindow, authIPRateLimitLimit), adminAuthController.Login)
 	adminV1.POST("/auth/refresh", adminAuthController.Refresh)
 	adminV1.GET("/auth/me", middleware.RequireAdminAuth(jwtManager), adminAuthController.Me)
 

@@ -15,20 +15,22 @@ const rateLimitMessage = "请勿频繁操作"
 
 type ipRateLimit struct {
 	window    time.Duration
+	limit     int
 	now       func() time.Time
 	mu        sync.Mutex
-	lastByKey map[string]time.Time
+	hitsByKey map[string][]time.Time
 }
 
-func NewIPRateLimit(window time.Duration) gin.HandlerFunc {
-	return newIPRateLimit(window, time.Now)
+func NewIPRateLimit(window time.Duration, limit int) gin.HandlerFunc {
+	return newIPRateLimit(window, limit, time.Now)
 }
 
-func newIPRateLimit(window time.Duration, now func() time.Time) gin.HandlerFunc {
+func newIPRateLimit(window time.Duration, limit int, now func() time.Time) gin.HandlerFunc {
 	limiter := &ipRateLimit{
 		window:    window,
+		limit:     limit,
 		now:       now,
-		lastByKey: make(map[string]time.Time),
+		hitsByKey: make(map[string][]time.Time),
 	}
 
 	return limiter.handle
@@ -52,15 +54,25 @@ func (l *ipRateLimit) handle(c *gin.Context) {
 func (l *ipRateLimit) allow(route, ip string) bool {
 	now := l.now()
 	key := route + "|" + ip
+	windowStart := now.Add(-l.window)
 
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	if last, ok := l.lastByKey[key]; ok && now.Sub(last) < l.window {
+	hits := l.hitsByKey[key]
+	kept := hits[:0]
+	for _, hitAt := range hits {
+		if !hitAt.Before(windowStart) {
+			kept = append(kept, hitAt)
+		}
+	}
+
+	if len(kept) >= l.limit {
+		l.hitsByKey[key] = kept
 		return false
 	}
 
-	l.lastByKey[key] = now
+	l.hitsByKey[key] = append(kept, now)
 	return true
 }
 

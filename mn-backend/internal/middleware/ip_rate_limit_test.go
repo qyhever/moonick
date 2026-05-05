@@ -12,11 +12,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func TestIPRateLimitRejectsFrequentRequestsWithinWindow(t *testing.T) {
+func TestIPRateLimitRejectsRequestsAfterLimitReachedWithinWindow(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	now := time.Date(2026, 5, 3, 12, 0, 0, 0, time.UTC)
-	limiter := newIPRateLimit(5*time.Second, func() time.Time {
+	limiter := newIPRateLimit(time.Minute, 10, func() time.Time {
 		return now
 	})
 
@@ -25,18 +25,20 @@ func TestIPRateLimitRejectsFrequentRequestsWithinWindow(t *testing.T) {
 		controller.ResponseSuccess(c, gin.H{"ok": true})
 	})
 
-	first := performIPLimitedRequest(t, r, "/auth/login", "203.0.113.10", "")
-	assertMiddlewareResponseCode(t, first, controller.CodeSuccess, "")
+	for i := 0; i < 10; i++ {
+		resp := performIPLimitedRequest(t, r, "/auth/login", "203.0.113.10", "")
+		assertMiddlewareResponseCode(t, resp, controller.CodeSuccess, "")
+	}
 
-	second := performIPLimitedRequest(t, r, "/auth/login", "203.0.113.10", "")
-	assertMiddlewareResponseCode(t, second, controller.CodeInvalidParam, "请勿频繁操作")
+	eleventh := performIPLimitedRequest(t, r, "/auth/login", "203.0.113.10", "")
+	assertMiddlewareResponseCode(t, eleventh, controller.CodeInvalidParam, "请勿频繁操作")
 }
 
 func TestIPRateLimitAllowsRequestAfterWindowElapsed(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	now := time.Date(2026, 5, 3, 12, 0, 0, 0, time.UTC)
-	limiter := newIPRateLimit(5*time.Second, func() time.Time {
+	limiter := newIPRateLimit(time.Minute, 10, func() time.Time {
 		return now
 	})
 
@@ -45,23 +47,28 @@ func TestIPRateLimitAllowsRequestAfterWindowElapsed(t *testing.T) {
 		controller.ResponseSuccess(c, gin.H{"ok": true})
 	})
 
-	first := performIPLimitedRequest(t, r, "/auth/login", "203.0.113.10", "")
-	assertMiddlewareResponseCode(t, first, controller.CodeSuccess, "")
+	for i := 0; i < 10; i++ {
+		resp := performIPLimitedRequest(t, r, "/auth/login", "203.0.113.10", "")
+		assertMiddlewareResponseCode(t, resp, controller.CodeSuccess, "")
+	}
 
-	now = now.Add(5*time.Second + time.Millisecond)
+	blocked := performIPLimitedRequest(t, r, "/auth/login", "203.0.113.10", "")
+	assertMiddlewareResponseCode(t, blocked, controller.CodeInvalidParam, "请勿频繁操作")
+
+	now = now.Add(time.Minute + time.Millisecond)
 
 	second := performIPLimitedRequest(t, r, "/auth/login", "203.0.113.10", "")
 	assertMiddlewareResponseCode(t, second, controller.CodeSuccess, "")
 }
 
-func TestIPRateLimitSupportsDifferentWindowsPerRoute(t *testing.T) {
+func TestIPRateLimitUsesIndependentCountersPerRoute(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	now := time.Date(2026, 5, 3, 12, 0, 0, 0, time.UTC)
-	loginLimiter := newIPRateLimit(5*time.Second, func() time.Time {
+	loginLimiter := newIPRateLimit(time.Minute, 10, func() time.Time {
 		return now
 	})
-	registerLimiter := newIPRateLimit(10*time.Second, func() time.Time {
+	registerLimiter := newIPRateLimit(time.Minute, 10, func() time.Time {
 		return now
 	})
 
@@ -73,13 +80,12 @@ func TestIPRateLimitSupportsDifferentWindowsPerRoute(t *testing.T) {
 		controller.ResponseSuccess(c, gin.H{"route": "register"})
 	})
 
-	assertMiddlewareResponseCode(t, performIPLimitedRequest(t, r, "/auth/login", "203.0.113.10", ""), controller.CodeSuccess, "")
+	for i := 0; i < 10; i++ {
+		assertMiddlewareResponseCode(t, performIPLimitedRequest(t, r, "/auth/login", "203.0.113.10", ""), controller.CodeSuccess, "")
+	}
+
+	assertMiddlewareResponseCode(t, performIPLimitedRequest(t, r, "/auth/login", "203.0.113.10", ""), controller.CodeInvalidParam, "请勿频繁操作")
 	assertMiddlewareResponseCode(t, performIPLimitedRequest(t, r, "/auth/register", "203.0.113.10", ""), controller.CodeSuccess, "")
-
-	now = now.Add(6 * time.Second)
-
-	assertMiddlewareResponseCode(t, performIPLimitedRequest(t, r, "/auth/login", "203.0.113.10", ""), controller.CodeSuccess, "")
-	assertMiddlewareResponseCode(t, performIPLimitedRequest(t, r, "/auth/register", "203.0.113.10", ""), controller.CodeInvalidParam, "请勿频繁操作")
 }
 
 func TestGetClientIPPrefersFirstForwardedAddress(t *testing.T) {
