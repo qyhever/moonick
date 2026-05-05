@@ -82,6 +82,7 @@ if [ $? -eq 0 ]; then
     echo "📤 开始上传文件到服务器..."
     rsync -avz --progress --partial ./moonick qyhever:/opt/apps/moonick-backend
     rsync -avz --progress --partial ./public qyhever:/opt/apps/moonick-backend
+    rsync -avz --progress --partial ./internal/config/app.yml qyhever:/opt/apps/moonick-backend
     rsync -avz --progress --partial ./internal/config/prod.yml qyhever:/opt/apps/moonick-backend
     echo "✅ 上传完成！"
 else
