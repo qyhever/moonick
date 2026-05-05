@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 import { devProxy } from "./devProxy";
 
 export default defineConfig({
+  base: "/moonick-admin/",
   plugins: [react()],
   server: {
     proxy: devProxy,
