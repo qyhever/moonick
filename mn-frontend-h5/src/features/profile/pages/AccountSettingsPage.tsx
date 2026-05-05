@@ -101,7 +101,6 @@ export default function AccountSettingsPage() {
             <p className="eyebrow">资料与安全</p>
             <div className="profile-identity-card__title-row">
               <h1 className="hero-card__title">账户设置</h1>
-              <span className="profile-status-pill">独立页面</span>
             </div>
             <p className="hero-card__subtitle">{displayName} · {displayEmail}</p>
           </div>

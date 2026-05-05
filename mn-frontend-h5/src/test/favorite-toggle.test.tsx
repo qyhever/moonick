@@ -4,14 +4,21 @@ import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { beforeEach, vi } from "vitest";
 
-const { mockGetTripDetail, mockToggleFavorite } = vi.hoisted(() => ({
+const { mockGetTripDetail, mockToggleFavorite, mockToastShow } = vi.hoisted(() => ({
   mockGetTripDetail: vi.fn(),
   mockToggleFavorite: vi.fn(),
+  mockToastShow: vi.fn(),
 }));
 
 vi.mock("../features/trips/api", () => ({
   getTripDetail: mockGetTripDetail,
   toggleFavorite: mockToggleFavorite,
+}));
+
+vi.mock("antd-mobile", () => ({
+  Toast: {
+    show: mockToastShow,
+  },
 }));
 
 import TripDetailPage from "../features/trips/pages/TripDetailPage";
@@ -26,6 +33,7 @@ beforeEach(() => {
   });
   mockGetTripDetail.mockReset();
   mockToggleFavorite.mockReset();
+  mockToastShow.mockReset();
   mockGetTripDetail.mockResolvedValue({
     id: 7,
     userId: 12,
@@ -88,7 +96,78 @@ it("toggles favorite state and shows success toast", async () => {
     expect(button).toHaveAttribute("data-favorited", "true");
   });
   expect(await screen.findByRole("button", { name: "已收藏" })).toBeInTheDocument();
-  expect(await screen.findByText("收藏成功")).toBeInTheDocument();
+  expect(mockToastShow).toHaveBeenCalledWith(
+    expect.objectContaining({
+      content: "收藏成功",
+    }),
+  );
+});
+
+it("shows cancel favorite success toast when toggle result is unfavorited", async () => {
+  useAuthStore.setState({
+    accessToken: "access-token",
+    refreshToken: "refresh-token",
+    user: {
+      id: 99,
+      email: "user@example.com",
+      phone: "13800138000",
+      nickname: "测试用户",
+      avatarUrl: "",
+      status: "active",
+      defaultWechat: "",
+      defaultPhone: "13800138000",
+    },
+  });
+  mockGetTripDetail.mockResolvedValue({
+    id: 7,
+    userId: 12,
+    tripType: "driver_post",
+    fromText: "上海虹桥",
+    toText: "杭州东",
+    departureDate: "2026-04-26",
+    departureTime: "09:30",
+    seatCount: 2,
+    isPriceNegotiable: true,
+    status: "active",
+    favorited: true,
+    unavailable: false,
+    contactPhone: "13800138000",
+    contactWechat: "mingye-trip",
+    createdAt: "2026-04-25T12:00:00Z",
+    updatedAt: "2026-04-25T12:00:00Z",
+  });
+  mockToggleFavorite.mockResolvedValue({
+    favorited: false,
+  });
+
+  const router = createMemoryRouter(
+    [
+      { path: "/trips/:id", element: <TripDetailPage /> },
+    ],
+    { initialEntries: ["/trips/7"] },
+  );
+
+  render(
+    <RouterProvider
+      router={router}
+      future={{
+        v7_startTransition: true,
+      }}
+    />
+  );
+
+  const button = await screen.findByRole("button", { name: "已收藏" });
+  await userEvent.click(button);
+
+  await waitFor(() => {
+    expect(button).toHaveAttribute("data-favorited", "false");
+  });
+  expect(await screen.findByRole("button", { name: "收藏" })).toBeInTheDocument();
+  expect(mockToastShow).toHaveBeenCalledWith(
+    expect.objectContaining({
+      content: "取消收藏成功",
+    }),
+  );
 });
 
 it("redirects guest to login instead of calling favorite api", async () => {
@@ -140,5 +219,11 @@ it("shows publish success toast from route state", async () => {
     />
   );
 
-  expect(await screen.findByText("发布成功")).toBeInTheDocument();
+  await waitFor(() => {
+    expect(mockToastShow).toHaveBeenCalledWith(
+      expect.objectContaining({
+        content: "发布成功",
+      }),
+    );
+  });
 });

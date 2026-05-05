@@ -86,21 +86,6 @@ textarea {
   padding-bottom: 32px;
 }
 
-.toast-banner {
-  position: sticky;
-  top: 16px;
-  z-index: 30;
-  margin: 0 auto 12px;
-  width: fit-content;
-  max-width: calc(100% - 24px);
-  padding: 11px 16px;
-  border-radius: 999px;
-  background: rgba(26, 22, 18, 0.9);
-  color: #fff7f0;
-  box-shadow: 0 14px 28px rgba(26, 22, 18, 0.18);
-  text-align: center;
-}
-
 .h5-shell {
   max-width: 430px;
   min-height: 100vh;
@@ -352,19 +337,6 @@ textarea {
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-}
-
-.profile-status-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #f7d9a7;
-  font-size: 12px;
-  font-weight: 600;
 }
 
 .profile-stat-grid {

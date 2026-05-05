@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
+import { Toast } from "antd-mobile";
 import { Star } from "lucide-react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
-import Toast from "../../../components/Toast";
 import { getTripDetail, toggleFavorite, updateTripStatus, type TripDetail } from "../api";
 import { useAuthStore } from "../../../store/auth";
 
@@ -34,6 +34,12 @@ function formatDeparture(date: string, time: string) {
   });
 }
 
+function showFeedbackToast(content: string) {
+  Toast.show({
+    content,
+  });
+}
+
 export default function TripDetailPage() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
@@ -45,22 +51,7 @@ export default function TripDetailPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [toast, setToast] = useState("");
   const isOwner = !!trip && currentUser?.id === trip.userId;
-
-  useEffect(() => {
-    if (!toast) {
-      return undefined;
-    }
-
-    const timer = window.setTimeout(() => {
-      setToast("");
-    }, 2000);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [toast]);
 
   useEffect(() => {
     let active = true;
@@ -97,7 +88,7 @@ export default function TripDetailPage() {
       return;
     }
 
-    setToast(routeToast);
+    showFeedbackToast(routeToast);
     navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
   }, [location.pathname, location.search, navigate, routeToast]);
 
@@ -118,7 +109,7 @@ export default function TripDetailPage() {
     try {
       const result = await toggleFavorite(trip.id);
       setTrip((current) => (current ? { ...current, favorited: result.favorited } : current));
-      setToast("收藏成功");
+      showFeedbackToast(result.favorited ? "收藏成功" : "取消收藏成功");
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "收藏失败，请稍后再试");
     } finally {
@@ -167,8 +158,6 @@ export default function TripDetailPage() {
 
   return (
     <main className="h5-shell">
-      {toast ? <Toast message={toast} /> : null}
-
       <section className="hero-card hero-card--compact">
         <p className="eyebrow">行程详情</p>
         <h1 className="hero-card__title">

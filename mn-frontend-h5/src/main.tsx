@@ -1,4 +1,5 @@
 import ReactDOM from "react-dom/client";
+import "antd-mobile/es/global";
 
 import App from "./App";
 import "./styles/h5.css";
