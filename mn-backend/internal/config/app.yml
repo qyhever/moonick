@@ -13,3 +13,13 @@ logger:
   max_size: 1000
   max_age: 3600
   max_backups: 5
+redis:
+  addr: "127.0.0.1:6379"
+  password: ""
+  db: 0
+  pool_size: 10
+  min_idle_conns: 2
+  dial_timeout: "3s"
+  read_timeout: "2s"
+  write_timeout: "2s"
+  key_prefix: "moonick:"

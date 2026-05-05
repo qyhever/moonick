@@ -17,6 +17,7 @@ type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
 	Logger   LoggerConfig   `mapstructure:"logger"`
 	Database DatabaseConfig `mapstructure:"database"`
+	Redis    RedisConfig    `mapstructure:"redis"`
 	JWT      JWTConfig      `mapstructure:"jwt"`
 	Auth     AuthConfig     `mapstructure:"auth"`
 	R2       R2Config       `mapstructure:"r2"`
@@ -39,6 +40,19 @@ type MySQLConfig struct {
 	User     string `mapstructure:"user"`
 	Password string `mapstructure:"password"`
 	DBName   string `mapstructure:"db_name"`
+}
+
+// RedisConfig Redis 配置
+type RedisConfig struct {
+	Addr         string        `mapstructure:"addr"`
+	Password     string        `mapstructure:"password"`
+	DB           int           `mapstructure:"db"`
+	PoolSize     int           `mapstructure:"pool_size"`
+	MinIdleConns int           `mapstructure:"min_idle_conns"`
+	DialTimeout  time.Duration `mapstructure:"dial_timeout"`
+	ReadTimeout  time.Duration `mapstructure:"read_timeout"`
+	WriteTimeout time.Duration `mapstructure:"write_timeout"`
+	KeyPrefix    string        `mapstructure:"key_prefix"`
 }
 
 // JWTConfig JWT配置
@@ -169,6 +183,16 @@ func bindEnvVars(loader *viper.Viper) {
 	loader.BindEnv("database.mysql.user", "MOONICK_DATABASE_MYSQL_USER")
 	loader.BindEnv("database.mysql.password", "MOONICK_DATABASE_MYSQL_PASSWORD")
 	loader.BindEnv("database.mysql.db_name", "MOONICK_DATABASE_MYSQL_DB_NAME")
+
+	loader.BindEnv("redis.addr", "MOONICK_REDIS_ADDR")
+	loader.BindEnv("redis.password", "MOONICK_REDIS_PASSWORD")
+	loader.BindEnv("redis.db", "MOONICK_REDIS_DB")
+	loader.BindEnv("redis.pool_size", "MOONICK_REDIS_POOL_SIZE")
+	loader.BindEnv("redis.min_idle_conns", "MOONICK_REDIS_MIN_IDLE_CONNS")
+	loader.BindEnv("redis.dial_timeout", "MOONICK_REDIS_DIAL_TIMEOUT")
+	loader.BindEnv("redis.read_timeout", "MOONICK_REDIS_READ_TIMEOUT")
+	loader.BindEnv("redis.write_timeout", "MOONICK_REDIS_WRITE_TIMEOUT")
+	loader.BindEnv("redis.key_prefix", "MOONICK_REDIS_KEY_PREFIX")
 
 	loader.BindEnv("jwt.secret", "MOONICK_JWT_SECRET")
 	loader.BindEnv("jwt.access_token_ttl", "MOONICK_JWT_ACCESS_TOKEN_TTL")

@@ -24,6 +24,15 @@ server:
 logger:
   level: "info"
   filename: "./log/app.log"
+redis:
+  addr: "app-redis:6379"
+  db: 1
+  pool_size: 8
+  min_idle_conns: 2
+  dial_timeout: "3s"
+  read_timeout: "2s"
+  write_timeout: "2s"
+  key_prefix: "moonick:"
 database:
   mysql:
     addr: "app-host:3306"
@@ -39,11 +48,15 @@ server:
   port: 6303
 logger:
   level: "debug"
+redis:
+  addr: "dev-redis:6379"
 database:
   mysql:
     addr: "dev-host:3306"
 `)
 	writeTestFile(t, filepath.Join(configDir, "dev.local.yml"), `
+redis:
+  password: "local-pass"
 database:
   mysql:
     user: "local-user"
@@ -81,6 +94,21 @@ auth:
 	}
 	if GlobalConfig.Logger.Filename != "./log/app.log" {
 		t.Fatalf("logger.filename = %q, want ./log/app.log", GlobalConfig.Logger.Filename)
+	}
+	if GlobalConfig.Redis.Addr != "dev-redis:6379" {
+		t.Fatalf("redis.addr = %q, want dev-redis:6379", GlobalConfig.Redis.Addr)
+	}
+	if GlobalConfig.Redis.Password != "local-pass" {
+		t.Fatalf("redis.password = %q, want local-pass", GlobalConfig.Redis.Password)
+	}
+	if GlobalConfig.Redis.DB != 1 {
+		t.Fatalf("redis.db = %d, want 1", GlobalConfig.Redis.DB)
+	}
+	if GlobalConfig.Redis.PoolSize != 8 {
+		t.Fatalf("redis.pool_size = %d, want 8", GlobalConfig.Redis.PoolSize)
+	}
+	if GlobalConfig.Redis.KeyPrefix != "moonick:" {
+		t.Fatalf("redis.key_prefix = %q, want moonick:", GlobalConfig.Redis.KeyPrefix)
 	}
 	if GlobalConfig.Database.MySQL.Addr != "dev-host:3306" {
 		t.Fatalf("database.mysql.addr = %q, want dev-host:3306", GlobalConfig.Database.MySQL.Addr)
