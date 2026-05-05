@@ -61,7 +61,7 @@
 
 - 管理员登录成功后保存 `accessToken` 和 `refreshToken`
 - 未登录访问受保护页面时统一跳转登录页
-- access token 过期时自动尝试 refresh
+- access token 过期时自动尝试 refresh，并用返回的新 `accessToken` / `refreshToken` 覆盖本地登录态
 - refresh 失败后跳回登录页
 
 ### 4.2 Token 隔离

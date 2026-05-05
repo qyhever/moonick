@@ -348,7 +348,7 @@ internal/
 
 1. 校验 refresh token 的签名、类型、身份、有效期
 2. 重新签发 access token
-3. v1 不轮换 refresh token
+3. 同时轮换并返回新的 refresh token
 
 ### 7.4 发布行程
 

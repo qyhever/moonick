@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
@@ -38,6 +39,8 @@ type Claims struct {
 	Subject   string `json:"sub"`
 	Role      string `json:"role,omitempty"`
 	TokenType string `json:"typ,omitempty"`
+	TokenID   string `json:"jti,omitempty"`
+	IssuedAt  int64  `json:"iat,omitempty"`
 	ExpiresAt int64  `json:"exp"`
 }
 
@@ -140,13 +143,21 @@ func (m *Manager) generateToken(subject, role, tokenType string, ttl time.Durati
 		return "", err
 	}
 
+	tokenID, err := generateTokenID()
+	if err != nil {
+		return "", fmt.Errorf("generate token id: %w", err)
+	}
+	now := time.Now()
+
 	claims := Claims{
 		Subject:   subject,
 		Role:      role,
 		TokenType: tokenType,
+		TokenID:   tokenID,
+		IssuedAt:  now.Unix(),
 	}
 	if ttl > 0 {
-		claims.ExpiresAt = time.Now().Add(ttl).Unix()
+		claims.ExpiresAt = now.Add(ttl).Unix()
 	}
 
 	payloadBytes, err := json.Marshal(claims)
@@ -162,6 +173,14 @@ func sign(payload []byte, secret []byte) string {
 	mac := hmac.New(sha256.New, secret)
 	mac.Write(payload)
 	return base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+}
+
+func generateTokenID() (string, error) {
+	bytes := make([]byte, 16)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(bytes), nil
 }
 
 func validateConfig(cfg Config) error {

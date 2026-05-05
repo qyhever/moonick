@@ -133,6 +133,9 @@ func TestSetupRouter_UserRefreshSucceedsWithRefreshToken(t *testing.T) {
 	if refreshResp.Data.AccessToken == "" || refreshResp.Data.RefreshToken == "" {
 		t.Fatalf("expected refresh response tokens, body=%s", refreshRec.Body.String())
 	}
+	if refreshResp.Data.RefreshToken == registerResp.Data.RefreshToken {
+		t.Fatalf("expected rotated refresh token, got same token before=%q after=%q", registerResp.Data.RefreshToken, refreshResp.Data.RefreshToken)
+	}
 	if refreshResp.Data.User.Email != "user@example.com" {
 		t.Fatalf("expected refreshed user email, got %#v", refreshResp.Data.User)
 	}
@@ -311,6 +314,9 @@ func TestSetupRouter_AdminRefreshSucceedsWithRefreshToken(t *testing.T) {
 	}
 	if refreshResp.Data.AccessToken == "" || refreshResp.Data.RefreshToken == "" {
 		t.Fatalf("expected refresh response tokens, body=%s", refreshRec.Body.String())
+	}
+	if refreshResp.Data.RefreshToken == loginResp.Data.RefreshToken {
+		t.Fatalf("expected rotated refresh token, got same token before=%q after=%q", loginResp.Data.RefreshToken, refreshResp.Data.RefreshToken)
 	}
 	if refreshResp.Data.Admin.Username != "root-admin" {
 		t.Fatalf("expected refreshed admin username, got %#v", refreshResp.Data.Admin)

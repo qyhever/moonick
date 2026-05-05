@@ -112,6 +112,9 @@ func TestAuthService_RefreshUserToken(t *testing.T) {
 	if refreshResp == nil || refreshResp.AccessToken == "" || refreshResp.RefreshToken == "" {
 		t.Fatalf("expected token pair from refresh, got %#v", refreshResp)
 	}
+	if refreshResp.RefreshToken == registerResp.RefreshToken {
+		t.Fatalf("expected rotated refresh token, got same token before=%q after=%q", registerResp.RefreshToken, refreshResp.RefreshToken)
+	}
 	if refreshResp.User == nil || refreshResp.User.Email != "user@example.com" {
 		t.Fatalf("expected refreshed user profile, got %#v", refreshResp)
 	}
@@ -469,6 +472,9 @@ func TestAuthService_RefreshAdminToken(t *testing.T) {
 	}
 	if refreshResp == nil || refreshResp.AccessToken == "" || refreshResp.RefreshToken == "" {
 		t.Fatalf("expected token pair from refresh, got %#v", refreshResp)
+	}
+	if refreshResp.RefreshToken == loginResp.RefreshToken {
+		t.Fatalf("expected rotated refresh token, got same token before=%q after=%q", loginResp.RefreshToken, refreshResp.RefreshToken)
 	}
 	if refreshResp.Admin == nil || refreshResp.Admin.Username != "root-admin" {
 		t.Fatalf("expected refreshed admin profile, got %#v", refreshResp)

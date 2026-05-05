@@ -165,7 +165,7 @@ npm run build
   - 手动篡改 `Local Storage -> mn-h5-auth.accessToken`
   - 刷新受保护页面后，`Network` 面板可见 `POST /api/v1/auth/refresh`
   - 页面保持登录态，仍停留在 `/me/profile`
-  - `mn-h5-auth` 中的 `accessToken` 与 `refreshToken` 均被替换为新值
+  - `mn-h5-auth` 中的 `accessToken` 与 `refreshToken` 均被替换为新值，且新的 `refreshToken` 不等于刷新前旧值
 - 失败分支：
   - 手动篡改 `Local Storage -> mn-h5-auth.accessToken` 与 `refreshToken`
   - 刷新受保护页面后，页面跳转到 `/login?redirect=%2Fme%2Fprofile`
@@ -199,6 +199,7 @@ npm run build
 
 - [ ] 未登录访问 `/dashboard` 会跳转 `/login`
 - [ ] 管理员登录成功后进入后台首页
+- [ ] access token 失效后，Admin 可自动调用 `POST /api/admin/v1/auth/refresh`，并同时更新本地 `accessToken` / `refreshToken`
 
 ### 5.2 看板
 
