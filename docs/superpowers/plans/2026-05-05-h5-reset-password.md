@@ -198,7 +198,6 @@ it("renders password reset page content from html draft", async () => {
   render(<RouterProvider router={router} />);
 
   expect(await screen.findByText("请设置新的登录密码，让账户安全保持在你手里。")).toBeInTheDocument();
-  expect(screen.getByText("这是一个重置密码场景，不需要输入当前密码。完成后，下次登录请使用新密码。")).toBeInTheDocument();
   expect(screen.getByText("安全提示")).toBeInTheDocument();
   expect(screen.getByText("设置建议")).toBeInTheDocument();
   expect(screen.getByText("不要重复使用旧密码")).toBeInTheDocument();
@@ -235,9 +234,6 @@ export default function PasswordResetPage() {
             <br />
             让账户安全保持在你手里。
           </h1>
-          <p className="password-reset-hero__subtitle">
-            这是一个重置密码场景，不需要输入当前密码。完成后，下次登录请使用新密码。
-          </p>
         </section>
 
         <section className="card password-reset-form-card">
