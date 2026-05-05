@@ -318,6 +318,39 @@ func TestSetupRouter_UploadAvatarReturnsUserNotExistWhenTokenSubjectMissing(t *t
 	assertResponseCode(t, rec, controller.CodeUserNotExist)
 }
 
+func TestSetupRouter_UploadAvatarOnUsersRouteReturnsUserNotExistWhenTokenSubjectMissing(t *testing.T) {
+	restore := useValidJWTConfig(t)
+	defer restore()
+
+	manager := testJWTManager()
+	userToken, err := manager.GenerateAccessToken("9999", "user")
+	if err != nil {
+		t.Fatalf("generate user token: %v", err)
+	}
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("file", "avatar.png")
+	if err != nil {
+		t.Fatalf("create form file: %v", err)
+	}
+	if _, err := part.Write([]byte("avatar")); err != nil {
+		t.Fatalf("write avatar body: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close multipart writer: %v", err)
+	}
+
+	r := SetupRouter()
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/users/avatar", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Authorization", "Bearer "+userToken)
+	rec := httptest.NewRecorder()
+
+	r.ServeHTTP(rec, req)
+	assertResponseCode(t, rec, controller.CodeUserNotExist)
+}
+
 func TestSetupRouter_AdminRouteRejectsUserToken(t *testing.T) {
 	restore := useValidJWTConfig(t)
 	defer restore()

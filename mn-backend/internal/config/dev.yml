@@ -23,6 +23,7 @@ r2:
   account_id: "account_id"
   access_key_id: "access_key_id"
   access_key_secret: "access_key_secret"
+  public_base_url: "https://pub-c986c455c9884a098d2751147be48ba8.r2.dev/"
 auth:
   whitelist:
     - "GET:/foo"

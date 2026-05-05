@@ -144,6 +144,65 @@ it("renders the profile overview with a dedicated account settings entry", async
   expect(screen.queryByText("账号安全")).not.toBeInTheDocument();
 });
 
+it("renders fallback asset instead of plain text when profile avatar fails to load", async () => {
+  mockGetCurrentUserProfile.mockResolvedValue({
+    id: 1,
+    email: "user@example.com",
+    phone: "13800138000",
+    nickname: "测试用户",
+    avatarUrl: "https://cdn.example.com/broken-avatar.png",
+    status: "active",
+    defaultWechat: "wechat_01",
+    defaultPhone: "13800138000",
+  });
+  mockGetMyTrips.mockResolvedValue({
+    items: [],
+    total: 12,
+    pageNum: 1,
+    pageSize: 10,
+  });
+  mockGetMyFavorites.mockResolvedValue({
+    items: [],
+    total: 5,
+    pageNum: 1,
+    pageSize: 10,
+  });
+
+  render(
+    <MemoryRouter>
+      <ProfilePage />
+    </MemoryRouter>,
+  );
+
+  fireEvent.error(await screen.findByAltText("当前头像"));
+
+  expect(await screen.findByAltText("头像加载失败")).toHaveAttribute("src", "/image-fail.svg");
+  expect(screen.queryByText("/image-fail.svg")).not.toBeInTheDocument();
+});
+
+it("uses default avatar asset in account settings when profile avatar is empty", async () => {
+  mockGetCurrentUserProfile.mockResolvedValue({
+    id: 1,
+    email: "user@example.com",
+    phone: "13800138000",
+    nickname: "测试用户",
+    avatarUrl: "",
+    status: "active",
+    defaultWechat: "wechat_01",
+    defaultPhone: "13800138000",
+  });
+  mockUpdateUserProfile.mockResolvedValue({ ok: true });
+  mockUpdateUserContact.mockResolvedValue({ ok: true });
+
+  render(
+    <MemoryRouter>
+      <AccountSettingsPage />
+    </MemoryRouter>,
+  );
+
+  expect(await screen.findByAltText("当前头像")).toHaveAttribute("src", "/image-default.svg");
+});
+
 it("renders the dedicated account settings page and keeps edit actions working", async () => {
   mockGetCurrentUserProfile.mockResolvedValue({
     id: 1,

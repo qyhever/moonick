@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
 import { uploadAvatar } from "../../trips/api";
+import UserAvatar from "./UserAvatar";
+import { AVATAR_DEFAULT_SRC, AVATAR_FALLBACK_SRC } from "./avatarAssets";
 
 type AvatarUploaderProps = {
   initialUrl?: string;
@@ -44,13 +46,14 @@ export default function AvatarUploader({
 
   return (
     <div className="avatar-uploader">
-      {avatarUrl ? (
-        <img alt="当前头像" className="avatar-uploader__image" src={avatarUrl} />
-      ) : (
-        <div className="avatar-uploader__placeholder" aria-hidden="true">
-          头像
-        </div>
-      )}
+      <UserAvatar
+        alt="当前头像"
+        className="avatar-uploader__image"
+        defaultSrc={AVATAR_DEFAULT_SRC}
+        fallback={<img alt="头像加载失败" className="avatar-uploader__placeholder" src={AVATAR_FALLBACK_SRC} width={24} />}
+        fallbackClassName="avatar-uploader__placeholder"
+        src={avatarUrl}
+      />
 
       <div className="avatar-uploader__info">
         <strong>头像与个人资料</strong>

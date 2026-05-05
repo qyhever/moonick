@@ -298,6 +298,10 @@ textarea {
 }
 
 .profile-identity-card__avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   width: 72px;
   height: 72px;
   flex-shrink: 0;
@@ -307,18 +311,29 @@ textarea {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 12px 28px rgba(0, 0, 0, 0.18);
 }
 
-.profile-identity-card__avatar img,
-.profile-identity-card__avatar-fallback {
+.profile-identity-card__avatar .adm-image,
+.profile-identity-card__avatar-image {
   width: 100%;
   height: 100%;
 }
 
-.profile-identity-card__avatar img {
+.profile-identity-card__avatar-fallback {
+  width: 24px;
+  height: 24px;
+}
+
+.profile-identity-card__avatar .adm-image-img,
+.profile-identity-card__avatar-image .adm-image-img {
   object-fit: cover;
   display: block;
 }
 
 .profile-identity-card__avatar-fallback {
+  display: block;
+  object-fit: cover;
+}
+
+.profile-identity-card__avatar-fallback:not(img) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -388,8 +403,15 @@ textarea {
   gap: 10px;
 }
 
+.profile-avatar-editor .avatar-uploader__image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 .profile-avatar-editor .avatar-uploader__image,
-.profile-avatar-editor .avatar-uploader__placeholder {
+.profile-avatar-editor .avatar-uploader__image.adm-image {
   width: 64px;
   height: 64px;
   border-radius: 20px;
@@ -1052,10 +1074,6 @@ textarea {
 
 .avatar-badge,
 .avatar-uploader__placeholder {
-  width: 56px;
-  height: 56px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #fde8e0, #fdd5c5);
   color: var(--accent-orange);
   display: inline-flex;
   align-items: center;
@@ -1071,9 +1089,19 @@ textarea {
 .avatar-uploader__image {
   width: 84px;
   height: 84px;
-  object-fit: cover;
   border-radius: 28px;
   box-shadow: var(--shadow-card);
+}
+
+.avatar-uploader__image.adm-image {
+  overflow: hidden;
+}
+
+.avatar-uploader__image .adm-image-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .avatar-uploader__info p {

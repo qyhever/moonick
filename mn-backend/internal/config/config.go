@@ -80,6 +80,7 @@ type R2Config struct {
 	AccountID       string `mapstructure:"account_id"`
 	AccessKeyID     string `mapstructure:"access_key_id"`
 	AccessKeySecret string `mapstructure:"access_key_secret"`
+	PublicBaseURL   string `mapstructure:"public_base_url"`
 }
 
 // Postal配置
@@ -163,6 +164,7 @@ func Init() error {
 	viper.BindEnv("r2.account_id", "MOONICK_R2_ACCOUNT_ID")
 	viper.BindEnv("r2.access_key_id", "MOONICK_R2_ACCESS_KEY_ID")
 	viper.BindEnv("r2.access_key_secret", "MOONICK_R2_ACCESS_KEY_SECRET")
+	viper.BindEnv("r2.public_base_url", "MOONICK_R2_PUBLIC_BASE_URL")
 
 	// 1. 读取环境配置文件 (如 dev.yml)
 	if err := viper.ReadInConfig(); err != nil {

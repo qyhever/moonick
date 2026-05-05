@@ -98,6 +98,7 @@ func SetupRouter() *gin.Engine {
 		userGroup.GET("/me", userController.GetProfile)
 		userGroup.PUT("/profile", userController.UpdateProfile)
 		userGroup.PUT("/contact", userController.UpdateContact)
+		userGroup.POST("/avatar", fileController.UploadAvatar)
 	}
 
 	tripGroup := apiV1.Group("/trips")

@@ -45,3 +45,9 @@ it("restores previous avatar when upload fails", async () => {
     "https://cdn.example.com/a.png",
   );
 });
+
+it("uses default avatar asset when uploader has no initial avatar", () => {
+  render(<AvatarUploader initialUrl="" />);
+
+  expect(screen.getByAltText("当前头像")).toHaveAttribute("src", "/image-default.svg");
+});

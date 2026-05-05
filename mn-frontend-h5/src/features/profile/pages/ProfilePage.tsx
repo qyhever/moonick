@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 
 import { getCurrentUserProfile } from "../api";
 import { getMyFavorites, getMyTrips } from "../../trips/api";
-import { getInitial, maskEmail } from "../utils";
+import UserAvatar from "../components/UserAvatar";
+import { AVATAR_DEFAULT_SRC, AVATAR_FALLBACK_SRC } from "../components/avatarAssets";
+import { maskEmail } from "../utils";
 import { useAuthStore } from "../../../store/auth";
 
 export default function ProfilePage() {
@@ -59,10 +61,14 @@ export default function ProfilePage() {
       <section className="profile-identity-card">
         <div className="profile-identity-card__top">
           <div className="profile-identity-card__avatar">
-            {avatarUrl ? <img alt="当前头像" src={avatarUrl} /> : null}
-            {!avatarUrl ? (
-              <span className="profile-identity-card__avatar-fallback">{getInitial(displayName)}</span>
-            ) : null}
+            <UserAvatar
+              alt="当前头像"
+              className="profile-identity-card__avatar-image"
+              defaultSrc={AVATAR_DEFAULT_SRC}
+              fallback={<img alt="头像加载失败" className="profile-identity-card__avatar-fallback" src={AVATAR_FALLBACK_SRC} />}
+              fallbackClassName="profile-identity-card__avatar-fallback"
+              src={avatarUrl}
+            />
           </div>
           <div className="profile-identity-card__meta">
             <p className="eyebrow">我的账户</p>
