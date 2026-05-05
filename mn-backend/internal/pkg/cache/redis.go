@@ -28,6 +28,10 @@ func InitRedis(cfg config.RedisConfig) *RedisClient {
 	return globalRedis
 }
 
+func SetRedis(client *RedisClient) {
+	globalRedis = client
+}
+
 func GetRedis() *RedisClient {
 	return globalRedis
 }

@@ -25,6 +25,7 @@ logger:
   level: "info"
   filename: "./log/app.log"
 redis:
+  enabled: true
   addr: "app-redis:6379"
   db: 1
   pool_size: 8
@@ -97,6 +98,9 @@ auth:
 	}
 	if GlobalConfig.Redis.Addr != "dev-redis:6379" {
 		t.Fatalf("redis.addr = %q, want dev-redis:6379", GlobalConfig.Redis.Addr)
+	}
+	if !GlobalConfig.Redis.Enabled {
+		t.Fatalf("redis.enabled = false, want true")
 	}
 	if GlobalConfig.Redis.Password != "local-pass" {
 		t.Fatalf("redis.password = %q, want local-pass", GlobalConfig.Redis.Password)

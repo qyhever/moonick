@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -88,6 +89,38 @@ func TestIPRateLimitUsesIndependentCountersPerRoute(t *testing.T) {
 	assertMiddlewareResponseCode(t, performIPLimitedRequest(t, r, "/auth/register", "203.0.113.10", ""), controller.CodeSuccess, "")
 }
 
+func TestIPRateLimitRejectsRequestWhenStoreDenies(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	limiter := newIPRateLimitWithStore(time.Minute, 10, time.Now, stubRateLimitStore{
+		allow: false,
+	})
+
+	r := gin.New()
+	r.POST("/auth/login", limiter, func(c *gin.Context) {
+		controller.ResponseSuccess(c, gin.H{"ok": true})
+	})
+
+	resp := performIPLimitedRequest(t, r, "/auth/login", "203.0.113.10", "")
+	assertMiddlewareResponseCode(t, resp, controller.CodeInvalidParam, "请勿频繁操作")
+}
+
+func TestIPRateLimitAllowsRequestWhenStoreErrors(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	limiter := newIPRateLimitWithStore(time.Minute, 10, time.Now, stubRateLimitStore{
+		err: errors.New("redis unavailable"),
+	})
+
+	r := gin.New()
+	r.POST("/auth/login", limiter, func(c *gin.Context) {
+		controller.ResponseSuccess(c, gin.H{"ok": true})
+	})
+
+	resp := performIPLimitedRequest(t, r, "/auth/login", "203.0.113.10", "")
+	assertMiddlewareResponseCode(t, resp, controller.CodeSuccess, "")
+}
+
 func TestGetClientIPPrefersFirstForwardedAddress(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -160,4 +193,16 @@ func assertMiddlewareResponseCode(t *testing.T, rec *httptest.ResponseRecorder, 
 	if expectedMessage != "" && resp.Message != expectedMessage {
 		t.Fatalf("expected message %q, got %q", expectedMessage, resp.Message)
 	}
+}
+
+type stubRateLimitStore struct {
+	allow bool
+	err   error
+}
+
+func (s stubRateLimitStore) Allow(_ string, _ time.Duration, _ int, _ time.Time) (bool, error) {
+	if s.err != nil {
+		return false, s.err
+	}
+	return s.allow, nil
 }

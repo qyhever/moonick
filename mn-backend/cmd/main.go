@@ -13,6 +13,7 @@ import (
 	router "moonick/internal/api"
 	"moonick/internal/config"
 	"moonick/internal/logger"
+	"moonick/internal/pkg/cache"
 	"moonick/internal/repository/mysql"
 	"moonick/internal/task"
 )
@@ -27,6 +28,20 @@ func main() {
 	if err := logger.Init(); err != nil {
 		fmt.Printf("❌ init logger failed, err:%v\n", err)
 		return
+	}
+
+	cfg := config.GetConfig()
+	if cfg != nil && cfg.Redis.Enabled {
+		redisClient := cache.NewRedisClient(cfg.Redis)
+		if err := redisClient.Ping(context.Background()); err != nil {
+			fmt.Printf("⚠️ init redis failed, fallback to memory rate limit: %v\n", err)
+			_ = redisClient.Close()
+		} else {
+			cache.SetRedis(redisClient)
+			defer func() {
+				_ = redisClient.Close()
+			}()
+		}
 	}
 
 	// 注册路由

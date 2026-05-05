@@ -44,6 +44,7 @@ type MySQLConfig struct {
 
 // RedisConfig Redis 配置
 type RedisConfig struct {
+	Enabled      bool          `mapstructure:"enabled"`
 	Addr         string        `mapstructure:"addr"`
 	Password     string        `mapstructure:"password"`
 	DB           int           `mapstructure:"db"`
@@ -185,6 +186,7 @@ func bindEnvVars(loader *viper.Viper) {
 	loader.BindEnv("database.mysql.db_name", "MOONICK_DATABASE_MYSQL_DB_NAME")
 
 	loader.BindEnv("redis.addr", "MOONICK_REDIS_ADDR")
+	loader.BindEnv("redis.enabled", "MOONICK_REDIS_ENABLED")
 	loader.BindEnv("redis.password", "MOONICK_REDIS_PASSWORD")
 	loader.BindEnv("redis.db", "MOONICK_REDIS_DB")
 	loader.BindEnv("redis.pool_size", "MOONICK_REDIS_POOL_SIZE")
