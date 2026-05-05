@@ -42,7 +42,7 @@ it("uploads avatar through the users route without overriding multipart headers"
   expect(mockPost).toHaveBeenCalledTimes(1);
 
   const [url, formData, config] = mockPost.mock.calls[0];
-  expect(url).toBe("/api/v1/users/avatar");
+  expect(url).toBe("/v1/users/avatar");
   expect(formData).toBeInstanceOf(FormData);
   expect((formData as FormData).get("file")).toBe(file);
   expect(config).toBeUndefined();

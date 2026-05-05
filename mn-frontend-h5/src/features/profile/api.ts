@@ -10,12 +10,12 @@ type VerificationCodeResponse = {
 };
 
 export async function updateUserProfile(nickname: string) {
-  const response = await api.put<ApiResponse<OkResponse>>("/api/v1/users/profile", { nickname });
+  const response = await api.put<ApiResponse<OkResponse>>("/v1/users/profile", { nickname });
   return unwrapApiResponse(response.data);
 }
 
 export async function updateUserContact(defaultWechat: string, defaultPhone: string) {
-  const response = await api.put<ApiResponse<OkResponse>>("/api/v1/users/contact", {
+  const response = await api.put<ApiResponse<OkResponse>>("/v1/users/contact", {
     defaultWechat,
     defaultPhone,
   });
@@ -23,12 +23,12 @@ export async function updateUserContact(defaultWechat: string, defaultPhone: str
 }
 
 export async function getCurrentUserProfile() {
-  const response = await api.get<ApiResponse<AuthUser>>("/api/v1/users/me");
+  const response = await api.get<ApiResponse<AuthUser>>("/v1/users/me");
   return unwrapApiResponse(response.data);
 }
 
 export async function sendVerificationCode(email: string, type: string) {
-  const response = await api.post<ApiResponse<VerificationCodeResponse>>("/api/v1/auth/code", {
+  const response = await api.post<ApiResponse<VerificationCodeResponse>>("/v1/auth/code", {
     email,
     type,
   });
@@ -36,7 +36,7 @@ export async function sendVerificationCode(email: string, type: string) {
 }
 
 export async function resetPassword(email: string, code: string, password: string) {
-  const response = await api.post<ApiResponse<OkResponse>>("/api/v1/auth/password/reset", {
+  const response = await api.post<ApiResponse<OkResponse>>("/v1/auth/password/reset", {
     email,
     code,
     password,

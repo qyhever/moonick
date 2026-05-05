@@ -67,48 +67,48 @@ type AvatarUploadResponse = {
 };
 
 export async function getTrips(query?: TripQuery) {
-  const response = await api.get<ApiResponse<TripListResponse>>("/api/v1/trips", {
+  const response = await api.get<ApiResponse<TripListResponse>>("/v1/trips", {
     params: query,
   });
   return unwrapApiResponse(response.data);
 }
 
 export async function getTripDetail(id: string | number) {
-  const response = await api.get<ApiResponse<TripDetail>>(`/api/v1/trips/${id}`);
+  const response = await api.get<ApiResponse<TripDetail>>(`/v1/trips/${id}`);
   return unwrapApiResponse(response.data);
 }
 
 export async function createTrip(payload: TripFormPayload) {
-  const response = await api.post<ApiResponse<TripDetail>>("/api/v1/trips", payload);
+  const response = await api.post<ApiResponse<TripDetail>>("/v1/trips", payload);
   return unwrapApiResponse(response.data);
 }
 
 export async function updateTrip(id: string | number, payload: TripFormPayload) {
-  const response = await api.put<ApiResponse<TripDetail>>(`/api/v1/trips/${id}`, payload);
+  const response = await api.put<ApiResponse<TripDetail>>(`/v1/trips/${id}`, payload);
   return unwrapApiResponse(response.data);
 }
 
 export async function updateTripStatus(id: string | number, status: TripStatus) {
-  const response = await api.patch<ApiResponse<TripDetail>>(`/api/v1/trips/${id}/status`, { status });
+  const response = await api.patch<ApiResponse<TripDetail>>(`/v1/trips/${id}/status`, { status });
   return unwrapApiResponse(response.data);
 }
 
 export async function toggleFavorite(id: string | number) {
   const response = await api.post<ApiResponse<FavoriteToggleResponse>>(
-    `/api/v1/trips/${id}/favorite`,
+    `/v1/trips/${id}/favorite`,
   );
   return unwrapApiResponse(response.data);
 }
 
 export async function getMyTrips(query?: TripQuery) {
-  const response = await api.get<ApiResponse<TripListResponse>>("/api/v1/me/trips", {
+  const response = await api.get<ApiResponse<TripListResponse>>("/v1/me/trips", {
     params: query,
   });
   return unwrapApiResponse(response.data);
 }
 
 export async function getMyFavorites(query?: TripQuery) {
-  const response = await api.get<ApiResponse<TripListResponse>>("/api/v1/me/favorites", {
+  const response = await api.get<ApiResponse<TripListResponse>>("/v1/me/favorites", {
     params: query,
   });
   return unwrapApiResponse(response.data);
@@ -118,7 +118,7 @@ export async function uploadAvatar(file: File) {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await api.post<ApiResponse<AvatarUploadResponse>>("/api/v1/users/avatar", formData);
+  const response = await api.post<ApiResponse<AvatarUploadResponse>>("/v1/users/avatar", formData);
 
   const data = unwrapApiResponse(response.data);
   return data.avatarUrl ?? data.url ?? "";

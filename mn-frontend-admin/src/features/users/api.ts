@@ -32,17 +32,17 @@ export type AdminUserDetail = {
 };
 
 export async function getAdminUsers(params?: { pageNum?: number; pageSize?: number; keyword?: string }) {
-  const response = await api.get<ApiResponse<AdminUserListResponse>>("/api/admin/v1/users", { params });
+  const response = await api.get<ApiResponse<AdminUserListResponse>>("/admin/v1/users", { params });
   return unwrapApiResponse(response.data);
 }
 
 export async function getAdminUserDetail(id: string | number) {
-  const response = await api.get<ApiResponse<AdminUserDetail>>(`/api/admin/v1/users/${id}`);
+  const response = await api.get<ApiResponse<AdminUserDetail>>(`/admin/v1/users/${id}`);
   return unwrapApiResponse(response.data);
 }
 
 export async function getAdminUserTrips(id: string | number, params?: { pageNum?: number; pageSize?: number }) {
-  const response = await api.get<ApiResponse<AdminTripListResponse>>(`/api/admin/v1/users/${id}/trips`, {
+  const response = await api.get<ApiResponse<AdminTripListResponse>>(`/admin/v1/users/${id}/trips`, {
     params,
   });
   return unwrapApiResponse(response.data);

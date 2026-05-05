@@ -56,7 +56,7 @@ beforeEach(() => {
   });
   mockPost.mockReset();
   mockPost.mockImplementation(async (url: string, payload?: { email: string; password?: string; code?: string }) => {
-    if (url === "/api/v1/auth/refresh") {
+    if (url === "/v1/auth/refresh") {
       return {
         data: {
           code: 1000,
@@ -79,7 +79,7 @@ beforeEach(() => {
       };
     }
 
-    if (url === "/api/v1/auth/code" && payload) {
+    if (url === "/v1/auth/code" && payload) {
       return {
         data: {
           code: 1000,
@@ -91,7 +91,7 @@ beforeEach(() => {
       };
     }
 
-    if (url === "/api/v1/auth/register" && payload) {
+    if (url === "/v1/auth/register" && payload) {
       return {
         data: {
           code: 1000,
@@ -114,7 +114,7 @@ beforeEach(() => {
       };
     }
 
-    if (url !== "/api/v1/auth/login" || !payload) {
+    if (url !== "/v1/auth/login" || !payload) {
       throw new Error(`Unexpected URL: ${url}`);
     }
 
@@ -284,7 +284,7 @@ it("sends register verification code and restores countdown after remount", asyn
   });
   fireEvent.click(screen.getByRole("button", { name: "发送验证码" }));
 
-  expect(mockPost).toHaveBeenCalledWith("/api/v1/auth/code", {
+  expect(mockPost).toHaveBeenCalledWith("/v1/auth/code", {
     email: "user@example.com",
     type: "register",
   });
@@ -323,7 +323,7 @@ it("shows resend helper text only during register code countdown", async () => {
 
 it("blocks register submit when email format is invalid", async () => {
   mockPost.mockImplementation(async (url: string) => {
-    if (url === "/api/v1/auth/refresh") {
+    if (url === "/v1/auth/refresh") {
       return {
         data: {
           code: 1000,
@@ -370,7 +370,7 @@ it("submits register code with email and password to backend", async () => {
   await userEvent.click(screen.getByRole("button", { name: "注册" }));
 
   await waitFor(() => {
-    expect(mockPost).toHaveBeenCalledWith("/api/v1/auth/register", {
+    expect(mockPost).toHaveBeenCalledWith("/v1/auth/register", {
       email: "user@example.com",
       password: "secret123",
       code: "795232",
@@ -393,7 +393,7 @@ it("refreshes token pair through backend refresh endpoint", async () => {
   expect(useAuthStore.getState().accessToken).toBe("refreshed-access-token");
   expect(useAuthStore.getState().refreshToken).toBe("refreshed-refresh-token");
   expect(mockPost).toHaveBeenCalledWith(
-    "/api/v1/auth/refresh",
+    "/v1/auth/refresh",
     null,
     expect.objectContaining({
       skipAuthRefresh: true,

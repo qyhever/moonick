@@ -64,18 +64,18 @@ function withQuery(params?: Record<string, string | number | undefined>) {
 
 export async function getAdminTrips(params?: AdminTripQuery) {
   const response = await api.get<ApiResponse<AdminTripListResponse>>(
-    "/api/admin/v1/trips",
+    "/admin/v1/trips",
     withQuery(params),
   );
   return unwrapApiResponse(response.data);
 }
 
 export async function getAdminTripDetail(id: string | number) {
-  const response = await api.get<ApiResponse<AdminTripDetail>>(`/api/admin/v1/trips/${id}`);
+  const response = await api.get<ApiResponse<AdminTripDetail>>(`/admin/v1/trips/${id}`);
   return unwrapApiResponse(response.data);
 }
 
 export async function updateAdminTrip(id: string | number, payload: AdminTripUpdatePayload) {
-  const response = await api.put<ApiResponse<AdminTripDetail>>(`/api/admin/v1/trips/${id}`, payload);
+  const response = await api.put<ApiResponse<AdminTripDetail>>(`/admin/v1/trips/${id}`, payload);
   return unwrapApiResponse(response.data);
 }

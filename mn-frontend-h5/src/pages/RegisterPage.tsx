@@ -139,7 +139,7 @@ export default function RegisterPage() {
     setIsSendingCode(true);
 
     try {
-      const response = await api.post<ApiResponse<RegisterCodeResponse>>("/api/v1/auth/code", {
+      const response = await api.post<ApiResponse<RegisterCodeResponse>>("/v1/auth/code", {
         email,
         type: "register",
       });

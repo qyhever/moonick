@@ -9,6 +9,6 @@ export type DashboardSummary = {
 };
 
 export async function getDashboardSummary() {
-  const response = await api.get<ApiResponse<DashboardSummary>>("/api/admin/v1/dashboard/summary");
+  const response = await api.get<ApiResponse<DashboardSummary>>("/admin/v1/dashboard/summary");
   return unwrapApiResponse(response.data);
 }

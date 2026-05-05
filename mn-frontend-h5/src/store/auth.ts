@@ -134,11 +134,11 @@ const initialState = readStoredAuth();
 export const useAuthStore = create<AuthState>((set, get) => ({
   ...initialState,
   login: async (payload) => {
-    const res = await api.post<AuthResponse<AuthPayload>>("/api/v1/auth/login", payload);
+    const res = await api.post<AuthResponse<AuthPayload>>("/v1/auth/login", payload);
     applyAuthPayload(set, unwrapApiResponse(res.data));
   },
   register: async (payload) => {
-    const res = await api.post<AuthResponse<AuthPayload>>("/api/v1/auth/register", {
+    const res = await api.post<AuthResponse<AuthPayload>>("/v1/auth/register", {
       email: payload.email,
       password: payload.password,
       code: payload.code,
@@ -152,7 +152,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     const res = await api.post<AuthResponse<AuthPayload>>(
-      "/api/v1/auth/refresh",
+      "/v1/auth/refresh",
       null,
       {
         skipAuthRefresh: true,

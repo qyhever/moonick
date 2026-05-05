@@ -105,7 +105,7 @@ const initialState = readStoredAuth();
 export const useAdminAuthStore = create<AuthState>((set, get) => ({
   ...initialState,
   login: async (payload) => {
-    const response = await api.post<ApiResponse<AuthPayload>>("/api/admin/v1/auth/login", payload);
+    const response = await api.post<ApiResponse<AuthPayload>>("/admin/v1/auth/login", payload);
     applyAuthPayload(set, unwrapApiResponse(response.data));
   },
   refresh: async () => {
@@ -115,7 +115,7 @@ export const useAdminAuthStore = create<AuthState>((set, get) => ({
     }
 
     const response = await api.post<ApiResponse<AuthPayload>>(
-      "/api/admin/v1/auth/refresh",
+      "/admin/v1/auth/refresh",
       null,
       {
         skipAuthRefresh: true,

@@ -60,7 +60,7 @@ it("refreshes admin auth once and retries the original request when code is 1007
   let refreshCalls = 0;
 
   api.defaults.adapter = async (config: InternalAxiosRequestConfig): Promise<MockResponse> => {
-    if (config.url === "/api/admin/v1/protected") {
+    if (config.url === "/admin/v1/protected") {
       protectedCalls += 1;
 
       if (protectedCalls === 1) {
@@ -82,7 +82,7 @@ it("refreshes admin auth once and retries the original request when code is 1007
       });
     }
 
-    if (config.url === "/api/admin/v1/auth/refresh") {
+    if (config.url === "/admin/v1/auth/refresh") {
       refreshCalls += 1;
       expect(getAuthorizationHeader(config)).toBe("Bearer refresh-token");
 
@@ -105,7 +105,7 @@ it("refreshes admin auth once and retries the original request when code is 1007
     throw new Error(`Unexpected URL: ${config.url}`);
   };
 
-  const response = await api.get("/api/admin/v1/protected");
+  const response = await api.get("/admin/v1/protected");
 
   expect(response.data.data).toEqual({ ok: true });
   expect(protectedCalls).toBe(2);
@@ -118,7 +118,7 @@ it("logs out admin user when refresh also fails", async () => {
   writeAuth("expired-access-token", "refresh-token");
 
   api.defaults.adapter = async (config: InternalAxiosRequestConfig): Promise<MockResponse> => {
-    if (config.url === "/api/admin/v1/protected") {
+    if (config.url === "/admin/v1/protected") {
       return buildResponse(config, {
         code: 1007,
         message: "无效 token",
@@ -126,7 +126,7 @@ it("logs out admin user when refresh also fails", async () => {
       });
     }
 
-    if (config.url === "/api/admin/v1/auth/refresh") {
+    if (config.url === "/admin/v1/auth/refresh") {
       return buildResponse(config, {
         code: 1007,
         message: "refresh token 无效",
@@ -137,7 +137,7 @@ it("logs out admin user when refresh also fails", async () => {
     throw new Error(`Unexpected URL: ${config.url}`);
   };
 
-  await expect(api.get("/api/admin/v1/protected")).rejects.toThrow();
+  await expect(api.get("/admin/v1/protected")).rejects.toThrow();
   expect(useAdminAuthStore.getState().accessToken).toBeNull();
   expect(useAdminAuthStore.getState().refreshToken).toBeNull();
   expect(window.localStorage.getItem("mn-admin-auth")).toBeNull();

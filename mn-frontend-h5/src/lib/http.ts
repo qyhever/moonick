@@ -91,7 +91,9 @@ function readStoredAuth() {
   }
 }
 
-export const api = axios.create();
+export const api = axios.create({
+  baseURL: "/mmoonick/api",
+});
 
 let authStore: AuthStoreBinding | null = null;
 let refreshPromise: Promise<void> | null = null;
