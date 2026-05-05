@@ -58,6 +58,7 @@ export const routes: RouteObject[] = [
           </RequireGuest>
         ),
       },
+      { path: "/password-reset", element: <PasswordResetPage /> },
       { path: "/trips/:id", element: <TripDetailPage /> },
       {
         path: "/publish",

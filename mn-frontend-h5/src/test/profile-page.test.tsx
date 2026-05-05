@@ -347,9 +347,6 @@ it("renders password reset page content from html draft", async () => {
   render(<RouterProvider router={router} />);
 
   expect(await screen.findByText("请设置新的登录密码，让账户安全保持在你手里。")).toBeInTheDocument();
-  expect(
-    screen.getByText("这是一个重置密码场景，不需要输入当前密码。完成后，下次登录请使用新密码。"),
-  ).toBeInTheDocument();
   expect(screen.getByText("重置密码", { selector: ".form-title" })).toBeInTheDocument();
   expect(screen.getByText("输入新的登录密码，并再次确认，避免因输入错误影响后续登录。")).toBeInTheDocument();
   expect(screen.getByPlaceholderText("请输入验证码")).toBeInTheDocument();

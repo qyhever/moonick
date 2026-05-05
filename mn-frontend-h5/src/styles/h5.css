@@ -1136,6 +1136,19 @@ textarea {
   color: var(--text-dark);
 }
 
+.auth-form__meta {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -6px;
+}
+
+.auth-form__meta-link {
+  color: var(--accent-orange);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
 .auth-code {
   display: grid;
   gap: 8px;

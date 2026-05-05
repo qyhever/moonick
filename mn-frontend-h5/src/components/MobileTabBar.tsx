@@ -100,6 +100,15 @@ function getRouteFrame(pathname: string): RouteFrame {
     };
   }
 
+  if (pathname === "/password-reset") {
+    return {
+      title: "重置密码",
+      showTopBar: true,
+      showTabBar: false,
+      backFallback: "/login",
+    };
+  }
+
   if (pathname.endsWith("/edit")) {
     return {
       title: "编辑行程",

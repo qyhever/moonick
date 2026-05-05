@@ -4,7 +4,8 @@ import { Toast } from "antd-mobile";
 
 import { resetPassword, sendVerificationCode } from "../api";
 import { useAuthStore } from "../../../store/auth";
-import { useNavigate } from "react-router-dom";
+import { isValidEmail } from "../../../lib/validation";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const RESET_PASSWORD_CODE_TYPE = "reset_password";
 const RESET_PASSWORD_CODE_STORAGE_KEY = "mn-h5-reset-password-code-expires-at";
@@ -57,8 +58,11 @@ function getRemainingSeconds(expiresAt: number | null) {
 
 export default function PasswordResetPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const accessToken = useAuthStore((state) => state.accessToken);
   const logout = useAuthStore((state) => state.logout);
-  const email = useAuthStore((state) => state.user?.email ?? "");
+  const storeEmail = useAuthStore((state) => state.user?.email ?? "");
+  const [email, setEmail] = useState(() => storeEmail || searchParams.get("email")?.trim() || "");
   const [verificationCode, setVerificationCode] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -96,9 +100,18 @@ export default function PasswordResetPage() {
     };
   }, [countdownExpiresAt]);
 
+  useEffect(() => {
+    if (storeEmail) {
+      setEmail(storeEmail);
+    }
+  }, [storeEmail]);
+
+  const effectiveEmail = storeEmail || email.trim();
+  const shouldShowEmailField = !accessToken;
+
   async function handleSendVerificationCode() {
-    if (!email) {
-      setError("未获取到当前登录邮箱，请重新登录后再试");
+    if (!effectiveEmail || !isValidEmail(effectiveEmail)) {
+      setError("请输入有效的邮箱地址");
       return;
     }
 
@@ -106,7 +119,7 @@ export default function PasswordResetPage() {
     setIsSendingCode(true);
 
     try {
-      const payload = await sendVerificationCode(email, RESET_PASSWORD_CODE_TYPE);
+      const payload = await sendVerificationCode(effectiveEmail, RESET_PASSWORD_CODE_TYPE);
       if (!payload.sent) {
         throw new Error("验证码发送失败，请稍后重试");
       }
@@ -145,8 +158,8 @@ export default function PasswordResetPage() {
       return;
     }
 
-    if (!email) {
-      setError("未获取到当前登录邮箱，请重新登录后再试");
+    if (!effectiveEmail || !isValidEmail(effectiveEmail)) {
+      setError("请输入有效的邮箱地址");
       return;
     }
 
@@ -154,13 +167,20 @@ export default function PasswordResetPage() {
     setIsSubmitting(true);
 
     try {
-      await resetPassword(email, verificationCode.trim(), password);
+      await resetPassword(effectiveEmail, verificationCode.trim(), password);
       persistCountdownDeadline(null);
-      logout();
-      Toast.show({
-        content: "密码已重置，请重新登录",
-      });
-      navigate("/login", { replace: true });
+      if (accessToken) {
+        logout();
+        Toast.show({
+          content: "密码已重置，请重新登录",
+        });
+        navigate("/login", { replace: true });
+      } else {
+        Toast.show({
+          content: "密码已重置，请使用新密码登录",
+        });
+        navigate("/login", { replace: true });
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : "重置密码失败，请稍后重试");
     } finally {
@@ -182,15 +202,23 @@ export default function PasswordResetPage() {
             <br />
             让账户安全保持在你手里。
           </h1>
-          <p className="password-reset-hero__subtitle">
-            这是一个重置密码场景，不需要输入当前密码。完成后，下次登录请使用新密码。
-          </p>
         </section>
 
         <section className="card password-reset-form-card auth-form">
           <h2 className="form-title">重置密码</h2>
           <p className="form-subtitle">输入新的登录密码，并再次确认，避免因输入错误影响后续登录。</p>
           <form className="password-reset-form" onSubmit={handleSubmit}>
+            {shouldShowEmailField ? (
+              <label className="field-block">
+                <span>邮箱</span>
+                <input
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="请输入邮箱地址"
+                  type="email"
+                  value={email}
+                />
+              </label>
+            ) : null}
             <label className="field-block">
               <span>新密码</span>
               <input

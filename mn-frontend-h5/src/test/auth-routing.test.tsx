@@ -48,6 +48,7 @@ function renderWithRouter(initialEntry: string) {
 
 beforeEach(() => {
   window.localStorage.clear();
+  window.scrollTo = vi.fn();
   useAuthStore.setState({
     accessToken: null,
     refreshToken: null,
@@ -251,6 +252,28 @@ it("does not render verification code field on login page but keeps it on regist
 
   expect(screen.getByLabelText("验证码")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "发送验证码" })).toHaveClass("auth-code__send");
+});
+
+it("renders forgot password link on login page and carries current email to reset flow", async () => {
+  renderWithRouter("/login");
+
+  const forgotPasswordLink = screen.getByRole("link", { name: "忘记密码？" });
+  expect(forgotPasswordLink).toHaveAttribute("href", "/password-reset");
+
+  await userEvent.type(screen.getByLabelText("邮箱"), "user@example.com");
+
+  expect(screen.getByRole("link", { name: "忘记密码？" })).toHaveAttribute(
+    "href",
+    "/password-reset?email=user%40example.com",
+  );
+});
+
+it("allows guest to open password reset page directly", async () => {
+  const { router } = renderWithRouter("/password-reset?email=user%40example.com");
+
+  expect(await screen.findByText("重置密码", { selector: ".page-topbar__title" })).toBeInTheDocument();
+  expect(screen.getByDisplayValue("user@example.com")).toBeInTheDocument();
+  expect(router.state.location.pathname).toBe("/password-reset");
 });
 
 it("sends register verification code and restores countdown after remount", async () => {

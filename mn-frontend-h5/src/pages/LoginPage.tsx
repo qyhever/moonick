@@ -13,6 +13,10 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const redirect = searchParams.get("redirect") || "/";
+  const trimmedEmail = email.trim();
+  const forgotPasswordTarget = trimmedEmail
+    ? `/password-reset?email=${encodeURIComponent(trimmedEmail)}`
+    : "/password-reset";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -51,6 +55,11 @@ export default function LoginPage() {
               onChange={(event) => setPassword(event.target.value)}
             />
           </label>
+          <div className="auth-form__meta">
+            <Link className="auth-form__meta-link" to={forgotPasswordTarget}>
+              忘记密码？
+            </Link>
+          </div>
           {error ? <p role="alert">{error}</p> : null}
           <div className="auth-actions">
             <button className="primary-button" type="submit">

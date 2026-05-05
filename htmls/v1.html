@@ -564,6 +564,19 @@ body::before {
   margin-bottom: 16px;
 }
 
+.field-meta {
+  display: flex;
+  justify-content: flex-end;
+  margin: -4px 0 6px;
+}
+
+.field-meta__link {
+  color: var(--accent-orange);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
 .field__label {
   display: block;
   font-size: 13px;
@@ -1344,6 +1357,9 @@ textarea.field__input {
       <label class="field__label">密码</label>
       <input class="field__input" type="password" placeholder="请输入密码">
     </div>
+    <div class="field-meta">
+      <a class="field-meta__link" href="#reset-password-page">忘记密码？</a>
+    </div>
     <button class="btn-solid">登录</button>
     <button class="btn-outline">还没有账号？去注册</button>
   </div>
@@ -1585,7 +1601,6 @@ textarea.field__input {
   <div class="card password-hero">
     <p class="password-hero__eyebrow">Password Reset</p>
     <h2 class="password-hero__title">请设置新的登录密码，<br>让账户安全保持在你手里。</h2>
-    <p class="password-hero__subtitle">这是一个重置密码场景，不需要输入当前密码。完成后，下次登录请使用新密码。</p>
   </div>
 
   <div class="card form-card">
