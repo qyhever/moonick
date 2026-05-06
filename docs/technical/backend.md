@@ -32,9 +32,16 @@
 
 - Gin 路由骨架
 - Viper 配置加载
-- Zap + lumberjack 日志
+- Zap 文件日志
 - 统一响应结构
 - 简单 controller / service / repository 分层
+
+日志实现约定补充：
+
+- 文件日志通过 `zap + 自定义按天分片 writer` 输出
+- `logger.filename` 作为基础文件名，实际落盘文件按自然日切分，形如 `./log/moonick-2026-05-06.log`
+- `logger.max_size` 当前仅保留为兼容配置，按天分片模式下不再触发文件大小轮转
+- `logger.max_age` 单位为天，`logger.max_backups` 为历史日志分片数量上限
 
 ### 2.2 扩展原则
 

@@ -81,6 +81,19 @@ auth:
 - `MOONICK_REDIS_ADDR`
 - `MOONICK_REDIS_PASSWORD`
 - `MOONICK_REDIS_DB`
+- `MOONICK_LOGGER_LEVEL`
+- `MOONICK_LOGGER_FILENAME`
+- `MOONICK_LOGGER_MAX_SIZE`
+- `MOONICK_LOGGER_MAX_AGE`
+- `MOONICK_LOGGER_MAX_BACKUPS`
+
+日志配置补充约定：
+
+- 文件日志按自然日分片，`logger.filename` 作为基础文件名，实际落盘形如 `./log/moonick-2026-05-06.log`
+- `logger.max_size` 当前仅保留为兼容配置，按天分片模式下不再触发文件大小轮转
+- `logger.max_age` 单位为天，不是小时或秒
+- `logger.max_backups` 表示最多保留的历史日志分片数量
+- `prod.yml` 默认使用 `info` 级别；需要排障时优先通过 `MOONICK_LOGGER_LEVEL` 临时覆盖
 
 ## 数据初始化
 

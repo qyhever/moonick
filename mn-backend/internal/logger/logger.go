@@ -13,7 +13,6 @@ import (
 	"moonick/internal/config"
 
 	"github.com/gin-gonic/gin"
-	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -62,13 +61,8 @@ func getEncoder() zapcore.Encoder {
 }
 
 func getLogWriter(filename string, maxSize, maxBackup, maxAge int) zapcore.WriteSyncer {
-	lumberJackLogger := &lumberjack.Logger{
-		Filename:   filename,
-		MaxSize:    maxSize,
-		MaxBackups: maxBackup,
-		MaxAge:     maxAge,
-	}
-	return zapcore.AddSync(lumberJackLogger)
+	_ = maxSize // 按天分片后不再基于文件大小滚动
+	return zapcore.AddSync(newDailyLogWriter(filename, maxBackup, maxAge))
 }
 
 // GinLogger 接收gin框架默认的日志
