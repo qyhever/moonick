@@ -412,7 +412,13 @@ it("applies real drawer conditions and supports reset and close", async () => {
 
   await user.click(screen.getByRole("button", { name: "打开筛选抽屉" }));
   await user.click(screen.getByRole("button", { name: "关闭" }));
-  expect(screen.queryByText("时间与低频条件收进这里，首页保持轻量")).not.toBeInTheDocument();
+
+  const drawer = screen.getByRole("dialog", { name: "高级查询" });
+  expect(drawer).toHaveAttribute("data-state", "closing");
+
+  await waitFor(() => {
+    expect(screen.queryByRole("dialog", { name: "高级查询" })).not.toBeInTheDocument();
+  }, { timeout: 1000 });
 });
 
 it("renders drawer actions outside the scrollable drawer content", async () => {
@@ -436,6 +442,49 @@ it("renders drawer actions outside the scrollable drawer content", async () => {
 
   expect(drawerContent).not.toContainElement(confirmButton);
   expect(drawerContent).not.toContainElement(resetButton);
+});
+
+it("locks page scroll while filter drawer is open and restores it after close", async () => {
+  const user = userEvent.setup();
+  const scrollToSpy = vi.mocked(window.scrollTo);
+
+  render(
+    <MemoryRouter>
+      <HomePage />
+    </MemoryRouter>,
+  );
+
+  await waitFor(() => {
+    expect(mockGetTrips).toHaveBeenCalledTimes(1);
+  });
+
+  window.scrollTo({ top: 320, left: 0, behavior: "auto" });
+  scrollToSpy.mockClear();
+
+  await user.click(screen.getByRole("button", { name: "打开筛选抽屉" }));
+
+  expect(document.body.style.overflow).toBe("hidden");
+  expect(document.body.style.position).toBe("fixed");
+  expect(document.body.style.top).toBe("-320px");
+  expect(document.documentElement.style.overflow).toBe("hidden");
+
+  await user.click(screen.getByRole("button", { name: "关闭" }));
+
+  await waitFor(() => {
+    expect(screen.getByRole("dialog", { name: "高级查询" })).toHaveAttribute("data-state", "closing");
+    expect(document.body.style.overflow).toBe("hidden");
+    expect(document.body.style.position).toBe("fixed");
+    expect(document.body.style.top).toBe("-320px");
+    expect(document.documentElement.style.overflow).toBe("hidden");
+  });
+
+  await waitFor(() => {
+    expect(document.body.style.overflow).toBe("");
+    expect(document.body.style.position).toBe("");
+    expect(document.body.style.top).toBe("");
+    expect(document.documentElement.style.overflow).toBe("");
+    expect(scrollToSpy).toHaveBeenLastCalledWith({ top: 320, left: 0, behavior: "auto" });
+  }, { timeout: 1000 });
 });
 
 it("keeps filter drawer available when rendered inside app layout with bottom tab bar", async () => {

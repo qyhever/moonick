@@ -49,6 +49,7 @@ const datePresetOptions: Array<{ label: string; value: HomeDatePreset }> = [
 ];
 
 const PAGE_SIZE = 10;
+const FILTER_DRAWER_TRANSITION_MS = 320;
 let cachedHomePageSnapshot: HomePageSnapshot | null = null;
 let shouldRestoreHomePageSnapshot = false;
 
@@ -117,6 +118,16 @@ function applyClientFilters(trips: TripSummary[], filters: HomeFilters) {
 export default function HomePage() {
   const restoreSnapshotRef = useRef<HomePageSnapshot | null>(consumeHomePageSnapshot());
   const restoredSnapshot = restoreSnapshotRef.current;
+  const drawerScrollLockRef = useRef<{
+    scrollY: number;
+    bodyOverflow: string;
+    bodyPosition: string;
+    bodyTop: string;
+    bodyLeft: string;
+    bodyRight: string;
+    bodyWidth: string;
+    htmlOverflow: string;
+  } | null>(null);
   const accessToken = useAuthStore((state) => state.accessToken);
   const currentUser = useAuthStore((state) => state.user);
   const [trips, setTrips] = useState<TripSummary[]>(restoredSnapshot?.trips ?? []);
@@ -128,7 +139,9 @@ export default function HomePage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [filters, setFilters] = useState<HomeFilters>(restoredSnapshot?.filters ?? defaultFilters);
+  const [isFilterDrawerMounted, setIsFilterDrawerMounted] = useState(false);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [isFilterDrawerClosing, setIsFilterDrawerClosing] = useState(false);
   const [draftDrawerFilters, setDraftDrawerFilters] = useState({
     fromText: restoredSnapshot?.filters.fromText ?? defaultFilters.fromText,
     toText: restoredSnapshot?.filters.toText ?? defaultFilters.toText,
@@ -138,6 +151,8 @@ export default function HomePage() {
   });
   const pageNumRef = useRef(1);
   const tripsLengthRef = useRef(0);
+  const drawerAnimationFrameRef = useRef<number | null>(null);
+  const drawerCloseTimeoutRef = useRef<number | null>(null);
   const shouldSkipInitialFetchRef = useRef(Boolean(restoredSnapshot));
   const snapshotRef = useRef<HomePageSnapshot>({
     trips: restoredSnapshot?.trips ?? [],
@@ -174,6 +189,65 @@ export default function HomePage() {
 
     window.scrollTo({ top: restoredSnapshot.scrollY, left: 0, behavior: "auto" });
   }, [restoredSnapshot]);
+
+  useEffect(() => {
+    return () => {
+      if (drawerAnimationFrameRef.current !== null) {
+        window.cancelAnimationFrame(drawerAnimationFrameRef.current);
+      }
+
+      if (drawerCloseTimeoutRef.current !== null) {
+        window.clearTimeout(drawerCloseTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    function unlockBodyScroll() {
+      const lockedState = drawerScrollLockRef.current;
+      if (!lockedState) {
+        return;
+      }
+
+      document.body.style.overflow = lockedState.bodyOverflow;
+      document.body.style.position = lockedState.bodyPosition;
+      document.body.style.top = lockedState.bodyTop;
+      document.body.style.left = lockedState.bodyLeft;
+      document.body.style.right = lockedState.bodyRight;
+      document.body.style.width = lockedState.bodyWidth;
+      document.documentElement.style.overflow = lockedState.htmlOverflow;
+      drawerScrollLockRef.current = null;
+      window.scrollTo({ top: lockedState.scrollY, left: 0, behavior: "auto" });
+    }
+
+    if (!isFilterDrawerMounted) {
+      unlockBodyScroll();
+      return;
+    }
+
+    const scrollY = window.scrollY;
+
+    drawerScrollLockRef.current = {
+      scrollY,
+      bodyOverflow: document.body.style.overflow,
+      bodyPosition: document.body.style.position,
+      bodyTop: document.body.style.top,
+      bodyLeft: document.body.style.left,
+      bodyRight: document.body.style.right,
+      bodyWidth: document.body.style.width,
+      htmlOverflow: document.documentElement.style.overflow,
+    };
+
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+    document.documentElement.style.overflow = "hidden";
+
+    return unlockBodyScroll;
+  }, [isFilterDrawerMounted]);
 
   useEffect(() => {
     if (shouldSkipInitialFetchRef.current) {
@@ -263,6 +337,15 @@ export default function HomePage() {
   }
 
   function openFilterDrawer() {
+    if (drawerCloseTimeoutRef.current !== null) {
+      window.clearTimeout(drawerCloseTimeoutRef.current);
+      drawerCloseTimeoutRef.current = null;
+    }
+
+    if (drawerAnimationFrameRef.current !== null) {
+      window.cancelAnimationFrame(drawerAnimationFrameRef.current);
+    }
+
     setDraftDrawerFilters({
       fromText: filters.fromText,
       toText: filters.toText,
@@ -270,11 +353,28 @@ export default function HomePage() {
       onlyAvailable: filters.onlyAvailable,
       negotiableOnly: filters.negotiableOnly,
     });
-    setIsFilterDrawerOpen(true);
+    setIsFilterDrawerMounted(true);
+    setIsFilterDrawerClosing(false);
+
+    drawerAnimationFrameRef.current = window.requestAnimationFrame(() => {
+      setIsFilterDrawerOpen(true);
+      drawerAnimationFrameRef.current = null;
+    });
   }
 
   function closeFilterDrawer() {
     setIsFilterDrawerOpen(false);
+    setIsFilterDrawerClosing(true);
+
+    if (drawerCloseTimeoutRef.current !== null) {
+      window.clearTimeout(drawerCloseTimeoutRef.current);
+    }
+
+    drawerCloseTimeoutRef.current = window.setTimeout(() => {
+      setIsFilterDrawerMounted(false);
+      setIsFilterDrawerClosing(false);
+      drawerCloseTimeoutRef.current = null;
+    }, FILTER_DRAWER_TRANSITION_MS);
   }
 
   function applyDrawerFilters() {
@@ -395,8 +495,20 @@ export default function HomePage() {
         )}
       </section>
 
-      {isFilterDrawerOpen ? (
-        <div className="filter-drawer" role="dialog" aria-modal="true" aria-labelledby="home-filter-drawer-title">
+      {isFilterDrawerMounted ? (
+        <div
+          className={
+            isFilterDrawerOpen
+              ? "filter-drawer is-open"
+              : isFilterDrawerClosing
+                ? "filter-drawer is-closing"
+                : "filter-drawer"
+          }
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="home-filter-drawer-title"
+          data-state={isFilterDrawerOpen ? "open" : isFilterDrawerClosing ? "closing" : "closed"}
+        >
           <button
             aria-label="关闭筛选抽屉"
             className="filter-drawer__backdrop"
@@ -409,9 +521,8 @@ export default function HomePage() {
               <div className="filter-drawer__header">
                 <div>
                   <h2 className="section-title" id="home-filter-drawer-title">
-                    筛选抽屉
+                    高级查询
                   </h2>
-                  <p className="section-subtitle">时间与低频条件收进这里，首页保持轻量</p>
                 </div>
                 <button className="filter-drawer__text-button" onClick={closeFilterDrawer} type="button">
                   关闭
