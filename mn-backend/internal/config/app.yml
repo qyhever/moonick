@@ -1,20 +1,24 @@
+mode: "dev"
 
 server:
   port: 6303
-auth:
-  whitelist:
-    - "GET:/foo"
-    - "GET:/@vite/client"
-    - "GET:/"
-    - "POST:/app/getHelloInfo"
+
 logger:
   level: "debug"
   filename: "./log/moonick.log"
   max_size: 1000
   max_age: 3600
   max_backups: 5
+
+database:
+  mysql:
+    addr: "localhost:3306"
+    user: "root"
+    password: "123456"
+    db_name: "moonick"
+
 redis:
-  enabled: false
+  enabled: true
   addr: "127.0.0.1:6379"
   password: ""
   db: 0
@@ -24,3 +28,32 @@ redis:
   read_timeout: "2s"
   write_timeout: "2s"
   key_prefix: "moonick:"
+
+jwt:
+  secret: "foobar"
+  access_expires_in: "2h"
+  refresh_expires_in: "72h"
+
+auth:
+  whitelist:
+    - "GET:/foo"
+    - "GET:/@vite/client"
+    - "GET:/"
+    - "POST:/app/getHelloInfo"
+  admin:
+    username: "admin"
+    password: "admin123"
+    name: "管理员"
+
+r2:
+  bucket_name: ""
+  account_id: ""
+  access_key_id: ""
+  access_key_secret: ""
+
+postal:
+  smtp_server: "" # SMTP服务器地址
+  smtp_port: ""  # SMTP端口(优先465)
+  from_email: "" # 发件邮箱
+  from_pass: ""  # 发件邮箱密码
+  from_name: ""  # 发件人显示名称
