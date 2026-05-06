@@ -99,5 +99,9 @@ func (s *Scheduler) runOnce(ctx context.Context) {
 		return
 	}
 
+	if count <= 0 {
+		return
+	}
+
 	zap.L().Info("trip expire task completed", zap.Int64("expiredTrips", count))
 }

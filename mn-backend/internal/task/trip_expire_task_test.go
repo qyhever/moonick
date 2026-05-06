@@ -5,6 +5,9 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest/observer"
 )
 
 type stubTripExpireRepository struct {
@@ -119,6 +122,55 @@ func TestScheduler_RunStopsAfterContextCancel(t *testing.T) {
 	}
 	if !ticker.stopped.Load() {
 		t.Fatal("expected ticker to be stopped on exit")
+	}
+}
+
+func TestScheduler_RunOnceSkipsInfoLogWhenNoTripExpired(t *testing.T) {
+	core, logs := observer.New(zap.InfoLevel)
+	logger := zap.New(core)
+	previous := zap.L()
+	zap.ReplaceGlobals(logger)
+	defer zap.ReplaceGlobals(previous)
+
+	scheduler := NewScheduler(SchedulerConfig{
+		Run: func(context.Context) (int64, error) {
+			return 0, nil
+		},
+	})
+
+	scheduler.runOnce(context.Background())
+
+	if logs.Len() != 0 {
+		t.Fatalf("expected no logs when no trip expired, got %d", logs.Len())
+	}
+}
+
+func TestScheduler_RunOnceWritesInfoLogWhenTripExpired(t *testing.T) {
+	core, logs := observer.New(zap.InfoLevel)
+	logger := zap.New(core)
+	previous := zap.L()
+	zap.ReplaceGlobals(logger)
+	defer zap.ReplaceGlobals(previous)
+
+	scheduler := NewScheduler(SchedulerConfig{
+		Run: func(context.Context) (int64, error) {
+			return 3, nil
+		},
+	})
+
+	scheduler.runOnce(context.Background())
+
+	if logs.Len() != 1 {
+		t.Fatalf("expected one info log, got %d", logs.Len())
+	}
+
+	entry := logs.All()[0]
+	if entry.Message != "trip expire task completed" {
+		t.Fatalf("unexpected log message: %s", entry.Message)
+	}
+
+	if got := entry.ContextMap()["expiredTrips"]; got != int64(3) {
+		t.Fatalf("expected expiredTrips=3, got %v", got)
 	}
 }
 
