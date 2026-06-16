@@ -1,7 +1,7 @@
 # 明叶同行 v1 首版闭环最终摘要
 
 生成时间：2026-04-26
-分支：`feature-mingye-carpool-v1`
+分支：`feature`
 
 ## 当前结论
 

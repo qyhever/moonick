@@ -1,7 +1,7 @@
 # 明叶同行 P1 任务 5 暂停摘要
 
 日期：2026-04-27
-分支：`feature-mingye-carpool-v1`
+分支：`feature`
 阶段：P1 MySQL 落库与后台完整编辑
 
 ## 当前总体状态

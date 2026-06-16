@@ -1,7 +1,7 @@
 # 明叶同行 P1 MySQL 落库与后台完整编辑最终变更存档
 
 日期：2026-04-28
-分支：`feature-mingye-carpool-v1`
+分支：`feature`
 范围：P1 MySQL 落库与后台完整编辑
 
 ## 一、最终状态

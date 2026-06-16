@@ -1,7 +1,7 @@
 # 明叶同行阶段性变更摘要
 
 生成时间：2026-04-25
-分支：`feature-mingye-carpool-v1`
+分支：`feature`
 
 ## 当前状态
 

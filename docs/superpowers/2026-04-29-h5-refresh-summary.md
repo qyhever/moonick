@@ -1,7 +1,7 @@
 # 明叶同行 H5 登录态 refresh 流程完成记录
 
 日期：2026-04-29
-分支：`feature-mingye-carpool-v1`
+分支：`feature`
 范围：H5 用户端登录态自动续期闭环
 
 ## 一、本次完成内容
